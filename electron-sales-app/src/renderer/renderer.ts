@@ -437,6 +437,16 @@ function setupEventListeners() {
   // Refresh button
   document.getElementById('refreshBtn')?.addEventListener('click', loadWorkbookData);
 
+  // Settings header button
+  document.getElementById('settingsHeaderBtn')?.addEventListener('click', () => {
+    switchTab('settings');
+  });
+
+  // Users header button
+  document.getElementById('usersHeaderBtn')?.addEventListener('click', () => {
+    switchTab('users');
+  });
+
   // File menu: download workbook copy
   document.getElementById('fileMenuBtn')?.addEventListener('click', async () => {
     try {

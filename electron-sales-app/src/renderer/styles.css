@@ -614,15 +614,34 @@ body {
     background: var(--bg-tertiary);
     border: 2px solid transparent;
     cursor: pointer;
-    transition: var(--transition-base);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     font-size: 1.25rem;
+    color: var(--text-secondary);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-icon svg {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
 }
 
 .btn-icon:hover {
-    background: var(--primary-light);
-    color: var(--text-inverse);
-    transform: scale(1.1) rotate(5deg);
-    box-shadow: var(--shadow-colored);
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    border-color: var(--primary-color);
+}
+
+.btn-icon:hover svg {
+    transform: scale(1.1);
+    stroke: white;
+}
+
+.btn-icon:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.2);
 }
 
 /* Badge */
