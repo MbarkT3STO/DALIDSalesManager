@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sales Manager</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <!-- Main Application -->
@@ -84,6 +85,13 @@
                     <path d="M3.27 6.96L12 12.01l8.73-5.05"/>
                 </svg>
                 Inventory
+            </button>
+            <button class="nav-tab" data-tab="analytics">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 3v18h18"/>
+                    <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/>
+                </svg>
+                Analytics
             </button>
             <button class="nav-tab" data-tab="reports">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -269,6 +277,35 @@
                     </button>
                 </div>
 
+                <!-- Invoice Filters -->
+                <div class="invoice-filters">
+                    <div class="filter-group">
+                        <label for="invoiceStatusFilter">Status:</label>
+                        <select id="invoiceStatusFilter" class="form-control">
+                            <option value="all">All Statuses</option>
+                            <option value="Paid">Paid</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="invoiceCustomerFilter">Customer:</label>
+                        <select id="invoiceCustomerFilter" class="form-control">
+                            <option value="all">All Customers</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="invoiceDateFilter">Date:</label>
+                        <input type="date" id="invoiceDateFilter" class="form-control" placeholder="Select date">
+                    </div>
+                    <button id="clearInvoiceFilters" class="btn btn-secondary btn-small">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                        Clear Filters
+                    </button>
+                </div>
+
                 <div class="table-container">
                     <table class="data-table">
                         <thead>
@@ -365,6 +402,160 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div id="analyticsTab" class="tab-content">
+                <div class="tab-header">
+                    <h2>Analytics & Statistics</h2>
+                    <div class="analytics-period">
+                        <select id="analyticsPeriod" class="form-control">
+                            <option value="7">Last 7 Days</option>
+                            <option value="30" selected>Last 30 Days</option>
+                            <option value="90">Last 90 Days</option>
+                            <option value="365">Last Year</option>
+                            <option value="all">All Time</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Key Metrics Grid -->
+                <div class="analytics-metrics">
+                    <div class="metric-card metric-card-highlight">
+                        <div class="metric-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 6v6l4 2"/>
+                            </svg>
+                        </div>
+                        <div class="metric-info">
+                            <h4>Today's Profit</h4>
+                            <p class="metric-value" id="todayProfitValue">$0.00</p>
+                            <span class="metric-change positive" id="todayProfitChange">Today</span>
+                        </div>
+                    </div>
+                    <div class="metric-card metric-card-highlight">
+                        <div class="metric-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 6v6l-4 2"/>
+                            </svg>
+                        </div>
+                        <div class="metric-info">
+                            <h4>Yesterday's Profit</h4>
+                            <p class="metric-value" id="yesterdayProfitValue">$0.00</p>
+                            <span class="metric-change" id="yesterdayProfitChange">Yesterday</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                            </svg>
+                        </div>
+                        <div class="metric-info">
+                            <h4>Average Order Value</h4>
+                            <p class="metric-value" id="avgOrderValue">$0.00</p>
+                            <span class="metric-change positive" id="avgOrderChange">+0%</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="8.5" cy="7" r="4"/>
+                                <path d="M20 8v6M23 11h-6"/>
+                            </svg>
+                        </div>
+                        <div class="metric-info">
+                            <h4>Total Customers</h4>
+                            <p class="metric-value" id="totalCustomersMetric">0</p>
+                            <span class="metric-change positive" id="customersChange">+0</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                            </svg>
+                        </div>
+                        <div class="metric-info">
+                            <h4>Products Sold</h4>
+                            <p class="metric-value" id="totalProductsSold">0</p>
+                            <span class="metric-change" id="productsSoldChange">0 units</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 3v18h18"/>
+                                <path d="M18 17V9l-5 5-5-5-3 3"/>
+                            </svg>
+                        </div>
+                        <div class="metric-info">
+                            <h4>Profit Margin</h4>
+                            <p class="metric-value" id="profitMarginMetric">0%</p>
+                            <span class="metric-change positive" id="profitMarginChange">+0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Grid -->
+                <div class="charts-grid">
+                    <!-- Sales Trend Chart -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Sales Trend</h3>
+                            <p class="chart-subtitle">Revenue over time</p>
+                        </div>
+                        <canvas id="salesTrendChart"></canvas>
+                    </div>
+
+                    <!-- Profit Trend Chart -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Profit Trend</h3>
+                            <p class="chart-subtitle">Profit over time</p>
+                        </div>
+                        <canvas id="profitTrendChart"></canvas>
+                    </div>
+
+                    <!-- Top Products Chart -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Top Products</h3>
+                            <p class="chart-subtitle">Best selling products</p>
+                        </div>
+                        <canvas id="topProductsChart"></canvas>
+                    </div>
+
+                    <!-- Product Categories Chart -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Sales by Product</h3>
+                            <p class="chart-subtitle">Revenue distribution</p>
+                        </div>
+                        <canvas id="productCategoriesChart"></canvas>
+                    </div>
+
+                    <!-- Customer Activity Chart -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Top Customers</h3>
+                            <p class="chart-subtitle">By total purchases</p>
+                        </div>
+                        <canvas id="topCustomersChart"></canvas>
+                    </div>
+
+                    <!-- Inventory Status Chart -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Inventory Status</h3>
+                            <p class="chart-subtitle">Stock levels</p>
+                        </div>
+                        <canvas id="inventoryStatusChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -591,6 +782,38 @@
                     <button type="button" id="saveInvoiceBtn" class="btn btn-primary">Save Invoice</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Edit Invoice Status Modal -->
+    <div id="editStatusModal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>Edit Invoice Status</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="editStatusForm" class="modal-form">
+                <div class="form-group">
+                    <label>Invoice ID</label>
+                    <input type="text" id="editStatusInvoiceId" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Customer</label>
+                    <input type="text" id="editStatusCustomer" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="editStatusSelect">Status *</label>
+                    <select id="editStatusSelect" class="form-control" required>
+                        <option value="Paid">Paid</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Status</button>
+                </div>
+            </form>
         </div>
     </div>
 

@@ -1,4 +1,7 @@
 // Type definitions
+declare const Chart: any;
+
+// Type definitions
 interface Product {
   name: string;
   quantity: number;
@@ -242,6 +245,7 @@ function renderAllData() {
   renderCustomers();
   renderInvoices();
   renderInventory();
+  renderAnalytics();
   renderReports();
 }
 
@@ -594,16 +598,41 @@ async function handleCustomerSubmit(e: Event) {
 };
 
 // Invoices rendering
+let currentStatusFilter = 'all';
+let currentCustomerFilter = 'all';
+let currentDateFilter = '';
+
 function renderInvoices() {
   const tbody = document.getElementById('invoicesTableBody');
   if (!tbody) return;
 
-  if (workbookData.invoices.length === 0) {
+  // Populate customer filter dropdown
+  populateCustomerFilter();
+
+  // Filter invoices
+  let filteredInvoices = workbookData.invoices;
+  
+  // Filter by status
+  if (currentStatusFilter !== 'all') {
+    filteredInvoices = filteredInvoices.filter(inv => inv.status === currentStatusFilter);
+  }
+  
+  // Filter by customer
+  if (currentCustomerFilter !== 'all') {
+    filteredInvoices = filteredInvoices.filter(inv => inv.customerName === currentCustomerFilter);
+  }
+  
+  // Filter by date
+  if (currentDateFilter) {
+    filteredInvoices = filteredInvoices.filter(inv => inv.date === currentDateFilter);
+  }
+
+  if (filteredInvoices.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No invoices found</td></tr>';
     return;
   }
 
-  tbody.innerHTML = workbookData.invoices.map(invoice => `
+  tbody.innerHTML = filteredInvoices.map(invoice => `
     <tr>
       <td><strong>${invoice.invoiceId}</strong></td>
       <td>${formatDate(invoice.date)}</td>
@@ -613,11 +642,65 @@ function renderInvoices() {
       <td><span class="badge badge-${getStatusBadgeClass(invoice.status)}">${invoice.status}</span></td>
       <td>
         <button class="btn btn-small btn-secondary" onclick="viewInvoice('${invoice.invoiceId}')">View</button>
+        <button class="btn btn-small btn-warning" onclick="editInvoiceStatus('${escapeHtml(invoice.invoiceId)}', '${escapeHtml(invoice.customerName)}', '${invoice.status}')">Edit Status</button>
         <button class="btn btn-small btn-primary" onclick="printInvoice('${invoice.invoiceId}')">Print</button>
       </td>
     </tr>
   `).join('');
 }
+
+// Populate customer filter dropdown
+function populateCustomerFilter() {
+  const customerFilter = (document as any).getElementById('invoiceCustomerFilter');
+  if (!customerFilter) return;
+
+  // Get unique customers from invoices
+  const uniqueCustomers = [...new Set(workbookData.invoices.map(inv => inv.customerName))].sort();
+  
+  const currentValue = customerFilter.value;
+  customerFilter.innerHTML = '<option value="all">All Customers</option>' +
+    uniqueCustomers.map(customer => `<option value="${escapeHtml(customer)}">${escapeHtml(customer)}</option>`).join('');
+  
+  // Restore previous selection if it still exists
+  if (currentValue && uniqueCustomers.includes(currentValue)) {
+    customerFilter.value = currentValue;
+  }
+}
+
+// Invoice status filter
+const invoiceStatusFilter = (document as any).getElementById('invoiceStatusFilter');
+invoiceStatusFilter?.addEventListener('change', (e: any) => {
+  currentStatusFilter = e.target.value;
+  renderInvoices();
+});
+
+// Invoice customer filter
+const invoiceCustomerFilter = (document as any).getElementById('invoiceCustomerFilter');
+invoiceCustomerFilter?.addEventListener('change', (e: any) => {
+  currentCustomerFilter = e.target.value;
+  renderInvoices();
+});
+
+// Invoice date filter
+const invoiceDateFilter = (document as any).getElementById('invoiceDateFilter');
+invoiceDateFilter?.addEventListener('change', (e: any) => {
+  currentDateFilter = e.target.value;
+  renderInvoices();
+});
+
+// Clear all filters
+const clearInvoiceFilters = (document as any).getElementById('clearInvoiceFilters');
+clearInvoiceFilters?.addEventListener('click', () => {
+  currentStatusFilter = 'all';
+  currentCustomerFilter = 'all';
+  currentDateFilter = '';
+  
+  ((document as any).getElementById('invoiceStatusFilter') as any).value = 'all';
+  ((document as any).getElementById('invoiceCustomerFilter') as any).value = 'all';
+  ((document as any).getElementById('invoiceDateFilter') as any).value = '';
+  
+  renderInvoices();
+});
 
 // Invoice modal
 function openInvoiceModal() {
@@ -1348,5 +1431,374 @@ inventoryForm?.addEventListener('submit', async (e: any) => {
     await loadWorkbookData();
   } else {
     showToast(result.message || 'Failed to record movement', 'error');
+  }
+});
+
+// Analytics & Charts
+let analyticsCharts: any = {};
+
+function renderAnalytics() {
+  // Calculate key metrics
+  const totalSales = workbookData.invoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+  const totalProfit = workbookData.invoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
+  const avgOrderValue = workbookData.invoices.length > 0 ? totalSales / workbookData.invoices.length : 0;
+  const totalProductsSold = workbookData.sales.reduce((sum, sale) => sum + sale.quantity, 0);
+  const profitMargin = totalSales > 0 ? (totalProfit / totalSales) * 100 : 0;
+
+  // Calculate today's profit
+  const today = new Date().toISOString().split('T')[0];
+  const todayInvoices = workbookData.invoices.filter(inv => inv.date === today);
+  const todayProfit = todayInvoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
+  const todaySales = todayInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+
+  // Calculate yesterday's profit
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayDate = yesterday.toISOString().split('T')[0];
+  const yesterdayInvoices = workbookData.invoices.filter(inv => inv.date === yesterdayDate);
+  const yesterdayProfit = yesterdayInvoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
+
+  // Update metrics
+  updateElement('todayProfitValue', `$${todayProfit.toFixed(2)}`);
+  updateElement('todayProfitChange', todayInvoices.length > 0 ? `${todayInvoices.length} orders` : 'No sales today');
+  updateElement('yesterdayProfitValue', `$${yesterdayProfit.toFixed(2)}`);
+  updateElement('yesterdayProfitChange', yesterdayInvoices.length > 0 ? `${yesterdayInvoices.length} orders` : 'No sales');
+  updateElement('avgOrderValue', `$${avgOrderValue.toFixed(2)}`);
+  updateElement('totalCustomersMetric', workbookData.customers.length.toString());
+  updateElement('totalProductsSold', totalProductsSold.toString());
+  updateElement('profitMarginMetric', `${profitMargin.toFixed(1)}%`);
+  updateElement('productsSoldChange', `${totalProductsSold} units`);
+
+  // Destroy existing charts
+  Object.values(analyticsCharts).forEach((chart: any) => {
+    if (chart) chart.destroy();
+  });
+  analyticsCharts = {};
+
+  // Render charts
+  renderSalesTrendChart();
+  renderProfitTrendChart();
+  renderTopProductsChart();
+  renderProductCategoriesChart();
+  renderTopCustomersChart();
+  renderInventoryStatusChart();
+}
+
+function renderSalesTrendChart() {
+  const canvas = (document as any).getElementById('salesTrendChart');
+  if (!canvas) return;
+
+  // Group sales by date
+  const salesByDate: any = {};
+  workbookData.invoices.forEach(inv => {
+    const date = inv.date;
+    salesByDate[date] = (salesByDate[date] || 0) + inv.totalAmount;
+  });
+
+  const dates = Object.keys(salesByDate).sort();
+  const values = dates.map(date => salesByDate[date]);
+
+  analyticsCharts.salesTrend = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: dates,
+      datasets: [{
+        label: 'Sales',
+        data: values,
+        borderColor: 'rgb(99, 102, 241)',
+        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value: any) {
+              return '$' + value.toFixed(0);
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderProfitTrendChart() {
+  const canvas = (document as any).getElementById('profitTrendChart');
+  if (!canvas) return;
+
+  // Group profit by date
+  const profitByDate: any = {};
+  workbookData.invoices.forEach(inv => {
+    const date = inv.date;
+    profitByDate[date] = (profitByDate[date] || 0) + inv.totalProfit;
+  });
+
+  const dates = Object.keys(profitByDate).sort();
+  const values = dates.map(date => profitByDate[date]);
+
+  analyticsCharts.profitTrend = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: dates,
+      datasets: [{
+        label: 'Profit',
+        data: values,
+        borderColor: 'rgb(34, 197, 94)',
+        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value: any) {
+              return '$' + value.toFixed(0);
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderTopProductsChart() {
+  const canvas = (document as any).getElementById('topProductsChart');
+  if (!canvas) return;
+
+  // Calculate sales by product
+  const productSales: any = {};
+  workbookData.sales.forEach(sale => {
+    productSales[sale.productName] = (productSales[sale.productName] || 0) + sale.quantity;
+  });
+
+  // Get top 10 products
+  const sortedProducts = Object.entries(productSales)
+    .sort((a: any, b: any) => b[1] - a[1])
+    .slice(0, 10);
+
+  analyticsCharts.topProducts = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: sortedProducts.map((p: any) => p[0]),
+      datasets: [{
+        label: 'Units Sold',
+        data: sortedProducts.map((p: any) => p[1]),
+        backgroundColor: 'rgba(99, 102, 241, 0.8)',
+        borderColor: 'rgb(99, 102, 241)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+
+function renderProductCategoriesChart() {
+  const canvas = (document as any).getElementById('productCategoriesChart');
+  if (!canvas) return;
+
+  // Calculate revenue by product
+  const productRevenue: any = {};
+  workbookData.sales.forEach(sale => {
+    productRevenue[sale.productName] = (productRevenue[sale.productName] || 0) + sale.total;
+  });
+
+  // Get top 8 products
+  const sortedProducts = Object.entries(productRevenue)
+    .sort((a: any, b: any) => b[1] - a[1])
+    .slice(0, 8);
+
+  const colors = [
+    'rgba(99, 102, 241, 0.8)',
+    'rgba(139, 92, 246, 0.8)',
+    'rgba(236, 72, 153, 0.8)',
+    'rgba(239, 68, 68, 0.8)',
+    'rgba(249, 115, 22, 0.8)',
+    'rgba(234, 179, 8, 0.8)',
+    'rgba(34, 197, 94, 0.8)',
+    'rgba(20, 184, 166, 0.8)'
+  ];
+
+  analyticsCharts.productCategories = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: sortedProducts.map((p: any) => p[0]),
+      datasets: [{
+        data: sortedProducts.map((p: any) => p[1]),
+        backgroundColor: colors,
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+  });
+}
+
+function renderTopCustomersChart() {
+  const canvas = (document as any).getElementById('topCustomersChart');
+  if (!canvas) return;
+
+  // Calculate purchases by customer
+  const customerPurchases: any = {};
+  workbookData.invoices.forEach(inv => {
+    customerPurchases[inv.customerName] = (customerPurchases[inv.customerName] || 0) + inv.totalAmount;
+  });
+
+  // Get top 10 customers
+  const sortedCustomers = Object.entries(customerPurchases)
+    .sort((a: any, b: any) => b[1] - a[1])
+    .slice(0, 10);
+
+  analyticsCharts.topCustomers = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: sortedCustomers.map((c: any) => c[0]),
+      datasets: [{
+        label: 'Total Purchases',
+        data: sortedCustomers.map((c: any) => c[1]),
+        backgroundColor: 'rgba(34, 197, 94, 0.8)',
+        borderColor: 'rgb(34, 197, 94)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value: any) {
+              return '$' + value.toFixed(0);
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderInventoryStatusChart() {
+  const canvas = (document as any).getElementById('inventoryStatusChart');
+  if (!canvas) return;
+
+  // Categorize products by stock level
+  const lowStock = workbookData.products.filter(p => p.quantity < 10).length;
+  const mediumStock = workbookData.products.filter(p => p.quantity >= 10 && p.quantity < 50).length;
+  const highStock = workbookData.products.filter(p => p.quantity >= 50).length;
+
+  analyticsCharts.inventoryStatus = new Chart(canvas, {
+    type: 'pie',
+    data: {
+      labels: ['Low Stock (<10)', 'Medium Stock (10-49)', 'High Stock (50+)'],
+      datasets: [{
+        data: [lowStock, mediumStock, highStock],
+        backgroundColor: [
+          'rgba(239, 68, 68, 0.8)',
+          'rgba(234, 179, 8, 0.8)',
+          'rgba(34, 197, 94, 0.8)'
+        ],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+  });
+}
+
+// Analytics period filter
+const analyticsPeriodSelect = (document as any).getElementById('analyticsPeriod');
+analyticsPeriodSelect?.addEventListener('change', () => {
+  renderAnalytics();
+});
+
+// Edit Invoice Status
+let currentEditInvoiceId = '';
+
+(window as any).editInvoiceStatus = (invoiceId: string, customerName: string, currentStatus: string) => {
+  const modal = (document as any).getElementById('editStatusModal');
+  if (!modal) return;
+
+  currentEditInvoiceId = invoiceId;
+  
+  ((document as any).getElementById('editStatusInvoiceId') as any).value = invoiceId;
+  ((document as any).getElementById('editStatusCustomer') as any).value = customerName;
+  ((document as any).getElementById('editStatusSelect') as any).value = currentStatus;
+
+  modal.classList.add('active');
+};
+
+// Edit status form submission
+const editStatusForm = (document as any).getElementById('editStatusForm');
+const editStatusModal = (document as any).getElementById('editStatusModal');
+
+editStatusForm?.addEventListener('submit', async (e: any) => {
+  e.preventDefault();
+
+  const newStatus = ((document as any).getElementById('editStatusSelect') as any).value;
+
+  const result = await api.updateInvoiceStatus(currentEditInvoiceId, newStatus);
+  
+  if (result.success) {
+    showToast('Invoice status updated successfully', 'success');
+    editStatusModal.classList.remove('active');
+    await loadWorkbookData();
+  } else {
+    showToast(result.message || 'Failed to update status', 'error');
   }
 });

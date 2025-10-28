@@ -342,7 +342,53 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.filter-group label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.filter-group select {
+    min-width: 150px;
+}
+
+.invoice-filters {
+    display: flex;
+    align-items: end;
+    gap: 1rem;
     margin-bottom: 1.5rem;
+    padding: 1.25rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    flex-wrap: wrap;
+}
+
+.invoice-filters .filter-group {
+    flex: 1;
+    min-width: 180px;
+}
+
+.invoice-filters .form-control {
+    width: 100%;
 }
 
 .tab-header h2 {
@@ -568,15 +614,19 @@ body {
 }
 
 .modal-content {
-    background: var(--bg-card);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-2xl);
+    background-color: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
     width: 90%;
-    max-width: 500px;
+    max-width: 800px;
     max-height: 90vh;
     overflow-y: auto;
     animation: slideUp 0.3s ease;
     border: 1px solid var(--border-color);
+}
+
+.modal-small {
+    max-width: 500px;
 }
 
 .modal-large {
@@ -903,6 +953,156 @@ select.form-control {
     font-size: 0.875rem;
     color: var(--text-muted);
     margin-top: 2rem;
+}
+
+/* Analytics Section */
+.analytics-period {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.analytics-period select {
+    min-width: 150px;
+}
+
+.analytics-metrics {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+    overflow-x: auto;
+}
+
+@media (max-width: 1800px) {
+    .analytics-metrics {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 1200px) {
+    .analytics-metrics {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .analytics-metrics {
+        grid-template-columns: 1fr;
+    }
+}
+
+.metric-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    transition: var(--transition-base);
+}
+
+.metric-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-light);
+}
+
+.metric-card-highlight {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+.metric-card-highlight:hover {
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+}
+
+.metric-icon {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-gradient);
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+}
+
+.metric-icon svg {
+    color: white;
+    stroke: white;
+}
+
+.metric-info {
+    flex: 1;
+}
+
+.metric-info h4 {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.metric-value {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0.25rem 0;
+}
+
+.metric-change {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    display: inline-block;
+}
+
+.metric-change.positive {
+    color: var(--success-color);
+    background: rgba(34, 197, 94, 0.1);
+}
+
+.metric-change.negative {
+    color: var(--danger-color);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 2rem;
+}
+
+.chart-container {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    min-height: 350px;
+}
+
+.chart-header {
+    margin-bottom: 1.5rem;
+}
+
+.chart-header h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.chart-subtitle {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.chart-container canvas {
+    max-height: 280px;
 }
 
 /* Toast Notification */
