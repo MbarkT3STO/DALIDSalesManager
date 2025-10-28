@@ -1504,7 +1504,6 @@ function generateInvoiceHTML(invoice: Invoice): string {
 
       <div class="footer">
         <p>${t('sales.thankYou')}</p>
-        <p>${t('app.title')} - ${t('sales.professionalInvoice')}</p>
       </div>
     </body>
     </html>
