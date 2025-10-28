@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, Notification } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, Notification, Menu } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 import { ExcelHandler, Product, Customer, Invoice, Payment, User } from './excel-handler';
@@ -22,6 +22,9 @@ function createWindow(): void {
     backgroundColor: '#f5f5f5'
   });
 
+  // Remove the default menu
+  Menu.setApplicationMenu(null);
+
   // Load login page first
   mainWindow.loadFile(path.join(__dirname, '../../src/renderer/login.html'));
 
@@ -36,6 +39,9 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  // Remove menu for all platforms including macOS
+  Menu.setApplicationMenu(null);
+  
   createWindow();
 
   app.on('activate', () => {

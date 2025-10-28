@@ -10,6 +10,13 @@ yarn.lock
 dist/
 build/
 out/
+release/
+*.dmg
+*.exe
+*.AppImage
+*.deb
+*.rpm
+*.snap
 
 # TypeScript
 *.tsbuildinfo
@@ -48,7 +55,13 @@ Thumbs.db
 
 # Application data
 sales-data.xlsx
+sales.db
+sales.db-journal
 backups/
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
 
 # Coverage
 coverage/
