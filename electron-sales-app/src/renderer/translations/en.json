@@ -302,11 +302,12 @@
     "title": "DALID Sales Manager",
     "subtitle": "Welcome back! Please login to continue",
     "username": "Username",
+    "usernamePlaceholder": "Enter your username",
     "password": "Password",
+    "passwordPlaceholder": "Enter your password",
     "rememberMe": "Remember me",
     "signIn": "Sign In",
     "invalidCredentials": "Invalid username or password",
-    "demoCredentials": "Demo Credentials",
     "admin": "Admin",
     "manager": "Manager",
     "cashier": "Cashier"

@@ -1,6 +1,69 @@
 // Login functionality
 const api = window.electronAPI;
 
+// Translation system - syncs with main app settings
+let currentLanguage = 'en';
+let translations = {};
+
+// Get language from app settings (same as main app)
+function getAppLanguage() {
+    try {
+        const settings = localStorage.getItem('appSettings');
+        if (settings) {
+            const parsed = JSON.parse(settings);
+            return parsed.language || 'en';
+        }
+    } catch (error) {
+        console.error('Failed to parse app settings:', error);
+    }
+    return 'en';
+}
+
+async function loadTranslations(lang) {
+    try {
+        const response = await fetch(`./translations/${lang}.json`);
+        translations = await response.json();
+        currentLanguage = lang;
+        applyTranslations();
+        applyRTL();
+    } catch (error) {
+        console.error('Failed to load translations:', error);
+    }
+}
+
+function t(key) {
+    const keys = key.split('.');
+    let value = translations;
+    for (const k of keys) {
+        value = value?.[k];
+    }
+    return value || key;
+}
+
+function applyTranslations() {
+    // Translate elements with data-translate attribute
+    document.querySelectorAll('[data-translate]').forEach(element => {
+        const key = element.getAttribute('data-translate');
+        element.textContent = t(key);
+    });
+
+    // Translate placeholders
+    document.querySelectorAll('[data-translate-placeholder]').forEach(element => {
+        const key = element.getAttribute('data-translate-placeholder');
+        element.placeholder = t(key);
+    });
+}
+
+function applyRTL() {
+    if (currentLanguage === 'ar') {
+        document.documentElement.setAttribute('dir', 'rtl');
+        document.body.style.direction = 'rtl';
+    } else {
+        document.documentElement.setAttribute('dir', 'ltr');
+        document.body.style.direction = 'ltr';
+    }
+}
+
 // DOM Elements
 const loginForm = document.getElementById('loginForm');
 const usernameInput = document.getElementById('username');
@@ -11,6 +74,10 @@ const errorMessage = document.getElementById('errorMessage');
 const errorText = document.getElementById('errorText');
 const togglePasswordBtn = document.getElementById('togglePassword');
 const eyeIcon = document.getElementById('eyeIcon');
+
+// Load translations based on app settings
+currentLanguage = getAppLanguage();
+loadTranslations(currentLanguage);
 
 // Toggle password visibility
 togglePasswordBtn.addEventListener('click', () => {

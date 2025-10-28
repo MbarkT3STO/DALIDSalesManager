@@ -299,15 +299,16 @@
     "tenBackups": "10 sauvegardes"
   },
   "login": {
-    "title": "Gestionnaire de Ventes DALID",
-    "subtitle": "Bon retour ! Veuillez vous connecter pour continuer",
+    "title": "DALID Gestionnaire de ventes",
+    "subtitle": "Bon retour! Veuillez vous connecter pour continuer",
     "username": "Nom d'utilisateur",
+    "usernamePlaceholder": "Entrez votre nom d'utilisateur",
     "password": "Mot de passe",
+    "passwordPlaceholder": "Entrez votre mot de passe",
     "rememberMe": "Se souvenir de moi",
     "signIn": "Se connecter",
     "invalidCredentials": "Nom d'utilisateur ou mot de passe invalide",
-    "demoCredentials": "Identifiants de démonstration",
-    "admin": "Admin",
+    "admin": "Administrateur",
     "manager": "Gestionnaire",
     "cashier": "Caissier"
   }
