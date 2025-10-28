@@ -75,6 +75,35 @@ let workbookData: WorkbookData = {
   payments: []
 };
 
+// Localization
+let currentLanguage = 'en';
+let translations: any = {};
+
+// Settings
+interface AppSettings {
+  language: string;
+  theme: string;
+  fontSize: string;
+  autoBackup: boolean;
+  backupRetention: number;
+  lowStockNotifications: boolean;
+  soundNotifications: boolean;
+  startupBehavior: string;
+  autoRefresh: boolean;
+}
+
+let appSettings: AppSettings = {
+  language: 'en',
+  theme: 'light',
+  fontSize: 'medium',
+  autoBackup: true,
+  backupRetention: 5,
+  lowStockNotifications: true,
+  soundNotifications: true,
+  startupBehavior: 'defaultWorkbook',
+  autoRefresh: false
+};
+
 let currentEditingProduct: string | null = null;
 let currentEditingCustomer: string | null = null;
 let currentInvoiceItems: Sale[] = [];
@@ -88,9 +117,237 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeApp();
 });
 
+// Localization functions
+async function loadTranslations(language: string) {
+  try {
+    const response = await fetch(`translations/${language}.json`);
+    translations = await response.json();
+    currentLanguage = language;
+    applyTranslations();
+  } catch (error) {
+    console.error('Failed to load translations:', error);
+    // Fallback to English
+    if (language !== 'en') {
+      await loadTranslations('en');
+    }
+  }
+}
+
+function t(key: string, fallback?: string): string {
+  const keys = key.split('.');
+  let value = translations;
+  
+  for (const k of keys) {
+    value = value?.[k];
+  }
+  
+  return value || fallback || key;
+}
+
+function applyTranslations() {
+  // Update navigation tabs
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    const tabName = tab.getAttribute('data-tab');
+    if (tabName) {
+      const textElement = tab.querySelector('span[data-translate]');
+      if (textElement) {
+        textElement.textContent = t(`navigation.${tabName}`, textElement.textContent);
+      }
+    }
+  });
+
+  // Update all elements with data-translate attribute
+  document.querySelectorAll('[data-translate]').forEach(element => {
+    const key = element.getAttribute('data-translate');
+    if (key) {
+      element.textContent = t(key);
+    }
+  });
+
+  // Update placeholders
+  document.querySelectorAll('[data-translate-placeholder]').forEach(element => {
+    const key = element.getAttribute('data-translate-placeholder');
+    if (key && element instanceof HTMLInputElement) {
+      element.placeholder = t(key);
+    }
+  });
+
+  // Update titles
+  document.querySelectorAll('[data-translate-title]').forEach(element => {
+    const key = element.getAttribute('data-translate-title');
+    if (key && element instanceof HTMLElement) {
+      element.title = t(key);
+    }
+  });
+
+  // Update button texts
+  document.querySelectorAll('button').forEach(button => {
+    const textContent = button.textContent?.trim();
+    if (textContent) {
+      // Common button translations
+      if (textContent === 'Add Product' || textContent === 'إضافة منتج' || textContent === 'Ajouter un produit') {
+        button.textContent = t('products.addProduct');
+      } else if (textContent === 'Add Customer' || textContent === 'إضافة عميل' || textContent === 'Ajouter un client') {
+        button.textContent = t('customers.addCustomer');
+      } else if (textContent === 'New Invoice' || textContent === 'فاتورة جديدة' || textContent === 'Nouvelle facture') {
+        button.textContent = t('sales.newInvoice');
+      } else if (textContent === 'Save' || textContent === 'حفظ' || textContent === 'Enregistrer') {
+        button.textContent = t('common.save');
+      } else if (textContent === 'Cancel' || textContent === 'إلغاء' || textContent === 'Annuler') {
+        button.textContent = t('common.cancel');
+      } else if (textContent === 'Delete' || textContent === 'حذف' || textContent === 'Supprimer') {
+        button.textContent = t('common.delete');
+      } else if (textContent === 'Edit' || textContent === 'تعديل' || textContent === 'Modifier') {
+        button.textContent = t('common.edit');
+      } else if (textContent === 'Search' || textContent === 'بحث' || textContent === 'Rechercher') {
+        button.textContent = t('common.search');
+      } else if (textContent === 'Export' || textContent === 'تصدير' || textContent === 'Exporter') {
+        button.textContent = t('common.export');
+      } else if (textContent === 'Print' || textContent === 'طباعة' || textContent === 'Imprimer') {
+        button.textContent = t('common.print');
+      }
+    }
+  });
+
+  // Update table headers
+  document.querySelectorAll('th').forEach(th => {
+    const textContent = th.textContent?.trim();
+    if (textContent) {
+      if (textContent === 'Product Name' || textContent === 'اسم المنتج' || textContent === 'Nom du produit') {
+        th.textContent = t('products.productName');
+      } else if (textContent === 'Quantity' || textContent === 'الكمية' || textContent === 'Quantité') {
+        th.textContent = t('products.quantity');
+      } else if (textContent === 'Buy Price' || textContent === 'سعر الشراء' || textContent === 'Prix d\'achat') {
+        th.textContent = t('products.buyPrice');
+      } else if (textContent === 'Sale Price' || textContent === 'سعر البيع' || textContent === 'Prix de vente') {
+        th.textContent = t('products.salePrice');
+      } else if (textContent === 'Customer Name' || textContent === 'اسم العميل' || textContent === 'Nom du client') {
+        th.textContent = t('customers.customerName');
+      } else if (textContent === 'Phone' || textContent === 'الهاتف' || textContent === 'Téléphone') {
+        th.textContent = t('customers.phone');
+      } else if (textContent === 'Email' || textContent === 'البريد الإلكتروني' || textContent === 'Email') {
+        th.textContent = t('customers.email');
+      } else if (textContent === 'Address' || textContent === 'العنوان' || textContent === 'Adresse') {
+        th.textContent = t('customers.address');
+      } else if (textContent === 'Actions' || textContent === 'الإجراءات' || textContent === 'Actions') {
+        th.textContent = t('common.actions');
+      } else if (textContent === 'Date' || textContent === 'التاريخ' || textContent === 'Date') {
+        th.textContent = t('sales.date');
+      } else if (textContent === 'Status' || textContent === 'الحالة' || textContent === 'Statut') {
+        th.textContent = t('sales.status');
+      }
+    }
+  });
+
+  // Update form labels
+  document.querySelectorAll('label').forEach(label => {
+    const textContent = label.textContent?.trim();
+    if (textContent) {
+      if (textContent === 'Product Name:' || textContent === 'اسم المنتج:' || textContent === 'Nom du produit:') {
+        label.textContent = t('products.productName') + ':';
+      } else if (textContent === 'Quantity:' || textContent === 'الكمية:' || textContent === 'Quantité:') {
+        label.textContent = t('products.quantity') + ':';
+      } else if (textContent === 'Buy Price:' || textContent === 'سعر الشراء:' || textContent === 'Prix d\'achat:') {
+        label.textContent = t('products.buyPrice') + ':';
+      } else if (textContent === 'Sale Price:' || textContent === 'سعر البيع:' || textContent === 'Prix de vente:') {
+        label.textContent = t('products.salePrice') + ':';
+      } else if (textContent === 'Customer Name:' || textContent === 'اسم العميل:' || textContent === 'Nom du client:') {
+        label.textContent = t('customers.customerName') + ':';
+      } else if (textContent === 'Phone:' || textContent === 'الهاتف:' || textContent === 'Téléphone:') {
+        label.textContent = t('customers.phone') + ':';
+      } else if (textContent === 'Email:' || textContent === 'البريد الإلكتروني:' || textContent === 'Email:') {
+        label.textContent = t('customers.email') + ':';
+      } else if (textContent === 'Address:' || textContent === 'العنوان:' || textContent === 'Adresse:') {
+        label.textContent = t('customers.address') + ':';
+      }
+    }
+  });
+
+  // Update headings
+  document.querySelectorAll('h1, h2, h3').forEach(heading => {
+    const textContent = heading.textContent?.trim();
+    if (textContent) {
+      if (textContent === 'Dashboard' || textContent === 'لوحة التحكم' || textContent === 'Tableau de bord') {
+        heading.textContent = t('dashboard.title');
+      } else if (textContent === 'Products' || textContent === 'المنتجات' || textContent === 'Produits') {
+        heading.textContent = t('products.title');
+      } else if (textContent === 'Customers' || textContent === 'العملاء' || textContent === 'Clients') {
+        heading.textContent = t('customers.title');
+      } else if (textContent === 'Sales & Invoices' || textContent === 'المبيعات والفواتير' || textContent === 'Ventes et Factures') {
+        heading.textContent = t('sales.title');
+      } else if (textContent === 'Inventory' || textContent === 'المخزون' || textContent === 'Inventaire') {
+        heading.textContent = t('inventory.title');
+      } else if (textContent === 'Analytics' || textContent === 'التحليلات' || textContent === 'Analyses') {
+        heading.textContent = t('analytics.title');
+      } else if (textContent === 'Reports' || textContent === 'التقارير' || textContent === 'Rapports') {
+        heading.textContent = t('reports.title');
+      } else if (textContent === 'User Management' || textContent === 'إدارة المستخدمين' || textContent === 'Gestion des utilisateurs') {
+        heading.textContent = t('users.title');
+      } else if (textContent === 'Settings' || textContent === 'الإعدادات' || textContent === 'Paramètres') {
+        heading.textContent = t('settings.title');
+      }
+    }
+  });
+
+  // Apply RTL for Arabic
+  if (currentLanguage === 'ar') {
+    document.documentElement.setAttribute('dir', 'rtl');
+    document.documentElement.setAttribute('lang', 'ar');
+  } else {
+    document.documentElement.setAttribute('dir', 'ltr');
+    document.documentElement.setAttribute('lang', currentLanguage);
+  }
+}
+
+// Settings functions
+function loadSettings() {
+  const saved = localStorage.getItem('appSettings');
+  if (saved) {
+    try {
+      appSettings = { ...appSettings, ...JSON.parse(saved) };
+    } catch (error) {
+      console.error('Failed to parse saved settings:', error);
+    }
+  }
+}
+
+function saveSettings() {
+  localStorage.setItem('appSettings', JSON.stringify(appSettings));
+}
+
+function applySettings() {
+  // Apply theme
+  if (appSettings.theme === 'auto') {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+  } else {
+    document.documentElement.setAttribute('data-theme', appSettings.theme);
+  }
+
+  // Apply font size
+  document.documentElement.setAttribute('data-font-size', appSettings.fontSize);
+
+  // Apply language
+  loadTranslations(appSettings.language);
+}
+
+function renderSettings() {
+  // Populate settings form
+  (document.getElementById('languageSelect') as HTMLSelectElement).value = appSettings.language;
+  (document.getElementById('themeSelect') as HTMLSelectElement).value = appSettings.theme;
+  (document.getElementById('fontSizeSelect') as HTMLSelectElement).value = appSettings.fontSize;
+  (document.getElementById('autoBackupToggle') as HTMLInputElement).checked = appSettings.autoBackup;
+  (document.getElementById('backupRetentionSelect') as HTMLSelectElement).value = appSettings.backupRetention.toString();
+  (document.getElementById('lowStockNotificationsToggle') as HTMLInputElement).checked = appSettings.lowStockNotifications;
+  (document.getElementById('soundNotificationsToggle') as HTMLInputElement).checked = appSettings.soundNotifications;
+  (document.getElementById('startupBehaviorSelect') as HTMLSelectElement).value = appSettings.startupBehavior;
+  (document.getElementById('autoRefreshToggle') as HTMLInputElement).checked = appSettings.autoRefresh;
+}
+
 async function initializeApp() {
+  loadSettings();
+  applySettings();
   setupEventListeners();
-  loadSavedTheme();
   // Automatically use default workbook
   await autoLoadDefaultWorkbook();
 }
@@ -133,11 +390,15 @@ async function loadWorkbookData() {
 
 async function updateWorkbookPath() {
   const result = await api.getWorkbookPath();
-  if (result.success) {
-    const pathElement = document.getElementById('workbookPath');
-    if (pathElement) {
+  const pathElement = document.getElementById('workbookPath');
+  if (pathElement) {
+    if (result.success) {
       const fileName = result.path.split('/').pop() || result.path;
       pathElement.textContent = fileName;
+      pathElement.removeAttribute('data-translate');
+    } else {
+      pathElement.textContent = t('common.noWorkbook');
+      pathElement.setAttribute('data-translate', 'common.noWorkbook');
     }
   }
 }
@@ -206,6 +467,13 @@ function setupEventListeners() {
   document.getElementById('filterReportBtn')?.addEventListener('click', filterReports);
   document.getElementById('exportReportBtn')?.addEventListener('click', exportReport);
 
+  // Settings
+  document.getElementById('saveSettingsBtn')?.addEventListener('click', handleSaveSettings);
+  document.getElementById('resetSettingsBtn')?.addEventListener('click', handleResetSettings);
+  document.getElementById('languageSelect')?.addEventListener('change', handleLanguageChange);
+  document.getElementById('themeSelect')?.addEventListener('change', handleThemeChange);
+  document.getElementById('fontSizeSelect')?.addEventListener('change', handleFontSizeChange);
+
   // Set default date for invoice
   const today = new Date().toISOString().split('T')[0];
   const invoiceDateInput = document.getElementById('invoiceDate') as HTMLInputElement;
@@ -241,6 +509,7 @@ function switchTab(tabName: string | null) {
   if (tabName === 'dashboard') renderDashboard();
   if (tabName === 'reports') renderReports();
   if (tabName === 'users') renderUsers();
+  if (tabName === 'settings') renderSettings();
 }
 
 // Theme toggle
@@ -2204,3 +2473,73 @@ const originalOpenProductModal = (window as any).openProductModal;
 
 // Note: handleProductSubmit is already defined earlier in the file and has been
 // updated to support reorder level through the form's productReorderLevel field
+
+// ============================================
+// SETTINGS HANDLERS
+// ============================================
+
+function handleSaveSettings() {
+  // Update settings from form
+  appSettings.language = (document.getElementById('languageSelect') as HTMLSelectElement).value;
+  appSettings.theme = (document.getElementById('themeSelect') as HTMLSelectElement).value;
+  appSettings.fontSize = (document.getElementById('fontSizeSelect') as HTMLSelectElement).value;
+  appSettings.autoBackup = (document.getElementById('autoBackupToggle') as HTMLInputElement).checked;
+  appSettings.backupRetention = parseInt((document.getElementById('backupRetentionSelect') as HTMLSelectElement).value);
+  appSettings.lowStockNotifications = (document.getElementById('lowStockNotificationsToggle') as HTMLInputElement).checked;
+  appSettings.soundNotifications = (document.getElementById('soundNotificationsToggle') as HTMLInputElement).checked;
+  appSettings.startupBehavior = (document.getElementById('startupBehaviorSelect') as HTMLSelectElement).value;
+  appSettings.autoRefresh = (document.getElementById('autoRefreshToggle') as HTMLInputElement).checked;
+
+  // Save and apply settings
+  saveSettings();
+  applySettings();
+  
+  showToast(t('settings.settingsSaved', 'Settings saved successfully'), 'success');
+}
+
+function handleResetSettings() {
+  // Reset to defaults
+  appSettings = {
+    language: 'en',
+    theme: 'light',
+    fontSize: 'medium',
+    autoBackup: true,
+    backupRetention: 5,
+    lowStockNotifications: true,
+    soundNotifications: true,
+    startupBehavior: 'defaultWorkbook',
+    autoRefresh: false
+  };
+
+  // Save and apply settings
+  saveSettings();
+  applySettings();
+  renderSettings();
+  
+  showToast(t('settings.settingsReset', 'Settings reset to defaults'), 'success');
+}
+
+function handleLanguageChange() {
+  const newLanguage = (document.getElementById('languageSelect') as HTMLSelectElement).value;
+  appSettings.language = newLanguage;
+  saveSettings();
+  loadTranslations(newLanguage).then(() => {
+    applyTranslations();
+    renderAllData(); // Re-render all content with new language
+    updateWorkbookPath(); // Update workbook path with new language
+  });
+}
+
+function handleThemeChange() {
+  const newTheme = (document.getElementById('themeSelect') as HTMLSelectElement).value;
+  appSettings.theme = newTheme;
+  saveSettings();
+  applySettings();
+}
+
+function handleFontSizeChange() {
+  const newFontSize = (document.getElementById('fontSizeSelect') as HTMLSelectElement).value;
+  appSettings.fontSize = newFontSize;
+  saveSettings();
+  applySettings();
+}
