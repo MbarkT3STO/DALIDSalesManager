@@ -84,6 +84,7 @@ interface AppSettings {
   language: string;
   theme: string;
   fontSize: string;
+  currency: string;
   autoBackup: boolean;
   backupRetention: number;
   lowStockNotifications: boolean;
@@ -96,11 +97,12 @@ let appSettings: AppSettings = {
   language: 'en',
   theme: 'light',
   fontSize: 'medium',
+  currency: 'USD',
   autoBackup: true,
   backupRetention: 5,
   lowStockNotifications: true,
   soundNotifications: true,
-  startupBehavior: 'defaultWorkbook',
+  startupBehavior: 'lastWorkbook',
   autoRefresh: false
 };
 
@@ -179,6 +181,21 @@ function applyTranslations() {
       element.title = t(key);
     }
   });
+
+  // Update user role badge
+  const userRoleBadge = document.querySelector('.user-role');
+  if (userRoleBadge) {
+    const role = userRoleBadge.getAttribute('data-role');
+    if (role) {
+      const roleMap: { [key: string]: string } = {
+        'Admin': t('users.admin'),
+        'Manager': t('users.manager'),
+        'Staff': t('users.staff'),
+        'Cashier': t('users.cashier')
+      };
+      userRoleBadge.textContent = roleMap[role] || role;
+    }
+  }
 
   // Update button texts
   document.querySelectorAll('button').forEach(button => {
@@ -334,6 +351,7 @@ function applySettings() {
 function renderSettings() {
   // Populate settings form
   (document.getElementById('languageSelect') as HTMLSelectElement).value = appSettings.language;
+  (document.getElementById('currencySelect') as HTMLSelectElement).value = appSettings.currency;
   (document.getElementById('themeSelect') as HTMLSelectElement).value = appSettings.theme;
   (document.getElementById('fontSizeSelect') as HTMLSelectElement).value = appSettings.fontSize;
   (document.getElementById('autoBackupToggle') as HTMLInputElement).checked = appSettings.autoBackup;
@@ -558,8 +576,8 @@ function renderDashboard() {
   const totalCustomers = workbookData.customers.length;
 
   // Update stat cards
-  updateElement('totalSales', `$${totalSales.toFixed(2)}`);
-  updateElement('totalProfit', `$${totalProfit.toFixed(2)}`);
+  updateElement('totalSales', formatCurrency(totalSales));
+  updateElement('totalProfit', formatCurrency(totalProfit));
   updateElement('totalProducts', totalProducts.toString());
   updateElement('totalCustomers', totalCustomers.toString());
 
@@ -568,6 +586,41 @@ function renderDashboard() {
 
   // Render low stock alert
   renderLowStockAlert();
+}
+
+// Helper function to translate status
+function translateStatus(status: string): string {
+  const statusMap: { [key: string]: string } = {
+    'Paid': t('sales.paid'),
+    'Pending': t('sales.pending'),
+    'Cancelled': t('sales.cancelled')
+  };
+  return statusMap[status] || status;
+}
+
+// Helper function to format currency
+function formatCurrency(amount: number): string {
+  const currencySymbols: { [key: string]: string } = {
+    'USD': '$',
+    'EUR': '€',
+    'GBP': '£',
+    'JPY': '¥',
+    'CNY': '¥',
+    'DZD': 'د.ج',
+    'SAR': 'ر.س',
+    'AED': 'د.إ',
+    'MAD': 'د.م.'
+  };
+  
+  const symbol = currencySymbols[appSettings.currency] || appSettings.currency;
+  const formattedAmount = amount.toFixed(2);
+  
+  // For Arabic currencies, put symbol after the amount
+  if (appSettings.currency === 'SAR' || appSettings.currency === 'AED' || appSettings.currency === 'MAD' || appSettings.currency === 'DZD') {
+    return `${formattedAmount} ${symbol}`;
+  }
+  
+  return `${symbol}${formattedAmount}`;
 }
 
 function renderRecentInvoices() {
@@ -588,9 +641,9 @@ function renderRecentInvoices() {
       <td>${inv.invoiceId}</td>
       <td>${formatDate(inv.date)}</td>
       <td>${inv.customerName}</td>
-      <td>$${inv.totalAmount.toFixed(2)}</td>
-      <td>$${inv.totalProfit.toFixed(2)}</td>
-      <td><span class="badge badge-${getStatusBadgeClass(inv.status)}">${inv.status}</span></td>
+      <td>${formatCurrency(inv.totalAmount)}</td>
+      <td>${formatCurrency(inv.totalProfit)}</td>
+      <td><span class="badge badge-${getStatusBadgeClass(inv.status)}">${translateStatus(inv.status)}</span></td>
     </tr>
   `).join('');
 }
@@ -602,13 +655,13 @@ function renderLowStockAlert() {
   const lowStockProducts = workbookData.products.filter(p => p.quantity < 10);
 
   if (lowStockProducts.length === 0) {
-    container.innerHTML = '<p class="empty-state">All products are well stocked</p>';
+    container.innerHTML = `<p class="empty-state">${t('dashboard.allProductsStocked')}</p>`;
     return;
   }
 
   container.innerHTML = lowStockProducts.map(p => `
     <div class="alert-item">
-      <strong>${p.name}</strong> - Only ${p.quantity} units remaining
+      <strong>${p.name}</strong> - ${t('dashboard.only')} ${p.quantity} ${t('dashboard.unitsRemaining')}
     </div>
   `).join('');
 }
@@ -629,12 +682,12 @@ function renderProducts() {
       <tr>
         <td><strong>${product.name}</strong></td>
         <td>${product.quantity}</td>
-        <td>$${product.buyPrice.toFixed(2)}</td>
-        <td>$${product.salePrice.toFixed(2)}</td>
+        <td>${formatCurrency(product.buyPrice)}</td>
+        <td>${formatCurrency(product.salePrice)}</td>
         <td>${profitMargin}%</td>
         <td>
-          <button class="btn btn-small btn-secondary" onclick="editProduct('${escapeHtml(product.name)}')">Edit</button>
-          <button class="btn btn-small btn-danger" onclick="deleteProduct('${escapeHtml(product.name)}')">Delete</button>
+          <button class="btn btn-small btn-secondary" onclick="editProduct('${escapeHtml(product.name)}')">${t('common.edit')}</button>
+          <button class="btn btn-small btn-danger" onclick="deleteProduct('${escapeHtml(product.name)}')">${t('common.delete')}</button>
         </td>
       </tr>
     `;
@@ -663,12 +716,12 @@ function filterProducts() {
       <tr>
         <td><strong>${product.name}</strong></td>
         <td>${product.quantity}</td>
-        <td>$${product.buyPrice.toFixed(2)}</td>
-        <td>$${product.salePrice.toFixed(2)}</td>
+        <td>${formatCurrency(product.buyPrice)}</td>
+        <td>${formatCurrency(product.salePrice)}</td>
         <td>${profitMargin}%</td>
         <td>
-          <button class="btn btn-small btn-secondary" onclick="editProduct('${escapeHtml(product.name)}')">Edit</button>
-          <button class="btn btn-small btn-danger" onclick="deleteProduct('${escapeHtml(product.name)}')">Delete</button>
+          <button class="btn btn-small btn-secondary" onclick="editProduct('${escapeHtml(product.name)}')">${t('common.edit')}</button>
+          <button class="btn btn-small btn-danger" onclick="deleteProduct('${escapeHtml(product.name)}')">${t('common.delete')}</button>
         </td>
       </tr>
     `;
@@ -694,10 +747,10 @@ function openProductModal(productName?: string) {
       (document.getElementById('productBuyPrice') as HTMLInputElement).value = product.buyPrice.toString();
       (document.getElementById('productSalePrice') as HTMLInputElement).value = product.salePrice.toString();
       currentEditingProduct = productName;
-      if (title) title.textContent = 'Edit Product';
+      if (title) title.textContent = t('products.editProduct');
     }
   } else {
-    if (title) title.textContent = 'Add Product';
+    if (title) title.textContent = t('products.addProduct');
   }
 
   modal.classList.add('active');
@@ -775,8 +828,8 @@ function renderCustomers() {
       <td>${customer.email}</td>
       <td>${customer.address}</td>
       <td>
-        <button class="btn btn-small btn-secondary" onclick="editCustomer('${escapeHtml(customer.name)}')">Edit</button>
-        <button class="btn btn-small btn-danger" onclick="deleteCustomer('${escapeHtml(customer.name)}')">Delete</button>
+        <button class="btn btn-small btn-secondary" onclick="editCustomer('${escapeHtml(customer.name)}')">${ t('common.edit')}</button>
+        <button class="btn btn-small btn-danger" onclick="deleteCustomer('${escapeHtml(customer.name)}')">${ t('common.delete')}</button>
       </td>
     </tr>
   `).join('');
@@ -807,8 +860,8 @@ function filterCustomers() {
       <td>${customer.email}</td>
       <td>${customer.address}</td>
       <td>
-        <button class="btn btn-small btn-secondary" onclick="editCustomer('${escapeHtml(customer.name)}')">Edit</button>
-        <button class="btn btn-small btn-danger" onclick="deleteCustomer('${escapeHtml(customer.name)}')">Delete</button>
+        <button class="btn btn-small btn-secondary" onclick="editCustomer('${escapeHtml(customer.name)}')">${ t('common.edit')}</button>
+        <button class="btn btn-small btn-danger" onclick="deleteCustomer('${escapeHtml(customer.name)}')">${ t('common.delete')}</button>
       </td>
     </tr>
   `).join('');
@@ -833,10 +886,10 @@ function openCustomerModal(customerName?: string) {
       (document.getElementById('customerEmail') as HTMLInputElement).value = customer.email;
       (document.getElementById('customerAddress') as HTMLTextAreaElement).value = customer.address;
       currentEditingCustomer = customerName;
-      if (title) title.textContent = 'Edit Customer';
+      if (title) title.textContent = t('customers.editCustomer');
     }
   } else {
-    if (title) title.textContent = 'Add Customer';
+    if (title) title.textContent = t('customers.addCustomer');
   }
 
   modal.classList.add('active');
@@ -937,13 +990,13 @@ function renderInvoices() {
       <td><strong>${invoice.invoiceId}</strong></td>
       <td>${formatDate(invoice.date)}</td>
       <td>${invoice.customerName}</td>
-      <td>$${invoice.totalAmount.toFixed(2)}</td>
-      <td>$${invoice.totalProfit.toFixed(2)}</td>
-      <td><span class="badge badge-${getStatusBadgeClass(invoice.status)}">${invoice.status}</span></td>
+      <td>${formatCurrency(invoice.totalAmount)}</td>
+      <td>${formatCurrency(invoice.totalProfit)}</td>
+      <td><span class="badge badge-${getStatusBadgeClass(invoice.status)}">${translateStatus(invoice.status)}</span></td>
       <td>
-        <button class="btn btn-small btn-secondary" onclick="viewInvoice('${invoice.invoiceId}')">View</button>
-        <button class="btn btn-small btn-warning" onclick="editInvoiceStatus('${escapeHtml(invoice.invoiceId)}', '${escapeHtml(invoice.customerName)}', '${invoice.status}')">Edit Status</button>
-        <button class="btn btn-small btn-primary" onclick="printInvoice('${invoice.invoiceId}')">Print</button>
+        <button class="btn btn-small btn-secondary" onclick="viewInvoice('${invoice.invoiceId}')">${t('common.view')}</button>
+        <button class="btn btn-small btn-warning" onclick="editInvoiceStatus('${escapeHtml(invoice.invoiceId)}', '${escapeHtml(invoice.customerName)}', '${invoice.status}')">${t('sales.editStatus')}</button>
+        <button class="btn btn-small btn-primary" onclick="printInvoice('${invoice.invoiceId}')">${t('common.print')}</button>
       </td>
     </tr>
   `).join('');
@@ -1089,7 +1142,7 @@ function handleProductAutocomplete(e: Event) {
   dropdown.innerHTML = matches.map(p => `
     <div class="autocomplete-item" data-product='${JSON.stringify(p)}'>
       <strong>${highlightMatch(p.name, searchTerm)}</strong><br>
-      <small>Stock: ${p.quantity} | Price: $${p.salePrice.toFixed(2)}</small>
+      <small>Stock: ${p.quantity} | Price: ${formatCurrency(p.salePrice)}</small>
     </div>
   `).join('');
 
@@ -1179,9 +1232,9 @@ function renderInvoiceItems() {
     <tr>
       <td>${item.productName}</td>
       <td>${item.quantity}</td>
-      <td>$${item.unitPrice.toFixed(2)}</td>
-      <td>$${item.total.toFixed(2)}</td>
-      <td>$${item.profit.toFixed(2)}</td>
+      <td>${formatCurrency(item.unitPrice)}</td>
+      <td>${formatCurrency(item.total)}</td>
+      <td>${formatCurrency(item.profit)}</td>
       <td>
         <button class="btn btn-small btn-danger" onclick="removeInvoiceItem(${index})">Remove</button>
       </td>
@@ -1199,8 +1252,8 @@ function updateInvoiceSummary() {
   const totalAmount = currentInvoiceItems.reduce((sum, item) => sum + item.total, 0);
   const totalProfit = currentInvoiceItems.reduce((sum, item) => sum + item.profit, 0);
 
-  updateElement('invoiceTotalAmount', `$${totalAmount.toFixed(2)}`);
-  updateElement('invoiceTotalProfit', `$${totalProfit.toFixed(2)}`);
+  updateElement('invoiceTotalAmount', formatCurrency(totalAmount));
+  updateElement('invoiceTotalProfit', formatCurrency(totalProfit));
 }
 
 async function saveInvoice() {
@@ -1298,19 +1351,22 @@ function generateInvoiceId(): string {
 
 function generateInvoiceHTML(invoice: Invoice): string {
   const customer = workbookData.customers.find(c => c.name === invoice.customerName);
+  const isRTL = currentLanguage === 'ar';
+  const dir = isRTL ? 'rtl' : 'ltr';
   
   return `
     <!DOCTYPE html>
-    <html>
+    <html dir="${dir}">
     <head>
       <meta charset="UTF-8">
-      <title>Invoice ${invoice.invoiceId}</title>
+      <title>${t('sales.invoice')} ${invoice.invoiceId}</title>
       <style>
         body {
           font-family: Arial, sans-serif;
           padding: 40px;
           max-width: 800px;
           margin: 0 auto;
+          direction: ${dir};
         }
         .header {
           text-align: center;
@@ -1329,6 +1385,7 @@ function generateInvoiceHTML(invoice: Invoice): string {
         }
         .info-box {
           flex: 1;
+          text-align: ${isRTL ? 'right' : 'left'};
         }
         .info-box h3 {
           margin-top: 0;
@@ -1341,7 +1398,7 @@ function generateInvoiceHTML(invoice: Invoice): string {
         }
         th, td {
           padding: 12px;
-          text-align: left;
+          text-align: ${isRTL ? 'right' : 'left'};
           border-bottom: 1px solid #ddd;
         }
         th {
@@ -1350,16 +1407,16 @@ function generateInvoiceHTML(invoice: Invoice): string {
           color: #333;
         }
         .total-section {
-          text-align: right;
+          text-align: ${isRTL ? 'left' : 'right'};
           margin-top: 20px;
         }
         .total-row {
           display: flex;
-          justify-content: flex-end;
+          justify-content: ${isRTL ? 'flex-start' : 'flex-end'};
           padding: 8px 0;
         }
         .total-row span:first-child {
-          margin-right: 40px;
+          ${isRTL ? 'margin-left' : 'margin-right'}: 40px;
           font-weight: bold;
         }
         .grand-total {
@@ -1385,14 +1442,14 @@ function generateInvoiceHTML(invoice: Invoice): string {
     </head>
     <body>
       <div class="header">
-        <h1>INVOICE</h1>
-        <p>Invoice #: ${invoice.invoiceId}</p>
-        <p>Date: ${formatDate(invoice.date)}</p>
+        <h1>${t('sales.invoice').toUpperCase()}</h1>
+        <p>${t('sales.invoiceId')}: ${invoice.invoiceId}</p>
+        <p>${t('common.date')}: ${formatDate(invoice.date)}</p>
       </div>
 
       <div class="info-section">
         <div class="info-box">
-          <h3>Customer Information</h3>
+          <h3>${t('sales.customerInformation')}</h3>
           <p><strong>${invoice.customerName}</strong></p>
           ${customer ? `
             <p>${customer.phone}</p>
@@ -1401,19 +1458,19 @@ function generateInvoiceHTML(invoice: Invoice): string {
           ` : ''}
         </div>
         <div class="info-box">
-          <h3>Invoice Details</h3>
-          <p><strong>Status:</strong> ${invoice.status}</p>
-          <p><strong>Date:</strong> ${formatDate(invoice.date)}</p>
+          <h3>${t('sales.invoiceDetails')}</h3>
+          <p><strong>${t('common.status')}:</strong> ${translateStatus(invoice.status)}</p>
+          <p><strong>${t('common.date')}:</strong> ${formatDate(invoice.date)}</p>
         </div>
       </div>
 
       <table>
         <thead>
           <tr>
-            <th>Product</th>
-            <th>Quantity</th>
-            <th>Unit Price</th>
-            <th>Total</th>
+            <th>${t('common.product')}</th>
+            <th>${t('common.quantity')}</th>
+            <th>${t('sales.unitPrice')}</th>
+            <th>${t('common.total')}</th>
           </tr>
         </thead>
         <tbody>
@@ -1421,8 +1478,8 @@ function generateInvoiceHTML(invoice: Invoice): string {
             <tr>
               <td>${item.productName}</td>
               <td>${item.quantity}</td>
-              <td>$${item.unitPrice.toFixed(2)}</td>
-              <td>$${item.total.toFixed(2)}</td>
+              <td>${formatCurrency(item.unitPrice)}</td>
+              <td>${formatCurrency(item.total)}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -1430,14 +1487,14 @@ function generateInvoiceHTML(invoice: Invoice): string {
 
       <div class="total-section">
         <div class="total-row grand-total">
-          <span>TOTAL:</span>
-          <span>$${invoice.totalAmount.toFixed(2)}</span>
+          <span>${t('sales.total').toUpperCase()}:</span>
+          <span>${formatCurrency(invoice.totalAmount)}</span>
         </div>
       </div>
 
       <div class="footer">
-        <p>Thank you for your business!</p>
-        <p>Sales Manager - Professional Invoice System</p>
+        <p>${t('sales.thankYou')}</p>
+        <p>${t('app.title')} - ${t('sales.professionalInvoice')}</p>
       </div>
     </body>
     </html>
@@ -1490,30 +1547,43 @@ async function renderUsers() {
       return;
     }
 
-    const html = users.map((user: any) => `
-      <tr>
-        <td>${user.username}</td>
-        <td>${user.fullName}</td>
-        <td><span class="badge badge-${user.role.toLowerCase()}">${user.role}</span></td>
-        <td>${user.email || '-'}</td>
-        <td>${user.createdDate}</td>
-        <td><span class="badge ${user.isActive ? 'badge-success' : 'badge-danger'}">${user.isActive ? 'Active' : 'Inactive'}</span></td>
-        <td>
-          <button class="btn-icon" onclick="editUser('${user.username}')" title="Edit">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-            </svg>
-          </button>
-          <button class="btn-icon btn-danger" onclick="deleteUser('${user.username}')" title="Delete">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="3 6 5 6 21 6"/>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-            </svg>
-          </button>
-        </td>
-      </tr>
-    `).join('');
+    const html = users.map((user: any) => {
+      // Translate role
+      const roleMap: { [key: string]: string } = {
+        'Admin': t('users.admin'),
+        'Manager': t('users.manager'),
+        'Staff': t('users.staff')
+      };
+      const translatedRole = roleMap[user.role] || user.role;
+      
+      // Translate active status
+      const statusText = user.isActive ? t('users.active') : t('users.inactive');
+      
+      return `
+        <tr>
+          <td>${user.username}</td>
+          <td>${user.fullName}</td>
+          <td><span class="badge badge-${user.role.toLowerCase()}">${translatedRole}</span></td>
+          <td>${user.email || '-'}</td>
+          <td>${user.createdDate}</td>
+          <td><span class="badge ${user.isActive ? 'badge-success' : 'badge-danger'}">${statusText}</span></td>
+          <td>
+            <button class="btn-icon" onclick="editUser('${user.username}')" title="${t('common.edit')}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
+            <button class="btn-icon btn-danger" onclick="deleteUser('${user.username}')" title="${t('common.delete')}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
     
     console.log('Generated HTML:', html);
     tbody.innerHTML = html;
@@ -1536,7 +1606,7 @@ async function renderUsers() {
   const modalTitle = (document as any).getElementById('userModalTitle');
   const form = (document as any).getElementById('userForm');
 
-  modalTitle.textContent = 'Edit User';
+  modalTitle.textContent = t('users.editUser');
   (document as any).getElementById('userUsername').value = user.username;
   (document as any).getElementById('userUsername').disabled = true;
   (document as any).getElementById('userPassword').value = user.password;
@@ -1573,7 +1643,7 @@ async function renderUsers() {
   const modalTitle = (document as any).getElementById('userModalTitle');
   const form = (document as any).getElementById('userForm');
 
-  modalTitle.textContent = 'Add User';
+  modalTitle.textContent = t('users.addUser');
   form.reset();
   (document as any).getElementById('userUsername').disabled = false;
   (document as any).getElementById('userIsActive').checked = true;
@@ -1663,8 +1733,8 @@ function filterReports() {
   const invoiceCount = filteredInvoices.length;
 
   // Update summary
-  updateElement('reportTotalSales', `$${totalSales.toFixed(2)}`);
-  updateElement('reportTotalProfit', `$${totalProfit.toFixed(2)}`);
+  updateElement('reportTotalSales', formatCurrency(totalSales));
+  updateElement('reportTotalProfit', formatCurrency(totalProfit));
   updateElement('reportInvoiceCount', invoiceCount.toString());
 
   // Render sales by product
@@ -1700,8 +1770,8 @@ function renderSalesByProduct(invoices: Invoice[]) {
     <tr>
       <td><strong>${name}</strong></td>
       <td>${data.quantity}</td>
-      <td>$${data.sales.toFixed(2)}</td>
-      <td>$${data.profit.toFixed(2)}</td>
+      <td>${formatCurrency(data.sales)}</td>
+      <td>${formatCurrency(data.profit)}</td>
     </tr>
   `).join('');
 }
@@ -1736,6 +1806,16 @@ function updateElement(id: string, value: string) {
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
+  
+  // For Arabic and French, use simple dd/MM/YYYY format
+  if (currentLanguage === 'ar' || currentLanguage === 'fr') {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+  
+  // For English, use locale format
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
@@ -1833,7 +1913,7 @@ function renderInventory() {
   const lowStockCount = workbookData.products.filter(p => p.quantity < 10).length;
 
   (document as any).getElementById('totalStockItems').textContent = totalStockItems;
-  (document as any).getElementById('totalStockValue').textContent = `$${totalStockValue.toFixed(2)}`;
+  (document as any).getElementById('totalStockValue').textContent = formatCurrency(totalStockValue);
   (document as any).getElementById('lowStockCount').textContent = lowStockCount;
 
   // Render inventory movements table
@@ -1841,7 +1921,7 @@ function renderInventory() {
   if (!tbody) return;
 
   if (workbookData.inventory.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No inventory movements yet</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">${t('inventory.noMovements')}</td></tr>`;
     return;
   }
 
@@ -1952,11 +2032,11 @@ function renderAnalytics() {
   const yesterdayProfit = yesterdayInvoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
 
   // Update metrics
-  updateElement('todayProfitValue', `$${todayProfit.toFixed(2)}`);
+  updateElement('todayProfitValue', formatCurrency(todayProfit));
   updateElement('todayProfitChange', todayInvoices.length > 0 ? `${todayInvoices.length} orders` : 'No sales today');
-  updateElement('yesterdayProfitValue', `$${yesterdayProfit.toFixed(2)}`);
+  updateElement('yesterdayProfitValue', formatCurrency(yesterdayProfit));
   updateElement('yesterdayProfitChange', yesterdayInvoices.length > 0 ? `${yesterdayInvoices.length} orders` : 'No sales');
-  updateElement('avgOrderValue', `$${avgOrderValue.toFixed(2)}`);
+  updateElement('avgOrderValue', formatCurrency(avgOrderValue));
   updateElement('totalCustomersMetric', workbookData.customers.length.toString());
   updateElement('totalProductsSold', totalProductsSold.toString());
   updateElement('profitMarginMetric', `${profitMargin.toFixed(1)}%`);
@@ -2320,13 +2400,13 @@ editStatusForm?.addEventListener('submit', async (e: any) => {
   ((document as any).getElementById('detailInvoiceId') as any).textContent = invoice.invoiceId;
   ((document as any).getElementById('detailDate') as any).textContent = formatDate(invoice.date);
   ((document as any).getElementById('detailCustomer') as any).textContent = invoice.customerName;
-  ((document as any).getElementById('detailTotal') as any).textContent = `$${invoice.totalAmount.toFixed(2)}`;
-  ((document as any).getElementById('detailProfit') as any).textContent = `$${invoice.totalProfit.toFixed(2)}`;
+  ((document as any).getElementById('detailTotal') as any).textContent = formatCurrency(invoice.totalAmount);
+  ((document as any).getElementById('detailProfit') as any).textContent = formatCurrency(invoice.totalProfit);
   ((document as any).getElementById('detailStatus') as any).innerHTML = `<span class="badge badge-${getStatusBadgeClass(invoice.status)}">${invoice.status}</span>`;
   
   // Payment summary
-  ((document as any).getElementById('detailTotalPaid') as any).textContent = `$${totalPaid.toFixed(2)}`;
-  ((document as any).getElementById('detailBalance') as any).textContent = `$${balance.toFixed(2)}`;
+  ((document as any).getElementById('detailTotalPaid') as any).textContent = formatCurrency(totalPaid);
+  ((document as any).getElementById('detailBalance') as any).textContent = formatCurrency(balance);
   ((document as any).getElementById('detailBalance') as any).style.color = balance > 0 ? '#ef4444' : '#22c55e';
 
   // Render invoice items
@@ -2336,9 +2416,9 @@ editStatusForm?.addEventListener('submit', async (e: any) => {
       <tr>
         <td>${item.productName}</td>
         <td>${item.quantity}</td>
-        <td>$${item.unitPrice.toFixed(2)}</td>
-        <td>$${item.total.toFixed(2)}</td>
-        <td>$${item.profit.toFixed(2)}</td>
+        <td>${formatCurrency(item.unitPrice)}</td>
+        <td>${formatCurrency(item.total)}</td>
+        <td>${formatCurrency(item.profit)}</td>
       </tr>
     `).join('');
   }
@@ -2353,7 +2433,7 @@ editStatusForm?.addEventListener('submit', async (e: any) => {
         <tr>
           <td>${payment.paymentId}</td>
           <td>${formatDate(payment.date)}</td>
-          <td>$${payment.amount.toFixed(2)}</td>
+          <td>${formatCurrency(payment.amount)}</td>
           <td>${payment.method}</td>
           <td>${payment.notes || '-'}</td>
         </tr>
@@ -2481,6 +2561,7 @@ const originalOpenProductModal = (window as any).openProductModal;
 function handleSaveSettings() {
   // Update settings from form
   appSettings.language = (document.getElementById('languageSelect') as HTMLSelectElement).value;
+  appSettings.currency = (document.getElementById('currencySelect') as HTMLSelectElement).value;
   appSettings.theme = (document.getElementById('themeSelect') as HTMLSelectElement).value;
   appSettings.fontSize = (document.getElementById('fontSizeSelect') as HTMLSelectElement).value;
   appSettings.autoBackup = (document.getElementById('autoBackupToggle') as HTMLInputElement).checked;
@@ -2503,11 +2584,12 @@ function handleResetSettings() {
     language: 'en',
     theme: 'light',
     fontSize: 'medium',
+    currency: 'USD',
     autoBackup: true,
     backupRetention: 5,
     lowStockNotifications: true,
     soundNotifications: true,
-    startupBehavior: 'defaultWorkbook',
+    startupBehavior: 'lastWorkbook',
     autoRefresh: false
   };
 

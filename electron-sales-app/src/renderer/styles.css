@@ -181,21 +181,31 @@ body {
 }
 
 .app-title {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-weight: 800;
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
     letter-spacing: -0.02em;
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    margin: 0;
 }
 
 .app-title svg {
-    stroke: url(#gradient);
-    filter: drop-shadow(0 2px 4px rgba(99, 102, 241, 0.3));
+    filter: drop-shadow(0 2px 4px rgba(79, 70, 229, 0.25));
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.app-title:hover svg {
+    transform: scale(1.08) rotate(3deg);
+}
+
+.app-title span {
+    background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary-color) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+    letter-spacing: -0.5px;
 }
 
 .workbook-path {
@@ -339,6 +349,7 @@ body {
     border: 1px solid var(--border-color);
     position: relative;
     overflow: hidden;
+    text-align: center;
 }
 
 .stat-card::before {
@@ -1059,8 +1070,11 @@ select.form-control {
     border-radius: var(--radius-lg);
     padding: 1.5rem;
     display: flex;
+    flex-direction: column;
+    align-items: center;
     gap: 1rem;
     transition: var(--transition-base);
+    text-align: center;
 }
 
 .metric-card:hover {
@@ -1097,6 +1111,7 @@ select.form-control {
 
 .metric-info {
     flex: 1;
+    text-align: center;
 }
 
 .metric-info h4 {
@@ -1474,6 +1489,131 @@ select.form-control {
     .settings-actions .btn {
         width: 100%;
     }
+}
+
+/* RTL (Right-to-Left) Support for Arabic */
+body[dir="rtl"],
+html[dir="rtl"] {
+    direction: rtl;
+}
+
+/* RTL Table Alignment */
+body[dir="rtl"] .data-table th,
+html[dir="rtl"] .data-table th {
+    text-align: right;
+}
+
+body[dir="rtl"] .data-table td,
+html[dir="rtl"] .data-table td {
+    text-align: right;
+}
+
+/* RTL Form Labels */
+body[dir="rtl"] label,
+html[dir="rtl"] label {
+    text-align: right;
+}
+
+/* RTL Navigation */
+body[dir="rtl"] .nav-tabs,
+html[dir="rtl"] .nav-tabs {
+    /* Reverse order AND align to right: Dashboard first on right, Settings last on left */
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+}
+
+body[dir="rtl"] .nav-tab,
+html[dir="rtl"] .nav-tab {
+    /* Reverse icon and text within each tab */
+    flex-direction: row-reverse;
+}
+
+/* RTL Buttons in action columns */
+body[dir="rtl"] .data-table td:last-child,
+html[dir="rtl"] .data-table td:last-child {
+    text-align: right;
+}
+
+/* RTL Button groups in tables */
+body[dir="rtl"] .data-table .btn,
+html[dir="rtl"] .data-table .btn {
+    margin-left: 0;
+    margin-right: 0.5rem;
+}
+
+body[dir="rtl"] .data-table .btn:last-child,
+html[dir="rtl"] .data-table .btn:last-child {
+    margin-right: 0;
+}
+
+/* RTL Status badges */
+body[dir="rtl"] .status-badge,
+html[dir="rtl"] .status-badge {
+    margin-left: 0;
+    margin-right: auto;
+}
+
+/* RTL Modal Actions */
+body[dir="rtl"] .modal-actions,
+html[dir="rtl"] .modal-actions {
+    flex-direction: row-reverse;
+}
+
+/* RTL Stats Cards */
+body[dir="rtl"] .stat-card,
+html[dir="rtl"] .stat-card {
+    text-align: center;
+}
+
+/* RTL Form Groups */
+body[dir="rtl"] .form-group,
+html[dir="rtl"] .form-group {
+    text-align: right;
+}
+
+/* RTL Checkbox Labels */
+body[dir="rtl"] .checkbox-label,
+html[dir="rtl"] .checkbox-label {
+    flex-direction: row-reverse;
+}
+
+/* RTL Settings Groups */
+body[dir="rtl"] .settings-group,
+html[dir="rtl"] .settings-group {
+    text-align: right;
+}
+
+/* RTL Invoice Summary */
+body[dir="rtl"] .invoice-summary,
+html[dir="rtl"] .invoice-summary {
+    text-align: right;
+}
+
+body[dir="rtl"] .summary-row,
+html[dir="rtl"] .summary-row {
+    flex-direction: row-reverse;
+}
+
+/* RTL Report Summary */
+body[dir="rtl"] .report-summary,
+html[dir="rtl"] .report-summary {
+    direction: rtl;
+}
+
+body[dir="rtl"] .summary-card,
+html[dir="rtl"] .summary-card {
+    text-align: center;
+}
+
+/* RTL Analytics Metrics */
+body[dir="rtl"] .metric-card,
+html[dir="rtl"] .metric-card {
+    text-align: center;
+}
+
+body[dir="rtl"] .metric-info,
+html[dir="rtl"] .metric-info {
+    text-align: center;
 }
 
 /* Print Styles */
