@@ -20,6 +20,23 @@ export interface ElectronAPI {
   getWorkbookPath: () => Promise<any>;
   showMessage: (options: { type: string; title: string; message: string }) => Promise<any>;
   showConfirm: (options: { title: string; message: string }) => Promise<any>;
+  addPayment: (payment: any) => Promise<any>;
+  getPaymentsByInvoice: (invoiceId: string) => Promise<any>;
+  getLowStockProducts: () => Promise<any>;
+  showNotification: (options: { title: string; body: string }) => Promise<any>;
+  exportInvoicePDF: (invoice: any) => Promise<any>;
+  exportProductsCSV: () => Promise<any>;
+  exportCustomersCSV: () => Promise<any>;
+  exportSalesCSV: () => Promise<any>;
+  exportInvoicesCSV: () => Promise<any>;
+  exportAllCSV: () => Promise<any>;
+  printInvoicePDF: (invoice: any) => Promise<any>;
+  convertCurrency: (amount: number, fromCurrency: string, toCurrency: string) => Promise<any>;
+  authenticateUser: (username: string, password: string) => Promise<any>;
+  getUsers: () => Promise<any>;
+  addUser: (user: any) => Promise<any>;
+  updateUser: (username: string, user: any) => Promise<any>;
+  deleteUser: (username: string) => Promise<any>;
 }
 
 // Expose protected methods that allow the renderer process to use
@@ -42,5 +59,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
   printInvoice: (html: string) => ipcRenderer.invoke('print-invoice', html),
   getWorkbookPath: () => ipcRenderer.invoke('get-workbook-path'),
   showMessage: (options: { type: string; title: string; message: string }) => ipcRenderer.invoke('show-message', options),
-  showConfirm: (options: { title: string; message: string }) => ipcRenderer.invoke('show-confirm', options)
+  showConfirm: (options: { title: string; message: string }) => ipcRenderer.invoke('show-confirm', options),
+  addPayment: (payment: any) => ipcRenderer.invoke('add-payment', payment),
+  getPaymentsByInvoice: (invoiceId: string) => ipcRenderer.invoke('get-payments-by-invoice', invoiceId),
+  getLowStockProducts: () => ipcRenderer.invoke('get-low-stock-products'),
+  showNotification: (options: { title: string; body: string }) => ipcRenderer.invoke('show-notification', options),
+  exportInvoicePDF: (invoice: any) => ipcRenderer.invoke('export-invoice-pdf', invoice),
+  exportProductsCSV: () => ipcRenderer.invoke('export-products-csv'),
+  exportCustomersCSV: () => ipcRenderer.invoke('export-customers-csv'),
+  exportSalesCSV: () => ipcRenderer.invoke('export-sales-csv'),
+  exportInvoicesCSV: () => ipcRenderer.invoke('export-invoices-csv'),
+  exportAllCSV: () => ipcRenderer.invoke('export-all-csv'),
+  printInvoicePDF: (invoice: any) => ipcRenderer.invoke('print-invoice-pdf', invoice),
+  convertCurrency: (amount: number, fromCurrency: string, toCurrency: string) => ipcRenderer.invoke('convert-currency', amount, fromCurrency, toCurrency),
+  authenticateUser: (username: string, password: string) => ipcRenderer.invoke('authenticate-user', username, password),
+  getUsers: () => ipcRenderer.invoke('get-users'),
+  addUser: (user: any) => ipcRenderer.invoke('add-user', user),
+  updateUser: (username: string, user: any) => ipcRenderer.invoke('update-user', username, user),
+  deleteUser: (username: string) => ipcRenderer.invoke('delete-user', username)
 } as ElectronAPI);

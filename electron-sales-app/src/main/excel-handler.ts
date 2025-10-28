@@ -10,6 +10,27 @@ export interface Product {
   reorderLevel?: number;
   category?: string;
   sku?: string;
+  currency?: string;
+}
+
+export interface Payment {
+  paymentId: string;
+  invoiceId: string;
+  date: string;
+  amount: number;
+  method: string;
+  notes: string;
+  currency?: string;
+}
+
+export interface User {
+  username: string;
+  password: string;
+  fullName: string;
+  role: 'Admin' | 'Manager' | 'Cashier';
+  email?: string;
+  createdDate: string;
+  isActive: boolean;
 }
 
 export interface Customer {
@@ -27,6 +48,7 @@ export interface Sale {
   unitPrice: number;
   total: number;
   profit: number;
+  currency?: string;
 }
 
 export interface Invoice {
@@ -37,6 +59,7 @@ export interface Invoice {
   totalProfit: number;
   status: string;
   items: Sale[];
+  currency?: string;
 }
 
 export interface InventoryMovement {
@@ -55,6 +78,8 @@ export interface WorkbookData {
   sales: Sale[];
   invoices: Invoice[];
   inventory: InventoryMovement[];
+  payments: Payment[];
+  users: User[];
 }
 
 export class ExcelHandler {
@@ -68,6 +93,46 @@ export class ExcelHandler {
   async ensureWorkbook(): Promise<void> {
     if (!fs.existsSync(this.workbookPath)) {
       await this.createDefaultWorkbook();
+    } else {
+      // Check if Users sheet exists, if not add it
+      await this.ensureUsersSheet();
+    }
+  }
+
+  private async ensureUsersSheet(): Promise<void> {
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(this.workbookPath);
+    
+    const usersSheet = workbook.getWorksheet('Users');
+    if (!usersSheet) {
+      console.log('Users sheet not found, creating it...');
+      
+      // Create Users sheet
+      const newUsersSheet = workbook.addWorksheet('Users');
+      newUsersSheet.columns = [
+        { header: 'Username', key: 'username', width: 20 },
+        { header: 'Password', key: 'password', width: 20 },
+        { header: 'FullName', key: 'fullName', width: 25 },
+        { header: 'Role', key: 'role', width: 15 },
+        { header: 'Email', key: 'email', width: 25 },
+        { header: 'CreatedDate', key: 'createdDate', width: 15 },
+        { header: 'IsActive', key: 'isActive', width: 10 }
+      ];
+      newUsersSheet.getRow(1).font = { bold: true };
+
+      // Add default admin user
+      newUsersSheet.addRow({
+        username: 'admin',
+        password: 'admin123',
+        fullName: 'Administrator',
+        role: 'Admin',
+        email: 'admin@salesmanager.com',
+        createdDate: new Date().toISOString().split('T')[0],
+        isActive: true
+      });
+
+      await workbook.xlsx.writeFile(this.workbookPath);
+      console.log('Users sheet created with default admin user');
     }
   }
 
@@ -80,7 +145,9 @@ export class ExcelHandler {
       { header: 'ProductName', key: 'name', width: 25 },
       { header: 'Quantity', key: 'quantity', width: 12 },
       { header: 'BuyPrice', key: 'buyPrice', width: 12 },
-      { header: 'SalePrice', key: 'salePrice', width: 12 }
+      { header: 'SalePrice', key: 'salePrice', width: 12 },
+      { header: 'ReorderLevel', key: 'reorderLevel', width: 15 },
+      { header: 'Currency', key: 'currency', width: 10 }
     ];
     productsSheet.getRow(1).font = { bold: true };
 
@@ -103,7 +170,8 @@ export class ExcelHandler {
       { header: 'Quantity', key: 'quantity', width: 12 },
       { header: 'UnitPrice', key: 'unitPrice', width: 12 },
       { header: 'Total', key: 'total', width: 12 },
-      { header: 'Profit', key: 'profit', width: 12 }
+      { header: 'Profit', key: 'profit', width: 12 },
+      { header: 'Currency', key: 'currency', width: 10 }
     ];
     salesSheet.getRow(1).font = { bold: true };
 
@@ -115,7 +183,8 @@ export class ExcelHandler {
       { header: 'CustomerName', key: 'customerName', width: 25 },
       { header: 'TotalAmount', key: 'totalAmount', width: 15 },
       { header: 'TotalProfit', key: 'totalProfit', width: 15 },
-      { header: 'Status', key: 'status', width: 12 }
+      { header: 'Status', key: 'status', width: 12 },
+      { header: 'Currency', key: 'currency', width: 10 }
     ];
     invoicesSheet.getRow(1).font = { bold: true };
 
@@ -132,6 +201,43 @@ export class ExcelHandler {
     ];
     inventorySheet.getRow(1).font = { bold: true };
 
+    // Payments sheet
+    const paymentsSheet = workbook.addWorksheet('Payments');
+    paymentsSheet.columns = [
+      { header: 'PaymentID', key: 'paymentId', width: 15 },
+      { header: 'InvoiceID', key: 'invoiceId', width: 15 },
+      { header: 'Date', key: 'date', width: 12 },
+      { header: 'Amount', key: 'amount', width: 12 },
+      { header: 'Method', key: 'method', width: 15 },
+      { header: 'Notes', key: 'notes', width: 30 },
+      { header: 'Currency', key: 'currency', width: 10 }
+    ];
+    paymentsSheet.getRow(1).font = { bold: true };
+
+    // Users sheet
+    const usersSheet = workbook.addWorksheet('Users');
+    usersSheet.columns = [
+      { header: 'Username', key: 'username', width: 20 },
+      { header: 'Password', key: 'password', width: 20 },
+      { header: 'FullName', key: 'fullName', width: 25 },
+      { header: 'Role', key: 'role', width: 15 },
+      { header: 'Email', key: 'email', width: 25 },
+      { header: 'CreatedDate', key: 'createdDate', width: 15 },
+      { header: 'IsActive', key: 'isActive', width: 10 }
+    ];
+    usersSheet.getRow(1).font = { bold: true };
+
+    // Add default admin user
+    usersSheet.addRow({
+      username: 'admin',
+      password: 'admin123',
+      fullName: 'Administrator',
+      role: 'Admin',
+      email: 'admin@salesmanager.com',
+      createdDate: new Date().toISOString().split('T')[0],
+      isActive: true
+    });
+
     await workbook.xlsx.writeFile(this.workbookPath);
   }
 
@@ -146,8 +252,10 @@ export class ExcelHandler {
     const sales = this.readSales(workbook);
     const invoices = this.readInvoices(workbook, sales);
     const inventory = this.readInventory(workbook);
+    const payments = this.readPayments(workbook);
+    const users = this.readUsers(workbook);
 
-    return { products, customers, sales, invoices, inventory };
+    return { products, customers, sales, invoices, inventory, payments, users };
   }
 
   private readProducts(workbook: ExcelJS.Workbook): Product[] {
@@ -165,7 +273,8 @@ export class ExcelHandler {
         name: String(name),
         quantity: this.getNumericValue(row, 2),
         buyPrice: this.getNumericValue(row, 3),
-        salePrice: this.getNumericValue(row, 4)
+        salePrice: this.getNumericValue(row, 4),
+        reorderLevel: this.getNumericValue(row, 5) || 10 // Default reorder level
       });
     });
 
@@ -275,6 +384,30 @@ export class ExcelHandler {
     return inventory;
   }
 
+  private readPayments(workbook: ExcelJS.Workbook): Payment[] {
+    const sheet = workbook.getWorksheet('Payments');
+    if (!sheet) return [];
+
+    const payments: Payment[] = [];
+    sheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return; // Skip header
+
+      const paymentId = this.getCellValue(row, 1);
+      if (!paymentId) return;
+
+      payments.push({
+        paymentId: String(paymentId),
+        invoiceId: String(this.getCellValue(row, 2) || ''),
+        date: String(this.getCellValue(row, 3) || ''),
+        amount: this.getNumericValue(row, 4),
+        method: String(this.getCellValue(row, 5) || 'Cash'),
+        notes: String(this.getCellValue(row, 6) || '')
+      });
+    });
+
+    return payments;
+  }
+
   private getCellValue(row: ExcelJS.Row, colNumber: number): any {
     const cell = row.getCell(colNumber);
     return cell.value;
@@ -294,7 +427,7 @@ export class ExcelHandler {
       throw new Error('Products sheet not found');
     }
 
-    sheet.addRow([product.name, product.quantity, product.buyPrice, product.salePrice]);
+    sheet.addRow([product.name, product.quantity, product.buyPrice, product.salePrice, product.reorderLevel || 10]);
     await this.saveWorkbook(workbook);
   }
 
@@ -314,6 +447,7 @@ export class ExcelHandler {
         row.getCell(2).value = product.quantity;
         row.getCell(3).value = product.buyPrice;
         row.getCell(4).value = product.salePrice;
+        row.getCell(5).value = product.reorderLevel || 10;
         found = true;
       }
     });
@@ -616,5 +750,226 @@ export class ExcelHandler {
 
   setWorkbookPath(newPath: string): void {
     this.workbookPath = newPath;
+  }
+
+  async addPayment(payment: Payment): Promise<void> {
+    const workbook = await this.loadWorkbook();
+    const paymentsSheet = workbook.getWorksheet('Payments');
+    
+    if (!paymentsSheet) {
+      throw new Error('Payments sheet not found');
+    }
+
+    paymentsSheet.addRow([
+      payment.paymentId,
+      payment.invoiceId,
+      payment.date,
+      payment.amount,
+      payment.method,
+      payment.notes
+    ]);
+
+    // Update invoice status if fully paid
+    await this.checkAndUpdateInvoicePaymentStatus(workbook, payment.invoiceId);
+
+    await this.saveWorkbook(workbook);
+  }
+
+  private async checkAndUpdateInvoicePaymentStatus(workbook: ExcelJS.Workbook, invoiceId: string): Promise<void> {
+    const invoicesSheet = workbook.getWorksheet('Invoices');
+    const paymentsSheet = workbook.getWorksheet('Payments');
+    
+    if (!invoicesSheet || !paymentsSheet) return;
+
+    // Get invoice total
+    let invoiceTotal = 0;
+    invoicesSheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return;
+      if (String(row.getCell(1).value) === invoiceId) {
+        invoiceTotal = this.getNumericValue(row, 4);
+      }
+    });
+
+    // Calculate total payments
+    let totalPaid = 0;
+    paymentsSheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return;
+      if (String(row.getCell(2).value) === invoiceId) {
+        totalPaid += this.getNumericValue(row, 4);
+      }
+    });
+
+    // Update invoice status
+    invoicesSheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return;
+      if (String(row.getCell(1).value) === invoiceId) {
+        if (totalPaid >= invoiceTotal) {
+          row.getCell(6).value = 'Paid';
+        } else if (totalPaid > 0) {
+          row.getCell(6).value = 'Partial';
+        } else {
+          row.getCell(6).value = 'Pending';
+        }
+      }
+    });
+  }
+
+  async getPaymentsByInvoice(invoiceId: string): Promise<Payment[]> {
+    const data = await this.readWorkbook();
+    return data.payments.filter(p => p.invoiceId === invoiceId);
+  }
+
+  async getLowStockProducts(): Promise<Product[]> {
+    const data = await this.readWorkbook();
+    return data.products.filter(p => p.quantity <= (p.reorderLevel || 10));
+  }
+
+  // User Management Methods
+  private readUsers(workbook: ExcelJS.Workbook): User[] {
+    const sheet = workbook.getWorksheet('Users');
+    if (!sheet) {
+      console.log('Users sheet not found');
+      return [];
+    }
+
+    const users: User[] = [];
+    sheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return; // Skip header
+
+      const username = String(row.getCell(1).value || '');
+      const password = String(row.getCell(2).value || '');
+      
+      // Only add users with valid username and password
+      if (username && password) {
+        users.push({
+          username,
+          password,
+          fullName: String(row.getCell(3).value || ''),
+          role: String(row.getCell(4).value || 'Cashier') as 'Admin' | 'Manager' | 'Cashier',
+          email: String(row.getCell(5).value || ''),
+          createdDate: String(row.getCell(6).value || ''),
+          isActive: row.getCell(7).value === true || row.getCell(7).value === 'true' || row.getCell(7).value === 1
+        });
+      }
+    });
+
+    console.log(`Found ${users.length} users in database`);
+    return users;
+  }
+
+  async addUser(user: User): Promise<void> {
+    const workbook = await this.loadWorkbook();
+    const sheet = workbook.getWorksheet('Users');
+    
+    if (!sheet) {
+      throw new Error('Users sheet not found');
+    }
+
+    // Check if username already exists
+    let exists = false;
+    sheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return;
+      if (String(row.getCell(1).value) === user.username) {
+        exists = true;
+      }
+    });
+
+    if (exists) {
+      throw new Error(`Username "${user.username}" already exists`);
+    }
+
+    sheet.addRow([
+      user.username,
+      user.password,
+      user.fullName,
+      user.role,
+      user.email || '',
+      user.createdDate,
+      user.isActive
+    ]);
+    
+    await this.saveWorkbook(workbook);
+  }
+
+  async updateUser(username: string, user: User): Promise<void> {
+    const workbook = await this.loadWorkbook();
+    const sheet = workbook.getWorksheet('Users');
+    
+    if (!sheet) {
+      throw new Error('Users sheet not found');
+    }
+
+    let found = false;
+    sheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return;
+      if (String(row.getCell(1).value) === username) {
+        row.getCell(1).value = user.username;
+        row.getCell(2).value = user.password;
+        row.getCell(3).value = user.fullName;
+        row.getCell(4).value = user.role;
+        row.getCell(5).value = user.email || '';
+        row.getCell(6).value = user.createdDate;
+        row.getCell(7).value = user.isActive;
+        found = true;
+      }
+    });
+
+    if (!found) {
+      throw new Error(`User "${username}" not found`);
+    }
+
+    await this.saveWorkbook(workbook);
+  }
+
+  async deleteUser(username: string): Promise<void> {
+    const workbook = await this.loadWorkbook();
+    const sheet = workbook.getWorksheet('Users');
+    
+    if (!sheet) {
+      throw new Error('Users sheet not found');
+    }
+
+    // Prevent deleting the last admin
+    const users = this.readUsers(workbook);
+    const admins = users.filter(u => u.role === 'Admin' && u.isActive);
+    const userToDelete = users.find(u => u.username === username);
+    
+    if (userToDelete?.role === 'Admin' && admins.length === 1) {
+      throw new Error('Cannot delete the last admin user');
+    }
+
+    let rowToDelete: number | null = null;
+    sheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return;
+      if (String(row.getCell(1).value) === username) {
+        rowToDelete = rowNumber;
+      }
+    });
+
+    if (rowToDelete) {
+      sheet.spliceRows(rowToDelete, 1);
+      await this.saveWorkbook(workbook);
+    } else {
+      throw new Error(`User "${username}" not found`);
+    }
+  }
+
+  async authenticateUser(username: string, password: string): Promise<User | null> {
+    const data = await this.readWorkbook();
+    console.log(`Authenticating user: ${username}`);
+    console.log(`Total users in database: ${data.users.length}`);
+    
+    const user = data.users.find(u => {
+      console.log(`Checking user: ${u.username}, active: ${u.isActive}`);
+      return u.username === username && u.password === password && u.isActive;
+    });
+    
+    if (user) {
+      console.log(`Authentication successful for: ${username}`);
+    } else {
+      console.log(`Authentication failed for: ${username}`);
+    }
+    
+    return user || null;
   }
 }

@@ -7,6 +7,16 @@ interface Product {
   quantity: number;
   buyPrice: number;
   salePrice: number;
+  reorderLevel?: number;
+}
+
+interface Payment {
+  paymentId: string;
+  invoiceId: string;
+  date: string;
+  amount: number;
+  method: string;
+  notes: string;
 }
 
 interface Customer {
@@ -52,6 +62,7 @@ interface WorkbookData {
   sales: Sale[];
   invoices: Invoice[];
   inventory: InventoryMovement[];
+  payments: Payment[];
 }
 
 // Global state
@@ -60,7 +71,8 @@ let workbookData: WorkbookData = {
   customers: [],
   sales: [],
   invoices: [],
-  inventory: []
+  inventory: [],
+  payments: []
 };
 
 let currentEditingProduct: string | null = null;
@@ -109,6 +121,7 @@ async function loadWorkbookData() {
       workbookData = result.data;
       updateWorkbookPath();
       renderAllData();
+      checkLowStockAndNotify();
       showToast('Data loaded successfully', 'success');
     } else {
       showToast(result.message || 'Failed to load data', 'error');
@@ -211,6 +224,7 @@ function switchTab(tabName: string | null) {
   // Refresh data when switching to certain tabs
   if (tabName === 'dashboard') renderDashboard();
   if (tabName === 'reports') renderReports();
+  if (tabName === 'users') renderUsers();
 }
 
 // Theme toggle
@@ -247,6 +261,7 @@ function renderAllData() {
   renderInventory();
   renderAnalytics();
   renderReports();
+  renderUsers();
 }
 
 // Dashboard rendering
@@ -1149,6 +1164,199 @@ function renderReports() {
   filterReports();
 }
 
+// Users rendering
+async function renderUsers() {
+  console.log('renderUsers called');
+  
+  // Check if Users tab is visible
+  const usersTab = (document as any).getElementById('usersTab');
+  if (usersTab) {
+    const isVisible = usersTab.classList.contains('active');
+    const displayStyle = window.getComputedStyle(usersTab).display;
+    console.log('Users tab active:', isVisible, 'display:', displayStyle);
+  }
+  
+  const tbody = (document as any).getElementById('usersTableBody');
+  if (!tbody) {
+    console.log('usersTableBody not found');
+    return;
+  }
+  
+  console.log('tbody element:', tbody);
+  console.log('tbody visible:', tbody.offsetParent !== null);
+
+  try {
+    console.log('Calling api.getUsers()');
+    const result = await api.getUsers();
+    console.log('getUsers result:', result);
+    
+    if (!result.success || !result.users) {
+      console.log('Failed to load users or no users in result');
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Failed to load users</td></tr>';
+      return;
+    }
+
+    const users = result.users;
+    console.log('Users array:', users);
+
+    if (users.length === 0) {
+      console.log('No users found in array');
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No users found</td></tr>';
+      return;
+    }
+
+    const html = users.map((user: any) => `
+      <tr>
+        <td>${user.username}</td>
+        <td>${user.fullName}</td>
+        <td><span class="badge badge-${user.role.toLowerCase()}">${user.role}</span></td>
+        <td>${user.email || '-'}</td>
+        <td>${user.createdDate}</td>
+        <td><span class="badge ${user.isActive ? 'badge-success' : 'badge-danger'}">${user.isActive ? 'Active' : 'Inactive'}</span></td>
+        <td>
+          <button class="btn-icon" onclick="editUser('${user.username}')" title="Edit">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button class="btn-icon btn-danger" onclick="deleteUser('${user.username}')" title="Delete">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+    
+    console.log('Generated HTML:', html);
+    tbody.innerHTML = html;
+    console.log('tbody.innerHTML set, rows count:', tbody.querySelectorAll('tr').length);
+  } catch (error) {
+    console.error('Error in renderUsers:', error);
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Error loading users</td></tr>';
+  }
+}
+
+// User modal functions
+(window as any).editUser = async (username: string) => {
+  const result = await api.getUsers();
+  if (!result.success) return;
+
+  const user = result.users.find((u: any) => u.username === username);
+  if (!user) return;
+
+  const modal = (document as any).getElementById('userModal');
+  const modalTitle = (document as any).getElementById('userModalTitle');
+  const form = (document as any).getElementById('userForm');
+
+  modalTitle.textContent = 'Edit User';
+  (document as any).getElementById('userUsername').value = user.username;
+  (document as any).getElementById('userUsername').disabled = true;
+  (document as any).getElementById('userPassword').value = user.password;
+  (document as any).getElementById('userFullName').value = user.fullName;
+  (document as any).getElementById('userRole').value = user.role;
+  (document as any).getElementById('userEmail').value = user.email || '';
+  (document as any).getElementById('userIsActive').checked = user.isActive;
+
+  form.dataset.mode = 'edit';
+  form.dataset.originalUsername = username;
+  modal.style.display = 'flex';
+};
+
+(window as any).deleteUser = async (username: string) => {
+  const confirmed = await api.showConfirm({
+    title: 'Delete User',
+    message: `Are you sure you want to delete user "${username}"?`
+  });
+
+  if (confirmed) {
+    const result = await api.deleteUser(username);
+    if (result.success) {
+      showToast('User deleted successfully');
+      await loadWorkbookData();
+    } else {
+      showToast(result.message || 'Failed to delete user', 'error');
+    }
+  }
+};
+
+// Add user button handler
+(document as any).getElementById('addUserBtn')?.addEventListener('click', () => {
+  const modal = (document as any).getElementById('userModal');
+  const modalTitle = (document as any).getElementById('userModalTitle');
+  const form = (document as any).getElementById('userForm');
+
+  modalTitle.textContent = 'Add User';
+  form.reset();
+  (document as any).getElementById('userUsername').disabled = false;
+  (document as any).getElementById('userIsActive').checked = true;
+  form.dataset.mode = 'add';
+  modal.style.display = 'flex';
+});
+
+// User modal close handlers
+const userModal = (document as any).getElementById('userModal');
+if (userModal) {
+  // Close button (X)
+  const closeBtn = userModal.querySelector('.modal-close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      userModal.style.display = 'none';
+    });
+  }
+  
+  // Cancel button
+  const cancelBtn = userModal.querySelector('.modal-cancel');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', () => {
+      userModal.style.display = 'none';
+    });
+  }
+  
+  // Click outside to close
+  userModal.addEventListener('click', (e: any) => {
+    if (e.target === userModal) {
+      userModal.style.display = 'none';
+    }
+  });
+}
+
+// User form submit handler
+(document as any).getElementById('userForm')?.addEventListener('submit', async (e: any) => {
+  e.preventDefault();
+
+  const form = e.target;
+  const mode = form.dataset.mode;
+
+  const user = {
+    username: (document as any).getElementById('userUsername').value,
+    password: (document as any).getElementById('userPassword').value,
+    fullName: (document as any).getElementById('userFullName').value,
+    role: (document as any).getElementById('userRole').value,
+    email: (document as any).getElementById('userEmail').value,
+    createdDate: new Date().toISOString().split('T')[0],
+    isActive: (document as any).getElementById('userIsActive').checked
+  };
+
+  let result;
+  if (mode === 'edit') {
+    const originalUsername = form.dataset.originalUsername;
+    result = await api.updateUser(originalUsername, user);
+  } else {
+    result = await api.addUser(user);
+  }
+
+  if (result.success) {
+    showToast(`User ${mode === 'edit' ? 'updated' : 'added'} successfully`);
+    (document as any).getElementById('userModal').style.display = 'none';
+    await loadWorkbookData();
+  } else {
+    showToast(result.message || 'Failed to save user', 'error');
+  }
+});
+
 function filterReports() {
   const fromDateInput = document.getElementById('reportFromDate') as HTMLInputElement;
   const toDateInput = document.getElementById('reportToDate') as HTMLInputElement;
@@ -1802,3 +2010,181 @@ editStatusForm?.addEventListener('submit', async (e: any) => {
     showToast(result.message || 'Failed to update status', 'error');
   }
 });
+
+// ============================================
+// PAYMENT TRACKING FEATURE
+// ============================================
+
+// View invoice with payment tracking
+(window as any).viewInvoiceWithPayments = async (invoiceId: string) => {
+  const invoice = workbookData.invoices.find(inv => inv.invoiceId === invoiceId);
+  if (!invoice) return;
+
+  const modal = (document as any).getElementById('invoiceDetailsModal');
+  if (!modal) return;
+
+  // Get payments for this invoice
+  const paymentsResult = await api.getPaymentsByInvoice(invoiceId);
+  const payments = paymentsResult.success ? paymentsResult.payments : [];
+
+  // Calculate payment summary
+  const totalPaid = payments.reduce((sum: number, p: Payment) => sum + p.amount, 0);
+  const balance = invoice.totalAmount - totalPaid;
+
+  // Populate invoice details
+  ((document as any).getElementById('detailInvoiceId') as any).textContent = invoice.invoiceId;
+  ((document as any).getElementById('detailDate') as any).textContent = formatDate(invoice.date);
+  ((document as any).getElementById('detailCustomer') as any).textContent = invoice.customerName;
+  ((document as any).getElementById('detailTotal') as any).textContent = `$${invoice.totalAmount.toFixed(2)}`;
+  ((document as any).getElementById('detailProfit') as any).textContent = `$${invoice.totalProfit.toFixed(2)}`;
+  ((document as any).getElementById('detailStatus') as any).innerHTML = `<span class="badge badge-${getStatusBadgeClass(invoice.status)}">${invoice.status}</span>`;
+  
+  // Payment summary
+  ((document as any).getElementById('detailTotalPaid') as any).textContent = `$${totalPaid.toFixed(2)}`;
+  ((document as any).getElementById('detailBalance') as any).textContent = `$${balance.toFixed(2)}`;
+  ((document as any).getElementById('detailBalance') as any).style.color = balance > 0 ? '#ef4444' : '#22c55e';
+
+  // Render invoice items
+  const itemsBody = (document as any).getElementById('invoiceItemsBody');
+  if (itemsBody) {
+    itemsBody.innerHTML = invoice.items.map((item: Sale) => `
+      <tr>
+        <td>${item.productName}</td>
+        <td>${item.quantity}</td>
+        <td>$${item.unitPrice.toFixed(2)}</td>
+        <td>$${item.total.toFixed(2)}</td>
+        <td>$${item.profit.toFixed(2)}</td>
+      </tr>
+    `).join('');
+  }
+
+  // Render payment history
+  const paymentsBody = (document as any).getElementById('paymentHistoryBody');
+  if (paymentsBody) {
+    if (payments.length === 0) {
+      paymentsBody.innerHTML = '<tr><td colspan="5" class="empty-state">No payments recorded</td></tr>';
+    } else {
+      paymentsBody.innerHTML = payments.map((payment: Payment) => `
+        <tr>
+          <td>${payment.paymentId}</td>
+          <td>${formatDate(payment.date)}</td>
+          <td>$${payment.amount.toFixed(2)}</td>
+          <td>${payment.method}</td>
+          <td>${payment.notes || '-'}</td>
+        </tr>
+      `).join('');
+    }
+  }
+
+  // Store current invoice ID for adding payments
+  (window as any).currentInvoiceForPayment = invoiceId;
+
+  modal.classList.add('active');
+};
+
+// Add payment to invoice
+(window as any).openAddPaymentModal = () => {
+  const modal = (document as any).getElementById('addPaymentModal');
+  if (!modal) return;
+
+  const today = new Date().toISOString().split('T')[0];
+  ((document as any).getElementById('paymentDate') as any).value = today;
+  ((document as any).getElementById('paymentAmount') as any).value = '';
+  ((document as any).getElementById('paymentMethod') as any).value = 'Cash';
+  ((document as any).getElementById('paymentNotes') as any).value = '';
+
+  modal.classList.add('active');
+};
+
+// Handle payment form submission
+const addPaymentForm = (document as any).getElementById('addPaymentForm');
+addPaymentForm?.addEventListener('submit', async (e: any) => {
+  e.preventDefault();
+
+  const invoiceId = (window as any).currentInvoiceForPayment;
+  if (!invoiceId) {
+    showToast('No invoice selected', 'error');
+    return;
+  }
+
+  const date = ((document as any).getElementById('paymentDate') as any).value;
+  const amount = parseFloat(((document as any).getElementById('paymentAmount') as any).value);
+  const method = ((document as any).getElementById('paymentMethod') as any).value;
+  const notes = ((document as any).getElementById('paymentNotes') as any).value;
+
+  if (!date || isNaN(amount) || amount <= 0) {
+    showToast('Please enter valid payment details', 'error');
+    return;
+  }
+
+  // Generate payment ID
+  const paymentId = `PAY-${Date.now()}`;
+
+  const payment: Payment = {
+    paymentId,
+    invoiceId,
+    date,
+    amount,
+    method,
+    notes
+  };
+
+  const result = await api.addPayment(payment);
+
+  if (result.success) {
+    showToast('Payment added successfully', 'success');
+    ((document as any).getElementById('addPaymentModal') as any).classList.remove('active');
+    await loadWorkbookData();
+    // Refresh the invoice details modal
+    (window as any).viewInvoiceWithPayments(invoiceId);
+  } else {
+    showToast(result.message || 'Failed to add payment', 'error');
+  }
+});
+
+// ============================================
+// STOCK ALERTS & NOTIFICATIONS FEATURE
+// ============================================
+
+// Check low stock and show notifications
+async function checkLowStockAndNotify() {
+  const result = await api.getLowStockProducts();
+  if (!result.success) return;
+
+  const lowStockProducts = result.products;
+  
+  if (lowStockProducts.length > 0) {
+    // Show desktop notification
+    const productNames = lowStockProducts.map((p: Product) => p.name).slice(0, 3).join(', ');
+    const notificationText = lowStockProducts.length > 3 
+      ? `${productNames} and ${lowStockProducts.length - 3} more products are low on stock`
+      : `${productNames} ${lowStockProducts.length === 1 ? 'is' : 'are'} low on stock`;
+
+    await api.showNotification({
+      title: '⚠️ Low Stock Alert',
+      body: notificationText
+    });
+  }
+}
+
+// Update product form to include reorder level
+const originalOpenProductModal = (window as any).openProductModal;
+(window as any).openProductModal = (productName?: string) => {
+  if (originalOpenProductModal) {
+    originalOpenProductModal(productName);
+  }
+  
+  // Add reorder level field if editing
+  if (productName) {
+    const product = workbookData.products.find(p => p.name === productName);
+    if (product && product.reorderLevel !== undefined) {
+      const reorderInput = (document as any).getElementById('productReorderLevel');
+      if (reorderInput) {
+        reorderInput.value = product.reorderLevel;
+      }
+    }
+  }
+};
+
+// Note: handleProductSubmit is already defined earlier in the file and has been
+// updated to support reorder level through the form's productReorderLevel field
