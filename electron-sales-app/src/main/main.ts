@@ -53,6 +53,33 @@ app.on('window-all-closed', () => {
 
 // IPC Handlers
 
+// Export a copy of the current workbook
+ipcMain.handle('export-workbook-copy', async () => {
+  try {
+    if (!excelHandler) {
+      return { success: false, message: 'No workbook loaded' };
+    }
+
+    const sourcePath = excelHandler.getWorkbookPath();
+    const defaultName = path.basename(sourcePath) || 'sales-data.xlsx';
+
+    const result = await dialog.showSaveDialog({
+      title: 'Save a Copy of Workbook',
+      defaultPath: defaultName,
+      filters: [{ name: 'Excel Files', extensions: ['xlsx'] }]
+    });
+
+    if (result.canceled || !result.filePath) {
+      return { success: false, message: 'Export cancelled' };
+    }
+
+    fs.copyFileSync(sourcePath, result.filePath);
+    return { success: true, path: result.filePath };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
 ipcMain.handle('open-workbook', async () => {
   try {
     const result = await dialog.showOpenDialog({
@@ -603,24 +630,7 @@ ipcMain.handle('convert-currency', async (event, amount: number, fromCurrency: s
   }
 });
 
-// User Management handlers
-ipcMain.handle('authenticate-user', async (event, username: string, password: string) => {
-  try {
-    if (!excelHandler) {
-      return { success: false, message: 'No workbook loaded' };
-    }
-
-    const user = await excelHandler.authenticateUser(username, password);
-    if (user) {
-      return { success: true, user };
-    } else {
-      return { success: false, message: 'Invalid credentials' };
-    }
-  } catch (error: any) {
-    return { success: false, message: error.message };
-  }
-});
-
+// Users: list all users
 ipcMain.handle('get-users', async () => {
   try {
     if (!excelHandler) {
@@ -629,6 +639,20 @@ ipcMain.handle('get-users', async () => {
 
     const data = await excelHandler.readWorkbook();
     return { success: true, users: data.users };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+// Users: authenticate
+ipcMain.handle('authenticate-user', async (event, username: string, password: string) => {
+  try {
+    if (!excelHandler) {
+      return { success: false, message: 'No workbook loaded' };
+    }
+
+    const user = await excelHandler.authenticateUser(username, password);
+    return { success: true, user };
   } catch (error: any) {
     return { success: false, message: error.message };
   }

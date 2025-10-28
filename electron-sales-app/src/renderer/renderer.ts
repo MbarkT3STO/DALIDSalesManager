@@ -158,6 +158,22 @@ function setupEventListeners() {
   // Refresh button
   document.getElementById('refreshBtn')?.addEventListener('click', loadWorkbookData);
 
+  // File menu: download workbook copy
+  document.getElementById('fileMenuBtn')?.addEventListener('click', async () => {
+    try {
+      const result = await api.exportWorkbookCopy();
+      if (result.success) {
+        showToast('Workbook saved to: ' + result.path, 'success');
+      } else {
+        if (result.message !== 'Export cancelled') {
+          showToast(result.message || 'Failed to save workbook copy', 'error');
+        }
+      }
+    } catch (error: any) {
+      showToast(error.message || 'Error saving workbook copy', 'error');
+    }
+  });
+
   // Product management
   document.getElementById('addProductBtn')?.addEventListener('click', () => openProductModal());
   document.getElementById('productForm')?.addEventListener('submit', handleProductSubmit);

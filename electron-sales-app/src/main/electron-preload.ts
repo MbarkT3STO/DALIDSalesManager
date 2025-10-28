@@ -32,6 +32,7 @@ export interface ElectronAPI {
   exportAllCSV: () => Promise<any>;
   printInvoicePDF: (invoice: any) => Promise<any>;
   convertCurrency: (amount: number, fromCurrency: string, toCurrency: string) => Promise<any>;
+  exportWorkbookCopy: () => Promise<any>;
   authenticateUser: (username: string, password: string) => Promise<any>;
   getUsers: () => Promise<any>;
   addUser: (user: any) => Promise<any>;
@@ -72,6 +73,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   exportAllCSV: () => ipcRenderer.invoke('export-all-csv'),
   printInvoicePDF: (invoice: any) => ipcRenderer.invoke('print-invoice-pdf', invoice),
   convertCurrency: (amount: number, fromCurrency: string, toCurrency: string) => ipcRenderer.invoke('convert-currency', amount, fromCurrency, toCurrency),
+  exportWorkbookCopy: () => ipcRenderer.invoke('export-workbook-copy'),
   authenticateUser: (username: string, password: string) => ipcRenderer.invoke('authenticate-user', username, password),
   getUsers: () => ipcRenderer.invoke('get-users'),
   addUser: (user: any) => ipcRenderer.invoke('add-user', user),
