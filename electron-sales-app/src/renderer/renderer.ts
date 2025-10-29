@@ -803,9 +803,10 @@ function renderAllData() {
 
 // Dashboard rendering
 function renderDashboard() {
-  // Calculate statistics
-  const totalSales = workbookData.invoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
-  const totalProfit = workbookData.invoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
+  // Calculate statistics (exclude cancelled invoices)
+  const activeInvoices = workbookData.invoices.filter(inv => inv.status !== 'Cancelled');
+  const totalSales = activeInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+  const totalProfit = activeInvoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
   const totalProducts = workbookData.products.length;
   const totalCustomers = workbookData.customers.length;
 
@@ -920,8 +921,18 @@ function renderProducts() {
         <td>${formatCurrency(product.salePrice)}</td>
         <td>${profitMargin}%</td>
         <td>
-          <button class="btn btn-small btn-secondary" onclick="editProduct('${escapeHtml(product.name)}')">${t('common.edit')}</button>
-          <button class="btn btn-small btn-danger" onclick="deleteProduct('${escapeHtml(product.name)}')">${t('common.delete')}</button>
+          <button class="btn-icon" onclick="editProduct('${escapeHtml(product.name)}')" title="${t('common.edit')}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button class="btn-icon" onclick="deleteProduct('${escapeHtml(product.name)}')" title="${t('common.delete')}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
         </td>
       </tr>
     `;
@@ -954,8 +965,18 @@ function filterProducts() {
         <td>${formatCurrency(product.salePrice)}</td>
         <td>${profitMargin}%</td>
         <td>
-          <button class="btn btn-small btn-secondary" onclick="editProduct('${escapeHtml(product.name)}')">${t('common.edit')}</button>
-          <button class="btn btn-small btn-danger" onclick="deleteProduct('${escapeHtml(product.name)}')">${t('common.delete')}</button>
+          <button class="btn-icon" onclick="editProduct('${escapeHtml(product.name)}')" title="${t('common.edit')}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button class="btn-icon" onclick="deleteProduct('${escapeHtml(product.name)}')" title="${t('common.delete')}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
         </td>
       </tr>
     `;
@@ -1062,8 +1083,18 @@ function renderCustomers() {
       <td>${customer.email}</td>
       <td>${customer.address}</td>
       <td>
-        <button class="btn btn-small btn-secondary" onclick="editCustomer('${escapeHtml(customer.name)}')">${ t('common.edit')}</button>
-        <button class="btn btn-small btn-danger" onclick="deleteCustomer('${escapeHtml(customer.name)}')">${ t('common.delete')}</button>
+        <button class="btn-icon" onclick="editCustomer('${escapeHtml(customer.name)}')" title="${t('common.edit')}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </button>
+        <button class="btn-icon" onclick="deleteCustomer('${escapeHtml(customer.name)}')" title="${t('common.delete')}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+        </button>
       </td>
     </tr>
   `).join('');
@@ -1094,8 +1125,18 @@ function filterCustomers() {
       <td>${customer.email}</td>
       <td>${customer.address}</td>
       <td>
-        <button class="btn btn-small btn-secondary" onclick="editCustomer('${escapeHtml(customer.name)}')">${ t('common.edit')}</button>
-        <button class="btn btn-small btn-danger" onclick="deleteCustomer('${escapeHtml(customer.name)}')">${ t('common.delete')}</button>
+        <button class="btn-icon" onclick="editCustomer('${escapeHtml(customer.name)}')" title="${t('common.edit')}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </button>
+        <button class="btn-icon" onclick="deleteCustomer('${escapeHtml(customer.name)}')" title="${t('common.delete')}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+        </button>
       </td>
     </tr>
   `).join('');
@@ -1228,9 +1269,25 @@ function renderInvoices() {
       <td>${formatCurrency(invoice.totalProfit)}</td>
       <td><span class="badge badge-${getStatusBadgeClass(invoice.status)}">${translateStatus(invoice.status)}</span></td>
       <td>
-        <button class="btn btn-small btn-secondary" onclick="viewInvoice('${invoice.invoiceId}')">${t('common.view')}</button>
-        <button class="btn btn-small btn-warning" onclick="editInvoiceStatus('${escapeHtml(invoice.invoiceId)}', '${escapeHtml(invoice.customerName)}', '${invoice.status}')">${t('sales.editStatus')}</button>
-        <button class="btn btn-small btn-primary" onclick="printInvoice('${invoice.invoiceId}')">${t('common.print')}</button>
+        <button class="btn-icon" onclick="viewInvoice('${invoice.invoiceId}')" title="${t('common.view')}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+        <button class="btn-icon" onclick="editInvoiceStatus('${escapeHtml(invoice.invoiceId)}', '${escapeHtml(invoice.customerName)}', '${invoice.status}')" title="${t('sales.editStatus')}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </button>
+        <button class="btn-icon" onclick="printInvoice('${invoice.invoiceId}')" title="${t('common.print')}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 6 2 18 2 18 9"/>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+            <rect x="6" y="14" width="12" height="8"/>
+          </svg>
+        </button>
       </td>
     </tr>
   `).join('');
@@ -1952,8 +2009,9 @@ function filterReports() {
   const fromDate = fromDateInput?.value ? new Date(fromDateInput.value) : null;
   const toDate = toDateInput?.value ? new Date(toDateInput.value) : null;
 
-  // Filter invoices by date range
+  // Filter invoices by date range (exclude cancelled invoices)
   const filteredInvoices = workbookData.invoices.filter(inv => {
+    if (inv.status === 'Cancelled') return false;
     const invDate = new Date(inv.date);
     if (fromDate && invDate < fromDate) return false;
     if (toDate && invDate > toDate) return false;
@@ -2244,16 +2302,17 @@ inventoryForm?.addEventListener('submit', async (e: any) => {
 let analyticsCharts: any = {};
 
 function renderAnalytics() {
-  // Calculate key metrics
-  const totalSales = workbookData.invoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
-  const totalProfit = workbookData.invoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
-  const avgOrderValue = workbookData.invoices.length > 0 ? totalSales / workbookData.invoices.length : 0;
+  // Calculate key metrics (exclude cancelled invoices)
+  const activeInvoices = workbookData.invoices.filter(inv => inv.status !== 'Cancelled');
+  const totalSales = activeInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+  const totalProfit = activeInvoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
+  const avgOrderValue = activeInvoices.length > 0 ? totalSales / activeInvoices.length : 0;
   const totalProductsSold = workbookData.sales.reduce((sum, sale) => sum + sale.quantity, 0);
   const profitMargin = totalSales > 0 ? (totalProfit / totalSales) * 100 : 0;
 
   // Calculate today's profit
   const today = new Date().toISOString().split('T')[0];
-  const todayInvoices = workbookData.invoices.filter(inv => inv.date === today);
+  const todayInvoices = activeInvoices.filter(inv => inv.date === today);
   const todayProfit = todayInvoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
   const todaySales = todayInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
 
@@ -2261,7 +2320,7 @@ function renderAnalytics() {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayDate = yesterday.toISOString().split('T')[0];
-  const yesterdayInvoices = workbookData.invoices.filter(inv => inv.date === yesterdayDate);
+  const yesterdayInvoices = activeInvoices.filter(inv => inv.date === yesterdayDate);
   const yesterdayProfit = yesterdayInvoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
 
   // Update metrics
@@ -2294,9 +2353,9 @@ function renderSalesTrendChart() {
   const canvas = (document as any).getElementById('salesTrendChart');
   if (!canvas) return;
 
-  // Group sales by date
+  // Group sales by date (exclude cancelled invoices)
   const salesByDate: any = {};
-  workbookData.invoices.forEach(inv => {
+  workbookData.invoices.filter(inv => inv.status !== 'Cancelled').forEach(inv => {
     const date = inv.date;
     salesByDate[date] = (salesByDate[date] || 0) + inv.totalAmount;
   });
@@ -2343,9 +2402,9 @@ function renderProfitTrendChart() {
   const canvas = (document as any).getElementById('profitTrendChart');
   if (!canvas) return;
 
-  // Group profit by date
+  // Group profit by date (exclude cancelled invoices)
   const profitByDate: any = {};
-  workbookData.invoices.forEach(inv => {
+  workbookData.invoices.filter(inv => inv.status !== 'Cancelled').forEach(inv => {
     const date = inv.date;
     profitByDate[date] = (profitByDate[date] || 0) + inv.totalProfit;
   });
@@ -2486,9 +2545,9 @@ function renderTopCustomersChart() {
   const canvas = (document as any).getElementById('topCustomersChart');
   if (!canvas) return;
 
-  // Calculate purchases by customer
+  // Calculate purchases by customer (exclude cancelled invoices)
   const customerPurchases: any = {};
-  workbookData.invoices.forEach(inv => {
+  workbookData.invoices.filter(inv => inv.status !== 'Cancelled').forEach(inv => {
     customerPurchases[inv.customerName] = (customerPurchases[inv.customerName] || 0) + inv.totalAmount;
   });
 
