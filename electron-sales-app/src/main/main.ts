@@ -3,9 +3,11 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { ExcelHandler, Product, Customer, Invoice, Payment, User } from './excel-handler';
 import { ExportHandler } from './export-handler';
+import { GDPRHandler } from './gdpr-handler';
 
 let mainWindow: BrowserWindow | null = null;
 let excelHandler: ExcelHandler | null = null;
+let gdprHandler: GDPRHandler | null = null;
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -698,6 +700,186 @@ ipcMain.handle('delete-user', async (event, username: string) => {
 
     await excelHandler.deleteUser(username);
     return { success: true };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+// GDPR & Audit Handlers
+
+// Initialize GDPR handler when workbook is loaded
+ipcMain.on('init-gdpr-handler', () => {
+  if (excelHandler && !gdprHandler) {
+    gdprHandler = new GDPRHandler(excelHandler);
+  }
+});
+
+// GDPR: Export customer data
+ipcMain.handle('gdpr-export-customer-data', async (event, customerId: string) => {
+  try {
+    if (!gdprHandler) {
+      if (excelHandler) {
+        gdprHandler = new GDPRHandler(excelHandler);
+      } else {
+        return { success: false, message: 'No workbook loaded' };
+      }
+    }
+
+    const data = await gdprHandler.exportCustomerData(customerId);
+    
+    // Save to file
+    const result = await dialog.showSaveDialog({
+      title: 'Export Customer Data (GDPR)',
+      defaultPath: `customer-data-${customerId}-${Date.now()}.json`,
+      filters: [{ name: 'JSON Files', extensions: ['json'] }]
+    });
+
+    if (!result.canceled && result.filePath) {
+      fs.writeFileSync(result.filePath, JSON.stringify(data, null, 2));
+      return { success: true, path: result.filePath, data };
+    }
+
+    return { success: false, message: 'Export cancelled' };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+// GDPR: Delete customer data (Right to be Forgotten)
+ipcMain.handle('gdpr-delete-customer-data', async (event, customerId: string, reason: string, performedBy: string) => {
+  try {
+    if (!gdprHandler) {
+      if (excelHandler) {
+        gdprHandler = new GDPRHandler(excelHandler);
+      } else {
+        return { success: false, message: 'No workbook loaded' };
+      }
+    }
+
+    const result = await gdprHandler.deleteCustomerData(customerId, reason, performedBy);
+    return { success: result };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+// GDPR: Record consent
+ipcMain.handle('gdpr-record-consent', async (event, consent: any) => {
+  try {
+    if (!gdprHandler) {
+      if (excelHandler) {
+        gdprHandler = new GDPRHandler(excelHandler);
+      } else {
+        return { success: false, message: 'No workbook loaded' };
+      }
+    }
+
+    gdprHandler.recordConsent(consent);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+// GDPR: Get customer consents
+ipcMain.handle('gdpr-get-customer-consents', async (event, customerId: string) => {
+  try {
+    if (!gdprHandler) {
+      if (excelHandler) {
+        gdprHandler = new GDPRHandler(excelHandler);
+      } else {
+        return { success: false, message: 'No workbook loaded' };
+      }
+    }
+
+    const consents = gdprHandler.getCustomerConsents(customerId);
+    return { success: true, consents };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+// Audit: Log action
+ipcMain.handle('audit-log', async (event, log: any) => {
+  try {
+    if (!gdprHandler) {
+      if (excelHandler) {
+        gdprHandler = new GDPRHandler(excelHandler);
+      } else {
+        return { success: false, message: 'No workbook loaded' };
+      }
+    }
+
+    gdprHandler.logAudit(log);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+// Audit: Get logs
+ipcMain.handle('audit-get-logs', async (event, filters: any) => {
+  try {
+    if (!gdprHandler) {
+      if (excelHandler) {
+        gdprHandler = new GDPRHandler(excelHandler);
+      } else {
+        return { success: false, message: 'No workbook loaded' };
+      }
+    }
+
+    const logs = gdprHandler.getAuditLogs(filters);
+    return { success: true, logs };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+// Audit: Generate report
+ipcMain.handle('audit-generate-report', async (event, startDate: string, endDate: string) => {
+  try {
+    if (!gdprHandler) {
+      if (excelHandler) {
+        gdprHandler = new GDPRHandler(excelHandler);
+      } else {
+        return { success: false, message: 'No workbook loaded' };
+      }
+    }
+
+    const report = await gdprHandler.generateAuditReport(new Date(startDate), new Date(endDate));
+    return { success: true, report };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+// Audit: Export logs
+ipcMain.handle('audit-export-logs', async (event, startDate: string, endDate: string, format: 'json' | 'csv') => {
+  try {
+    if (!gdprHandler) {
+      if (excelHandler) {
+        gdprHandler = new GDPRHandler(excelHandler);
+      } else {
+        return { success: false, message: 'No workbook loaded' };
+      }
+    }
+
+    const data = await gdprHandler.exportAuditLogs(new Date(startDate), new Date(endDate), format);
+    
+    // Save to file
+    const extension = format === 'json' ? 'json' : 'csv';
+    const result = await dialog.showSaveDialog({
+      title: 'Export Audit Logs',
+      defaultPath: `audit-logs-${Date.now()}.${extension}`,
+      filters: [{ name: format.toUpperCase() + ' Files', extensions: [extension] }]
+    });
+
+    if (!result.canceled && result.filePath) {
+      fs.writeFileSync(result.filePath, data);
+      return { success: true, path: result.filePath };
+    }
+
+    return { success: false, message: 'Export cancelled' };
   } catch (error: any) {
     return { success: false, message: error.message };
   }

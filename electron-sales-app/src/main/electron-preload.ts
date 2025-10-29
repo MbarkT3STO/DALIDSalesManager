@@ -38,6 +38,16 @@ export interface ElectronAPI {
   addUser: (user: any) => Promise<any>;
   updateUser: (username: string, user: any) => Promise<any>;
   deleteUser: (username: string) => Promise<any>;
+  // GDPR & Audit
+  initGDPRHandler: () => void;
+  gdprExportCustomerData: (customerId: string) => Promise<any>;
+  gdprDeleteCustomerData: (customerId: string, reason: string, performedBy: string) => Promise<any>;
+  gdprRecordConsent: (consent: any) => Promise<any>;
+  gdprGetCustomerConsents: (customerId: string) => Promise<any>;
+  auditLog: (log: any) => Promise<any>;
+  auditGetLogs: (filters: any) => Promise<any>;
+  auditGenerateReport: (startDate: string, endDate: string) => Promise<any>;
+  auditExportLogs: (startDate: string, endDate: string, format: 'json' | 'csv') => Promise<any>;
 }
 
 // Expose protected methods that allow the renderer process to use
@@ -78,5 +88,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getUsers: () => ipcRenderer.invoke('get-users'),
   addUser: (user: any) => ipcRenderer.invoke('add-user', user),
   updateUser: (username: string, user: any) => ipcRenderer.invoke('update-user', username, user),
-  deleteUser: (username: string) => ipcRenderer.invoke('delete-user', username)
+  deleteUser: (username: string) => ipcRenderer.invoke('delete-user', username),
+  // GDPR & Audit
+  initGDPRHandler: () => ipcRenderer.send('init-gdpr-handler'),
+  gdprExportCustomerData: (customerId: string) => ipcRenderer.invoke('gdpr-export-customer-data', customerId),
+  gdprDeleteCustomerData: (customerId: string, reason: string, performedBy: string) => ipcRenderer.invoke('gdpr-delete-customer-data', customerId, reason, performedBy),
+  gdprRecordConsent: (consent: any) => ipcRenderer.invoke('gdpr-record-consent', consent),
+  gdprGetCustomerConsents: (customerId: string) => ipcRenderer.invoke('gdpr-get-customer-consents', customerId),
+  auditLog: (log: any) => ipcRenderer.invoke('audit-log', log),
+  auditGetLogs: (filters: any) => ipcRenderer.invoke('audit-get-logs', filters),
+  auditGenerateReport: (startDate: string, endDate: string) => ipcRenderer.invoke('audit-generate-report', startDate, endDate),
+  auditExportLogs: (startDate: string, endDate: string, format: 'json' | 'csv') => ipcRenderer.invoke('audit-export-logs', startDate, endDate, format)
 } as ElectronAPI);

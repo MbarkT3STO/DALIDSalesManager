@@ -360,6 +360,222 @@ function renderSettings() {
   (document.getElementById('soundNotificationsToggle') as HTMLInputElement).checked = appSettings.soundNotifications;
   (document.getElementById('startupBehaviorSelect') as HTMLSelectElement).value = appSettings.startupBehavior;
   (document.getElementById('autoRefreshToggle') as HTMLInputElement).checked = appSettings.autoRefresh;
+  
+  // Populate GDPR customer dropdowns
+  populateGDPRCustomerDropdowns();
+  
+  // Set default dates for audit logs (last 30 days)
+  const today = new Date();
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(today.getDate() - 30);
+  
+  (document.getElementById('auditStartDate') as HTMLInputElement).value = thirtyDaysAgo.toISOString().split('T')[0];
+  (document.getElementById('auditEndDate') as HTMLInputElement).value = today.toISOString().split('T')[0];
+}
+
+// Populate GDPR customer dropdowns
+function populateGDPRCustomerDropdowns() {
+  const exportSelect = document.getElementById('gdprExportCustomerSelect') as HTMLSelectElement;
+  const deleteSelect = document.getElementById('gdprDeleteCustomerSelect') as HTMLSelectElement;
+  
+  if (!exportSelect || !deleteSelect || !workbookData) return;
+  
+  // Clear existing options (except first placeholder)
+  exportSelect.innerHTML = `<option value="">${t('gdpr.selectCustomerPlaceholder')}</option>`;
+  deleteSelect.innerHTML = `<option value="">${t('gdpr.selectCustomerPlaceholder')}</option>`;
+  
+  // Add customers
+  workbookData.customers.forEach(customer => {
+    const option1 = document.createElement('option');
+    option1.value = customer.name;
+    option1.textContent = customer.name;
+    exportSelect.appendChild(option1);
+    
+    const option2 = document.createElement('option');
+    option2.value = customer.name;
+    option2.textContent = customer.name;
+    deleteSelect.appendChild(option2);
+  });
+}
+
+// GDPR: Export Customer Data
+async function handleGDPRExport() {
+  const select = document.getElementById('gdprExportCustomerSelect') as HTMLSelectElement;
+  const customerName = select.value;
+  
+  if (!customerName) {
+    showToast(t('gdpr.selectCustomer'), 'error');
+    return;
+  }
+  
+  try {
+    const result = await api.gdprExportCustomerData(customerName);
+    if (result.success) {
+      showToast(t('gdpr.dataExported'), 'success');
+    } else {
+      showToast(result.message || 'Export failed', 'error');
+    }
+  } catch (error: any) {
+    showToast(error.message || 'Export failed', 'error');
+  }
+}
+
+// GDPR: Delete Customer Data
+async function handleGDPRDelete() {
+  const select = document.getElementById('gdprDeleteCustomerSelect') as HTMLSelectElement;
+  const reasonInput = document.getElementById('gdprDeleteReason') as HTMLInputElement;
+  const customerName = select.value;
+  const reason = reasonInput.value.trim();
+  
+  if (!customerName) {
+    showToast(t('gdpr.selectCustomer'), 'error');
+    return;
+  }
+  
+  if (!reason) {
+    showToast(t('gdpr.deleteReason'), 'error');
+    return;
+  }
+  
+  // Confirm deletion
+  const confirmed = confirm(t('gdpr.confirmDeleteMsg'));
+  if (!confirmed) return;
+  
+  try {
+    const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+    const result = await api.gdprDeleteCustomerData(customerName, reason, currentUser.username || 'unknown');
+    
+    if (result.success) {
+      showToast(t('gdpr.dataDeleted'), 'success');
+      reasonInput.value = '';
+      select.value = '';
+      // Reload data
+      await loadWorkbookData();
+    } else {
+      showToast(result.message || 'Deletion failed', 'error');
+    }
+  } catch (error: any) {
+    showToast(error.message || 'Deletion failed', 'error');
+  }
+}
+
+// Audit: View Logs
+async function handleAuditViewLogs() {
+  const startDateInput = document.getElementById('auditStartDate') as HTMLInputElement;
+  const endDateInput = document.getElementById('auditEndDate') as HTMLInputElement;
+  const container = document.getElementById('auditLogsContainer') as HTMLElement;
+  const tbody = document.getElementById('auditLogsTableBody') as HTMLTableSectionElement;
+  
+  if (!startDateInput.value || !endDateInput.value) {
+    showToast(t('audit.startDate') + ' and ' + t('audit.endDate') + ' required', 'error');
+    return;
+  }
+  
+  try {
+    const result = await api.auditGetLogs({
+      startDate: new Date(startDateInput.value),
+      endDate: new Date(endDateInput.value)
+    });
+    
+    if (result.success) {
+      tbody.innerHTML = '';
+      
+      if (result.logs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center;">${t('audit.noLogs')}</td></tr>`;
+      } else {
+        result.logs.forEach((log: any) => {
+          const row = tbody.insertRow();
+          row.innerHTML = `
+            <td>${new Date(log.timestamp).toLocaleString()}</td>
+            <td>${log.userName}</td>
+            <td>${log.action}</td>
+            <td>${log.entityType}: ${log.entityId}</td>
+          `;
+        });
+      }
+      
+      container.style.display = 'block';
+    } else {
+      showToast(result.message || 'Failed to load logs', 'error');
+    }
+  } catch (error: any) {
+    showToast(error.message || 'Failed to load logs', 'error');
+  }
+}
+
+// Audit: Generate Report
+async function handleAuditGenerateReport() {
+  const startDateInput = document.getElementById('auditStartDate') as HTMLInputElement;
+  const endDateInput = document.getElementById('auditEndDate') as HTMLInputElement;
+  
+  if (!startDateInput.value || !endDateInput.value) {
+    showToast(t('audit.startDate') + ' and ' + t('audit.endDate') + ' required', 'error');
+    return;
+  }
+  
+  try {
+    const result = await api.auditGenerateReport(startDateInput.value, endDateInput.value);
+    
+    if (result.success) {
+      // Display report summary
+      const summary = result.report.summary;
+      const message = `${t('audit.reportGenerated')}\n\n` +
+                     `${t('audit.totalActions')}: ${summary.totalActions}\n` +
+                     `${t('audit.uniqueUsers')}: ${summary.uniqueUsers}\n` +
+                     `${t('audit.entitiesModified')}: ${summary.entitiesModified}`;
+      alert(message);
+    } else {
+      showToast(result.message || 'Failed to generate report', 'error');
+    }
+  } catch (error: any) {
+    showToast(error.message || 'Failed to generate report', 'error');
+  }
+}
+
+// Audit: Export Logs (JSON)
+async function handleAuditExportJSON() {
+  const startDateInput = document.getElementById('auditStartDate') as HTMLInputElement;
+  const endDateInput = document.getElementById('auditEndDate') as HTMLInputElement;
+  
+  if (!startDateInput.value || !endDateInput.value) {
+    showToast(t('audit.startDate') + ' and ' + t('audit.endDate') + ' required', 'error');
+    return;
+  }
+  
+  try {
+    const result = await api.auditExportLogs(startDateInput.value, endDateInput.value, 'json');
+    
+    if (result.success) {
+      showToast(t('audit.logsExported'), 'success');
+    } else {
+      showToast(result.message || 'Export failed', 'error');
+    }
+  } catch (error: any) {
+    showToast(error.message || 'Export failed', 'error');
+  }
+}
+
+// Audit: Export Logs (CSV)
+async function handleAuditExportCSV() {
+  const startDateInput = document.getElementById('auditStartDate') as HTMLInputElement;
+  const endDateInput = document.getElementById('auditEndDate') as HTMLInputElement;
+  
+  if (!startDateInput.value || !endDateInput.value) {
+    showToast(t('audit.startDate') + ' and ' + t('audit.endDate') + ' required', 'error');
+    return;
+  }
+  
+  try {
+    const result = await api.auditExportLogs(startDateInput.value, endDateInput.value, 'csv');
+    
+    if (result.success) {
+      showToast(t('audit.logsExported'), 'success');
+    } else {
+      showToast(result.message || 'Export failed', 'error');
+    }
+  } catch (error: any) {
+    showToast(error.message || 'Export failed', 'error');
+  }
 }
 
 async function initializeApp() {
@@ -501,6 +717,14 @@ function setupEventListeners() {
   document.getElementById('languageSelect')?.addEventListener('change', handleLanguageChange);
   document.getElementById('themeSelect')?.addEventListener('change', handleThemeChange);
   document.getElementById('fontSizeSelect')?.addEventListener('change', handleFontSizeChange);
+  
+  // GDPR & Audit
+  document.getElementById('gdprExportBtn')?.addEventListener('click', handleGDPRExport);
+  document.getElementById('gdprDeleteBtn')?.addEventListener('click', handleGDPRDelete);
+  document.getElementById('auditViewLogsBtn')?.addEventListener('click', handleAuditViewLogs);
+  document.getElementById('auditGenerateReportBtn')?.addEventListener('click', handleAuditGenerateReport);
+  document.getElementById('auditExportJSONBtn')?.addEventListener('click', handleAuditExportJSON);
+  document.getElementById('auditExportCSVBtn')?.addEventListener('click', handleAuditExportCSV);
 
   // Set default date for invoice
   const today = new Date().toISOString().split('T')[0];
