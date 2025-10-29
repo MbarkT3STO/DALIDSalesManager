@@ -602,7 +602,7 @@ ipcMain.handle('export-all-csv', async () => {
   } catch (error: any) {
     return { success: false, message: error.message };
   }
-});
+}); 
 
 ipcMain.handle('print-invoice-pdf', async (event, invoice: Invoice) => {
   try {

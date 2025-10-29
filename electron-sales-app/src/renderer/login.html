@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Sales Manager</title>
     <link rel="stylesheet" href="login-styles.css">
+    <script>
+        // Initialize theme on page load
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+        initTheme();
+    </script>
 </head>
 <body>
     <div class="login-container">
