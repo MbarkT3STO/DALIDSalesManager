@@ -141,7 +141,7 @@
     "noItems": "Aucun article ajouté pour le moment",
     "typeToSearch": "Tapez pour rechercher...",
     "selectDate": "Sélectionner la date",
-    "editStatus": "Modifier le statut de la facture",
+    "editStatus": "Modifier le statut",
     "updateStatus": "Mettre à jour le statut",
     "required": "*",
     "invoice": "Facture",

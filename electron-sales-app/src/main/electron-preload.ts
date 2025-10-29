@@ -25,6 +25,7 @@ export interface ElectronAPI {
   getLowStockProducts: () => Promise<any>;
   showNotification: (options: { title: string; body: string }) => Promise<any>;
   exportInvoicePDF: (invoice: any) => Promise<any>;
+  exportAnalyticsPDF: (analyticsData: any) => Promise<any>;
   exportProductsCSV: () => Promise<any>;
   exportCustomersCSV: () => Promise<any>;
   exportSalesCSV: () => Promise<any>;
@@ -76,6 +77,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getLowStockProducts: () => ipcRenderer.invoke('get-low-stock-products'),
   showNotification: (options: { title: string; body: string }) => ipcRenderer.invoke('show-notification', options),
   exportInvoicePDF: (invoice: any) => ipcRenderer.invoke('export-invoice-pdf', invoice),
+  exportAnalyticsPDF: (analyticsData: any) => ipcRenderer.invoke('export-analytics-pdf', analyticsData),
   exportProductsCSV: () => ipcRenderer.invoke('export-products-csv'),
   exportCustomersCSV: () => ipcRenderer.invoke('export-customers-csv'),
   exportSalesCSV: () => ipcRenderer.invoke('export-sales-csv'),

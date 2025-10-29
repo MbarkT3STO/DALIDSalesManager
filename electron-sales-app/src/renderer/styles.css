@@ -835,6 +835,7 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     display: inline-block;
+    white-space: nowrap;
 }
 
 .badge-success {

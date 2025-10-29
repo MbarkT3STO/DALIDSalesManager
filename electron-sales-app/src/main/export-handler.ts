@@ -233,4 +233,203 @@ export class ExportHandler {
     await this.exportSalesToCSV(workbookData.sales, path.join(outputDir, 'sales.csv'));
     await this.exportInvoicesToCSV(workbookData.invoices, path.join(outputDir, 'invoices.csv'));
   }
+
+  static async exportAnalyticsToPDF(analyticsData: any, outputPath: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        const doc = new PDFDocument({ 
+          margin: 40,
+          size: 'A4',
+          bufferPages: true
+        });
+        const stream = fs.createWriteStream(outputPath);
+
+        doc.pipe(stream);
+
+        const primaryColor = '#4F46E5'; // Indigo
+        const accentColor = '#6366F1'; // Light indigo
+        const textColor = '#1F2937'; // Gray-800
+        const lightGray = '#F3F4F6'; // Gray-100
+        const mediumGray = '#9CA3AF'; // Gray-400
+
+        // Helper function to draw a gradient-like header
+        const drawHeader = () => {
+          doc.rect(0, 0, doc.page.width, 120).fill('#4F46E5');
+          
+          // Title
+          doc.fontSize(28).fillColor('white').font('Helvetica-Bold')
+             .text('Analytics Report', 40, 35);
+          
+          // Subtitle
+          doc.fontSize(12).fillColor('#DCDCFF').font('Helvetica')
+             .text(`Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`, 40, 70);
+          
+          // Period info
+          doc.fontSize(11).fillColor('#C8C8FF')
+             .text(`Period: ${analyticsData.periodLabel || 'All Time'}`, 40, 90);
+        };
+
+        // Draw header
+        drawHeader();
+
+        let yPosition = 140;
+
+        // Key Metrics Section
+        doc.fontSize(18).fillColor(textColor).font('Helvetica-Bold')
+           .text('Key Performance Metrics', 40, yPosition);
+        
+        yPosition += 30;
+
+        // Draw metric cards in a grid (2 columns)
+        const metrics = [
+          { label: "Today's Profit", value: analyticsData.todayProfit },
+          { label: "Yesterday's Profit", value: analyticsData.yesterdayProfit },
+          { label: 'Average Order Value', value: analyticsData.avgOrderValue },
+          { label: 'Total Customers', value: analyticsData.totalCustomers },
+          { label: 'Products Sold', value: analyticsData.productsSold },
+          { label: 'Profit Margin', value: analyticsData.profitMargin }
+        ];
+
+        const cardWidth = 240;
+        const cardHeight = 65;
+        const cardGap = 20;
+        const cardsPerRow = 2;
+
+        metrics.forEach((metric, index) => {
+          const col = index % cardsPerRow;
+          const row = Math.floor(index / cardsPerRow);
+          const x = 40 + col * (cardWidth + cardGap);
+          const y = yPosition + row * (cardHeight + cardGap);
+
+          // Card background with border
+          doc.roundedRect(x, y, cardWidth, cardHeight, 5)
+             .lineWidth(1)
+             .stroke(mediumGray);
+
+          // Colored left border accent
+          doc.rect(x, y + 5, 4, cardHeight - 10)
+             .fill(primaryColor);
+
+          // Label - ensure clean text rendering
+          doc.font('Helvetica')
+             .fontSize(9)
+             .fillColor(mediumGray);
+          doc.text(metric.label, x + 15, y + 15, { 
+            width: cardWidth - 25, 
+            lineBreak: false,
+            continued: false
+          });
+
+          // Value - ensure clean text rendering
+          doc.font('Helvetica-Bold')
+             .fontSize(18)
+             .fillColor(textColor);
+          doc.text(String(metric.value || '0'), x + 15, y + 35, { 
+            width: cardWidth - 25, 
+            lineBreak: false,
+            continued: false
+          });
+        });
+
+        yPosition += Math.ceil(metrics.length / cardsPerRow) * (cardHeight + cardGap) + 40;
+
+        // Check if we need a new page
+        if (yPosition > doc.page.height - 200) {
+          doc.addPage();
+          yPosition = 40;
+        }
+
+        // Charts Section
+        doc.fontSize(18).fillColor(textColor).font('Helvetica-Bold')
+           .text('Visual Analytics', 40, yPosition);
+        
+        yPosition += 30;
+
+        // Chart images
+        const charts = [
+          { title: 'Sales Trend', subtitle: 'Revenue over time', image: analyticsData.salesTrendChart },
+          { title: 'Profit Trend', subtitle: 'Profit over time', image: analyticsData.profitTrendChart },
+          { title: 'Top Products', subtitle: 'Best selling products', image: analyticsData.topProductsChart },
+          { title: 'Sales by Product', subtitle: 'Revenue distribution', image: analyticsData.productCategoriesChart },
+          { title: 'Top Customers', subtitle: 'By total purchases', image: analyticsData.topCustomersChart },
+          { title: 'Inventory Status', subtitle: 'Stock levels', image: analyticsData.inventoryStatusChart }
+        ];
+
+        for (let i = 0; i < charts.length; i++) {
+          const chart = charts[i];
+          
+          // Skip if no image data
+          if (!chart.image) {
+            continue;
+          }
+
+          // Check if we need a new page (need space for title + image)
+          const spaceNeeded = 300;
+          if (yPosition > doc.page.height - spaceNeeded) {
+            doc.addPage();
+            yPosition = 40;
+          }
+
+          // Chart title
+          doc.fontSize(14).fillColor(textColor).font('Helvetica-Bold')
+             .text(chart.title, 40, yPosition);
+          
+          // Chart subtitle
+          doc.fontSize(10).fillColor(mediumGray).font('Helvetica')
+             .text(chart.subtitle, 40, yPosition + 18);
+
+          yPosition += 40;
+
+          // Chart image
+          try {
+            // Convert base64 to buffer
+            const imageBuffer = Buffer.from(chart.image.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+            const imageWidth = 500;
+            const imageHeight = 250;
+            
+            doc.image(imageBuffer, 40, yPosition, {
+              width: imageWidth,
+              height: imageHeight
+            });
+            
+            yPosition += imageHeight + 30;
+          } catch (error) {
+            console.error('Error adding chart image:', error);
+            doc.fontSize(10).fillColor(mediumGray)
+               .text('Chart image not available', 40, yPosition);
+            yPosition += 30;
+          }
+        }
+
+        // Add page numbers
+        const pageCount = doc.bufferedPageRange().count;
+        for (let i = 0; i < pageCount; i++) {
+          doc.switchToPage(i);
+          doc.fontSize(9).fillColor(mediumGray).font('Helvetica')
+             .text(
+               `Page ${i + 1} of ${pageCount}`,
+               40,
+               doc.page.height - 30,
+               { align: 'center', width: doc.page.width - 80 }
+             );
+        }
+
+        // Footer on last page
+        doc.switchToPage(pageCount - 1);
+        doc.fontSize(8).fillColor(mediumGray).font('Helvetica-Oblique')
+           .text(
+             'Generated by DALID Sales Manager - Confidential Business Analytics',
+             40,
+             doc.page.height - 50,
+             { align: 'center', width: doc.page.width - 80 }
+           );
+
+        doc.end();
+        stream.on('finish', () => resolve());
+        stream.on('error', reject);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
 }

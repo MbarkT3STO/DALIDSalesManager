@@ -604,14 +604,24 @@
             <div id="analyticsTab" class="tab-content">
                 <div class="tab-header">
                     <h2 data-translate="analytics.title">Analytics & Statistics</h2>
-                    <div class="analytics-period">
-                        <select id="analyticsPeriod" class="form-control">
-                            <option value="7" data-translate="analytics.last7Days">Last 7 Days</option>
-                            <option value="30" selected data-translate="analytics.last30Days">Last 30 Days</option>
-                            <option value="90" data-translate="analytics.last90Days">Last 90 Days</option>
-                            <option value="365" data-translate="analytics.lastYear">Last Year</option>
-                            <option value="all" data-translate="analytics.allTime">All Time</option>
-                        </select>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <div class="analytics-period">
+                            <select id="analyticsPeriod" class="form-control">
+                                <option value="7" data-translate="analytics.last7Days">Last 7 Days</option>
+                                <option value="30" selected data-translate="analytics.last30Days">Last 30 Days</option>
+                                <option value="90" data-translate="analytics.last90Days">Last 90 Days</option>
+                                <option value="365" data-translate="analytics.lastYear">Last Year</option>
+                                <option value="all" data-translate="analytics.allTime">All Time</option>
+                            </select>
+                        </div>
+                        <button id="exportAnalyticsPdfBtn" class="btn btn-primary">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            <span data-translate="analytics.exportPdf">Export to PDF</span>
+                        </button>
                     </div>
                 </div>
 
@@ -775,7 +785,10 @@
                         <label data-translate="reports.toDate">To Date:</label>
                         <input type="date" id="reportToDate" class="form-control">
                     </div>
-                    <button id="filterReportBtn" class="btn btn-primary"><span data-translate="reports.applyFilter">Apply Filter</span></button>
+                    <div class="form-group">
+                        <label style="visibility: hidden;">Filter</label>
+                        <button id="filterReportBtn" class="btn btn-primary"><span data-translate="reports.applyFilter">Apply Filter</span></button>
+                    </div>
                 </div>
 
                 <div class="report-summary">

@@ -2597,6 +2597,48 @@ editStatusForm?.addEventListener('submit', async (e: any) => {
   e.preventDefault();
 
   const newStatus = ((document as any).getElementById('editStatusSelect') as any).value;
+  
+  // Find the invoice to get its current status and items
+  const invoice = workbookData.invoices.find(inv => inv.invoiceId === currentEditInvoiceId);
+  if (!invoice) {
+    showToast('Invoice not found', 'error');
+    return;
+  }
+  
+  const oldStatus = invoice.status;
+  
+  // Handle inventory adjustments based on status change
+  if (oldStatus !== newStatus) {
+    const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    
+    // If changing TO cancelled, return items to stock
+    if (newStatus === 'Cancelled') {
+      for (const item of invoice.items) {
+        await api.addInventoryMovement({
+          productName: item.productName,
+          type: 'IN',
+          quantity: item.quantity,
+          date: currentDate,
+          reference: `Invoice ${currentEditInvoiceId} cancelled`,
+          notes: `Returned to stock due to invoice cancellation`
+        });
+      }
+    }
+    
+    // If changing FROM cancelled TO paid/pending, deduct from stock
+    if (oldStatus === 'Cancelled' && (newStatus === 'Paid' || newStatus === 'Pending')) {
+      for (const item of invoice.items) {
+        await api.addInventoryMovement({
+          productName: item.productName,
+          type: 'OUT',
+          quantity: item.quantity,
+          date: currentDate,
+          reference: `Invoice ${currentEditInvoiceId} reactivated`,
+          notes: `Deducted from stock due to invoice status change to ${newStatus}`
+        });
+      }
+    }
+  }
 
   const result = await api.updateInvoiceStatus(currentEditInvoiceId, newStatus);
   
@@ -2858,3 +2900,109 @@ function handleFontSizeChange() {
   saveSettings();
   applySettings();
 }
+
+// ============================================
+// ANALYTICS PDF EXPORT FEATURE
+// ============================================
+
+async function exportAnalyticsToPDF() {
+  try {
+    // Show loading state
+    const exportBtn = document.getElementById('exportAnalyticsPdfBtn') as HTMLButtonElement;
+    if (exportBtn) {
+      exportBtn.disabled = true;
+      exportBtn.innerHTML = '<span>Generating PDF...</span>';
+    }
+
+    // Get period label
+    const periodSelect = document.getElementById('analyticsPeriod') as HTMLSelectElement;
+    const periodValue = periodSelect?.value || '30';
+    const periodLabels: { [key: string]: string } = {
+      '7': 'Last 7 Days',
+      '30': 'Last 30 Days',
+      '90': 'Last 90 Days',
+      '365': 'Last Year',
+      'all': 'All Time'
+    };
+    const periodLabel = periodLabels[periodValue] || 'Last 30 Days';
+
+    // Collect analytics data
+    const totalSales = workbookData.invoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+    const totalProfit = workbookData.invoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
+    const avgOrderValue = workbookData.invoices.length > 0 ? totalSales / workbookData.invoices.length : 0;
+    const totalProductsSold = workbookData.sales.reduce((sum, sale) => sum + sale.quantity, 0);
+    const profitMargin = totalSales > 0 ? (totalProfit / totalSales) * 100 : 0;
+
+    // Calculate today's profit
+    const today = new Date().toISOString().split('T')[0];
+    const todayInvoices = workbookData.invoices.filter(inv => inv.date === today);
+    const todayProfit = todayInvoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
+
+    // Calculate yesterday's profit
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayDate = yesterday.toISOString().split('T')[0];
+    const yesterdayInvoices = workbookData.invoices.filter(inv => inv.date === yesterdayDate);
+    const yesterdayProfit = yesterdayInvoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
+
+    // Convert charts to base64 images
+    const getChartImage = (chartId: string): string | null => {
+      const canvas = document.getElementById(chartId) as HTMLCanvasElement;
+      if (canvas) {
+        try {
+          return canvas.toDataURL('image/png');
+        } catch (error) {
+          console.error(`Error converting chart ${chartId} to image:`, error);
+          return null;
+        }
+      }
+      return null;
+    };
+
+    const analyticsData = {
+      periodLabel,
+      todayProfit: `$${todayProfit.toFixed(2)}`,
+      yesterdayProfit: `$${yesterdayProfit.toFixed(2)}`,
+      avgOrderValue: `$${avgOrderValue.toFixed(2)}`,
+      totalCustomers: workbookData.customers.length.toString(),
+      productsSold: `${totalProductsSold} units`,
+      profitMargin: `${profitMargin.toFixed(1)}%`,
+      salesTrendChart: getChartImage('salesTrendChart'),
+      profitTrendChart: getChartImage('profitTrendChart'),
+      topProductsChart: getChartImage('topProductsChart'),
+      productCategoriesChart: getChartImage('productCategoriesChart'),
+      topCustomersChart: getChartImage('topCustomersChart'),
+      inventoryStatusChart: getChartImage('inventoryStatusChart')
+    };
+
+    // Call the export API
+    const result = await api.exportAnalyticsPDF(analyticsData);
+
+    if (result.success) {
+      showToast(`Analytics report saved successfully!`, 'success');
+    } else {
+      showToast(result.message || 'Failed to export analytics to PDF', 'error');
+    }
+  } catch (error: any) {
+    console.error('Error exporting analytics to PDF:', error);
+    showToast(error.message || 'An error occurred while exporting', 'error');
+  } finally {
+    // Restore button state
+    const exportBtn = document.getElementById('exportAnalyticsPdfBtn') as HTMLButtonElement;
+    if (exportBtn) {
+      exportBtn.disabled = false;
+      exportBtn.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        <span data-translate="analytics.exportPdf">Export to PDF</span>
+      `;
+    }
+  }
+}
+
+// Add event listener for export analytics button
+const exportAnalyticsPdfBtn = document.getElementById('exportAnalyticsPdfBtn');
+exportAnalyticsPdfBtn?.addEventListener('click', exportAnalyticsToPDF);

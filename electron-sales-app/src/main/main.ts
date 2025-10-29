@@ -485,6 +485,26 @@ ipcMain.handle('export-invoice-pdf', async (event, invoice: Invoice) => {
   }
 });
 
+ipcMain.handle('export-analytics-pdf', async (event, analyticsData: any) => {
+  try {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const result = await dialog.showSaveDialog({
+      title: 'Export Analytics to PDF',
+      defaultPath: `analytics-report-${timestamp}.pdf`,
+      filters: [{ name: 'PDF Files', extensions: ['pdf'] }]
+    });
+
+    if (result.canceled || !result.filePath) {
+      return { success: false, message: 'Export cancelled' };
+    }
+
+    await ExportHandler.exportAnalyticsToPDF(analyticsData, result.filePath);
+    return { success: true, path: result.filePath };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
 ipcMain.handle('export-products-csv', async () => {
   try {
     if (!excelHandler) {
