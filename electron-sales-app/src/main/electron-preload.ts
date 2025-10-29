@@ -100,5 +100,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   auditLog: (log: any) => ipcRenderer.invoke('audit-log', log),
   auditGetLogs: (filters: any) => ipcRenderer.invoke('audit-get-logs', filters),
   auditGenerateReport: (startDate: string, endDate: string) => ipcRenderer.invoke('audit-generate-report', startDate, endDate),
+  // Customer History Export
+  exportCustomerHistoryPDF: (data: any) => ipcRenderer.invoke('export-customer-history-pdf', data),
+  exportCustomerHistoryExcel: (data: any) => ipcRenderer.invoke('export-customer-history-excel', data),
   auditExportLogs: (startDate: string, endDate: string, format: 'json' | 'csv') => ipcRenderer.invoke('audit-export-logs', startDate, endDate, format)
 } as ElectronAPI);

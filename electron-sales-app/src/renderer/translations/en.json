@@ -114,7 +114,17 @@
     "customerAdded": "Customer added successfully",
     "customerUpdated": "Customer updated successfully",
     "customerDeleted": "Customer deleted successfully",
-    "searchPlaceholder": "Search customers..."
+    "searchPlaceholder": "Search customers...",
+    "customerHistory": "Customer History",
+    "totalInvoices": "Total Invoices",
+    "avgOrder": "Average Order",
+    "purchaseTrend": "Purchase Trend",
+    "invoiceHistory": "Invoice History",
+    "viewHistory": "View History",
+    "exportPDF": "Export PDF",
+    "exportExcel": "Export Excel",
+    "exportSuccess": "Customer history exported successfully",
+    "exportError": "Failed to export customer history"
   },
   "sales": {
     "title": "Sales & Invoices",

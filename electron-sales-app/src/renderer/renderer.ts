@@ -1083,6 +1083,12 @@ function renderCustomers() {
       <td>${customer.email}</td>
       <td>${customer.address}</td>
       <td>
+        <button class="btn-icon" onclick="viewCustomerHistory('${escapeHtml(customer.name)}')" title="${t('customers.viewHistory')}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+            <polyline points="17 6 23 6 23 12"/>
+          </svg>
+        </button>
         <button class="btn-icon" onclick="editCustomer('${escapeHtml(customer.name)}')" title="${t('common.edit')}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -1125,6 +1131,12 @@ function filterCustomers() {
       <td>${customer.email}</td>
       <td>${customer.address}</td>
       <td>
+        <button class="btn-icon" onclick="viewCustomerHistory('${escapeHtml(customer.name)}')" title="${t('customers.viewHistory')}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+            <polyline points="17 6 23 6 23 12"/>
+          </svg>
+        </button>
         <button class="btn-icon" onclick="editCustomer('${escapeHtml(customer.name)}')" title="${t('common.edit')}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -1222,6 +1234,236 @@ async function handleCustomerSubmit(e: Event) {
     }
   } catch (error: any) {
     showToast(error.message || 'Error deleting customer', 'error');
+  }
+};
+
+// Customer History
+let customerHistoryChart: any = null;
+let currentCustomerName: string = '';
+let currentCustomerInvoices: Invoice[] = [];
+
+(window as any).viewCustomerHistory = function(customerName: string) {
+  currentCustomerName = customerName;
+  const modal = document.getElementById('customerHistoryModal');
+  const title = document.getElementById('customerHistoryTitle');
+  
+  if (!modal || !title) return;
+  
+  title.textContent = `${customerName} - ${t('customers.customerHistory')}`;
+  
+  // Get customer invoices (exclude cancelled)
+  const customerInvoices = workbookData.invoices.filter(
+    inv => inv.customerName === customerName && inv.status !== 'Cancelled'
+  );
+  currentCustomerInvoices = customerInvoices;
+  
+  // Calculate analytics
+  const totalSpent = customerInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+  const totalInvoices = customerInvoices.length;
+  const avgOrder = totalInvoices > 0 ? totalSpent / totalInvoices : 0;
+  
+  // Get last purchase date
+  const sortedInvoices = [...customerInvoices].sort((a, b) => 
+    new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  const lastPurchase = sortedInvoices.length > 0 ? formatDate(sortedInvoices[0].date) : '-';
+  
+  // Update analytics cards
+  updateElement('customerTotalSpent', formatCurrency(totalSpent));
+  updateElement('customerTotalInvoices', totalInvoices.toString());
+  updateElement('customerLastPurchase', lastPurchase);
+  updateElement('customerAvgOrder', formatCurrency(avgOrder));
+  
+  // Render purchase trend chart
+  renderCustomerPurchaseTrendChart(customerInvoices);
+  
+  // Render invoices table
+  renderCustomerInvoicesTable(customerInvoices);
+  
+  modal.classList.add('active');
+};
+
+function renderCustomerPurchaseTrendChart(invoices: Invoice[]) {
+  const canvas = document.getElementById('customerPurchaseTrendChart') as any;
+  if (!canvas) return;
+  
+  // Destroy existing chart
+  if (customerHistoryChart) {
+    customerHistoryChart.destroy();
+  }
+  
+  // Group sales by date
+  const salesByDate: any = {};
+  invoices.forEach(inv => {
+    const date = inv.date;
+    salesByDate[date] = (salesByDate[date] || 0) + inv.totalAmount;
+  });
+  
+  const dates = Object.keys(salesByDate).sort();
+  const values = dates.map(date => salesByDate[date]);
+  
+  customerHistoryChart = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: dates.map(d => formatDate(d)),
+      datasets: [{
+        label: 'Purchase Amount',
+        data: values,
+        borderColor: 'rgb(99, 102, 241)',
+        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value: any) {
+              return '$' + value.toFixed(0);
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderCustomerInvoicesTable(invoices: Invoice[]) {
+  const tbody = document.getElementById('customerInvoicesTableBody');
+  if (!tbody) return;
+  
+  if (invoices.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No invoices found</td></tr>';
+    return;
+  }
+  
+  // Sort by date descending
+  const sortedInvoices = [...invoices].sort((a, b) => 
+    new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  
+  tbody.innerHTML = sortedInvoices.map(invoice => `
+    <tr>
+      <td><strong>${invoice.invoiceId}</strong></td>
+      <td>${formatDate(invoice.date)}</td>
+      <td>${formatCurrency(invoice.totalAmount)}</td>
+      <td>${formatCurrency(invoice.totalProfit)}</td>
+      <td><span class="badge badge-${getStatusBadgeClass(invoice.status)}">${translateStatus(invoice.status)}</span></td>
+      <td>
+        <button class="btn-icon" onclick="viewInvoice('${invoice.invoiceId}')" title="${t('common.view')}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+        <button class="btn-icon" onclick="printInvoice('${invoice.invoiceId}')" title="${t('common.print')}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 6 2 18 2 18 9"/>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+            <rect x="6" y="14" width="12" height="8"/>
+          </svg>
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// Export Customer History Functions
+(window as any).exportCustomerHistoryPDF = async function() {
+  if (!currentCustomerName || currentCustomerInvoices.length === 0) {
+    showToast(t('customers.exportError'), 'error');
+    return;
+  }
+
+  try {
+    const totalSpent = currentCustomerInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+    const totalProfit = currentCustomerInvoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
+    const avgOrder = currentCustomerInvoices.length > 0 ? totalSpent / currentCustomerInvoices.length : 0;
+    
+    const sortedInvoices = [...currentCustomerInvoices].sort((a, b) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+    const lastPurchase = sortedInvoices.length > 0 ? sortedInvoices[0].date : '-';
+
+    const data = {
+      customerName: currentCustomerName,
+      totalSpent: formatCurrency(totalSpent),
+      totalInvoices: currentCustomerInvoices.length,
+      avgOrder: formatCurrency(avgOrder),
+      totalProfit: formatCurrency(totalProfit),
+      lastPurchase: formatDate(lastPurchase),
+      currency: appSettings.currency,
+      invoices: sortedInvoices.map(inv => ({
+        invoiceId: inv.invoiceId,
+        date: formatDate(inv.date),
+        amount: formatCurrency(inv.totalAmount),
+        profit: formatCurrency(inv.totalProfit),
+        status: translateStatus(inv.status)
+      }))
+    };
+
+    const result = await api.exportCustomerHistoryPDF(data);
+    if (result.success) {
+      showToast(t('customers.exportSuccess'), 'success');
+    } else {
+      showToast(result.message || t('customers.exportError'), 'error');
+    }
+  } catch (error: any) {
+    showToast(error.message || t('customers.exportError'), 'error');
+  }
+};
+
+(window as any).exportCustomerHistoryExcel = async function() {
+  if (!currentCustomerName || currentCustomerInvoices.length === 0) {
+    showToast(t('customers.exportError'), 'error');
+    return;
+  }
+
+  try {
+    const totalSpent = currentCustomerInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+    const totalProfit = currentCustomerInvoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
+    const avgOrder = currentCustomerInvoices.length > 0 ? totalSpent / currentCustomerInvoices.length : 0;
+    
+    const sortedInvoices = [...currentCustomerInvoices].sort((a, b) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+    const lastPurchase = sortedInvoices.length > 0 ? sortedInvoices[0].date : '-';
+
+    const data = {
+      customerName: currentCustomerName,
+      totalSpent,
+      totalInvoices: currentCustomerInvoices.length,
+      avgOrder,
+      totalProfit,
+      lastPurchase,
+      currency: appSettings.currency,
+      invoices: sortedInvoices.map(inv => ({
+        invoiceId: inv.invoiceId,
+        date: inv.date,
+        amount: inv.totalAmount,
+        profit: inv.totalProfit,
+        status: inv.status,
+        items: inv.items
+      }))
+    };
+
+    const result = await api.exportCustomerHistoryExcel(data);
+    if (result.success) {
+      showToast(t('customers.exportSuccess'), 'success');
+    } else {
+      showToast(result.message || t('customers.exportError'), 'error');
+    }
+  } catch (error: any) {
+    showToast(error.message || t('customers.exportError'), 'error');
   }
 };
 

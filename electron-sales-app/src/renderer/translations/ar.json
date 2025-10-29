@@ -109,7 +109,19 @@
     "customerUpdated": "تم تحديث العميل بنجاح",
     "customerDeleted": "تم حذف العميل بنجاح",
     "searchPlaceholder": "البحث عن العملاء...",
-    "required": "*"
+    "required": "*",
+    "customerHistory": "سجل العميل",
+    "totalInvoices": "إجمالي الفواتير",
+    "avgOrder": "متوسط الطلب",
+    "purchaseTrend": "اتجاه المشتريات",
+    "invoiceHistory": "سجل الفواتير",
+    "viewHistory": "عرض السجل",
+    "totalSpent": "إجمالي المبلغ المنفق",
+    "lastPurchase": "آخر عملية شراء",
+    "exportPDF": "تصدير PDF",
+    "exportExcel": "تصدير Excel",
+    "exportSuccess": "تم تصدير سجل العميل بنجاح",
+    "exportError": "فشل تصدير سجل العميل"
   },
   "sales": {
     "title": "المبيعات والفواتير",

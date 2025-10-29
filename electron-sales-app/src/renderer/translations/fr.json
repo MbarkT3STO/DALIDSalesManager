@@ -109,7 +109,19 @@
     "customerUpdated": "Client mis à jour avec succès",
     "customerDeleted": "Client supprimé avec succès",
     "searchPlaceholder": "Rechercher des clients...",
-    "required": "*"
+    "required": "*",
+    "customerHistory": "Historique du client",
+    "totalInvoices": "Total des factures",
+    "avgOrder": "Commande moyenne",
+    "purchaseTrend": "Tendance des achats",
+    "invoiceHistory": "Historique des factures",
+    "viewHistory": "Voir l'historique",
+    "totalSpent": "Total dépensé",
+    "lastPurchase": "Dernier achat",
+    "exportPDF": "Exporter PDF",
+    "exportExcel": "Exporter Excel",
+    "exportSuccess": "Historique du client exporté avec succès",
+    "exportError": "Échec de l'exportation de l'historique du client"
   },
   "sales": {
     "title": "Ventes et Factures",

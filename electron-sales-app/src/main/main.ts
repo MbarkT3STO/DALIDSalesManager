@@ -505,6 +505,52 @@ ipcMain.handle('export-analytics-pdf', async (event, analyticsData: any) => {
   }
 });
 
+ipcMain.handle('export-customer-history-pdf', async (event, data: any) => {
+  try {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const customerNameSafe = data.customerName.replace(/[^a-zA-Z0-9]/g, '_');
+    const result = await dialog.showSaveDialog({
+      title: 'Export Customer History to PDF',
+      defaultPath: `customer-history-${customerNameSafe}-${timestamp}.pdf`,
+      filters: [{ name: 'PDF Files', extensions: ['pdf'] }]
+    });
+
+    if (result.canceled || !result.filePath) {
+      return { success: false, message: 'Export cancelled' };
+    }
+
+    await ExportHandler.exportCustomerHistoryPDF(result.filePath, data);
+    return { success: true, path: result.filePath };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+ipcMain.handle('export-customer-history-excel', async (event, data: any) => {
+  try {
+    if (!excelHandler) {
+      return { success: false, message: 'No workbook loaded' };
+    }
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const customerNameSafe = data.customerName.replace(/[^a-zA-Z0-9]/g, '_');
+    const result = await dialog.showSaveDialog({
+      title: 'Export Customer History to Excel',
+      defaultPath: `customer-history-${customerNameSafe}-${timestamp}.xlsx`,
+      filters: [{ name: 'Excel Files', extensions: ['xlsx'] }]
+    });
+
+    if (result.canceled || !result.filePath) {
+      return { success: false, message: 'Export cancelled' };
+    }
+
+    await excelHandler.exportCustomerHistoryExcel(result.filePath, data);
+    return { success: true, path: result.filePath };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
 ipcMain.handle('export-products-csv', async () => {
   try {
     if (!excelHandler) {

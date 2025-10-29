@@ -972,4 +972,118 @@ export class ExcelHandler {
     
     return user || null;
   }
+
+  async exportCustomerHistoryExcel(filePath: string, data: any): Promise<void> {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Customer History');
+
+    // Set column widths
+    worksheet.columns = [
+      { width: 20 },
+      { width: 15 },
+      { width: 15 },
+      { width: 15 },
+      { width: 15 }
+    ];
+
+    // Title
+    worksheet.mergeCells('A1:E1');
+    const titleCell = worksheet.getCell('A1');
+    titleCell.value = 'Customer History Report';
+    titleCell.font = { size: 18, bold: true, color: { argb: 'FF4F46E5' } };
+    titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    worksheet.getRow(1).height = 30;
+
+    // Customer Name
+    worksheet.mergeCells('A2:E2');
+    const nameCell = worksheet.getCell('A2');
+    nameCell.value = data.customerName;
+    nameCell.font = { size: 14, bold: true };
+    nameCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    worksheet.getRow(2).height = 25;
+
+    // Generated Date and Currency
+    worksheet.mergeCells('A3:E3');
+    const dateCell = worksheet.getCell('A3');
+    dateCell.value = `Generated: ${new Date().toLocaleDateString()} | Currency: ${data.currency || 'USD'}`;
+    dateCell.font = { size: 10, color: { argb: 'FF6B7280' } };
+    dateCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+    // Summary Section
+    worksheet.addRow([]);
+    worksheet.addRow(['Summary']);
+    const summaryHeaderRow = worksheet.getRow(5);
+    summaryHeaderRow.font = { size: 12, bold: true };
+    summaryHeaderRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFF3F4F6' }
+    };
+
+    worksheet.addRow(['Total Spent', data.totalSpent]);
+    worksheet.addRow(['Total Invoices', data.totalInvoices]);
+    worksheet.addRow(['Average Order', data.avgOrder]);
+    worksheet.addRow(['Total Profit', data.totalProfit]);
+    worksheet.addRow(['Last Purchase', data.lastPurchase]);
+
+    // Invoice History Section
+    worksheet.addRow([]);
+    worksheet.addRow(['Invoice History']);
+    const historyHeaderRow = worksheet.getRow(12);
+    historyHeaderRow.font = { size: 12, bold: true };
+    historyHeaderRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFF3F4F6' }
+    };
+
+    // Invoice Table Headers
+    const headerRow = worksheet.addRow(['Invoice ID', 'Date', 'Amount', 'Profit', 'Status']);
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    headerRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF4F46E5' }
+    };
+    headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
+    headerRow.height = 25;
+
+    // Invoice Data
+    data.invoices.forEach((invoice: any, index: number) => {
+      const row = worksheet.addRow([
+        invoice.invoiceId,
+        invoice.date,
+        invoice.amount,
+        invoice.profit,
+        invoice.status
+      ]);
+
+      if (index % 2 === 0) {
+        row.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFF9FAFB' }
+        };
+      }
+
+      row.alignment = { horizontal: 'center', vertical: 'middle' };
+    });
+
+    // Add borders to invoice table
+    const invoiceTableStartRow = 13;
+    const invoiceTableEndRow = 13 + data.invoices.length;
+    for (let i = invoiceTableStartRow; i <= invoiceTableEndRow; i++) {
+      for (let j = 1; j <= 5; j++) {
+        const cell = worksheet.getCell(i, j);
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      }
+    }
+
+    await workbook.xlsx.writeFile(filePath);
+  }
 }
