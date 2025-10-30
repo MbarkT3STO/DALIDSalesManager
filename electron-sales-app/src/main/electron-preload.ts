@@ -60,6 +60,11 @@ export interface ElectronAPI {
   accExportCSV: (defaultFileName: string, csvContent: string) => Promise<any>;
   exportHtmlToPDF: (html: string, defaultFileName: string) => Promise<any>;
   openDevTools: () => Promise<any>;
+  // Activation
+  getActivationStatus: () => Promise<any>;
+  activateApp: (key: string) => Promise<any>;
+  onOpenActivationModal: (handler: () => void) => void;
+  getActivationKey: () => Promise<any>;
 }
 
 // Expose protected methods that allow the renderer process to use
@@ -126,5 +131,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   accGetBalanceSheet: (asOfDate?: string) => ipcRenderer.invoke('acc-get-balance-sheet', asOfDate),
   accExportCSV: (defaultFileName: string, csvContent: string) => ipcRenderer.invoke('acc-export-csv', defaultFileName, csvContent),
   exportHtmlToPDF: (html: string, defaultFileName: string) => ipcRenderer.invoke('export-html-to-pdf', html, defaultFileName),
-  openDevTools: () => ipcRenderer.invoke('open-devtools')
+  openDevTools: () => ipcRenderer.invoke('open-devtools'),
+  // Activation
+  getActivationStatus: () => ipcRenderer.invoke('get-activation-status'),
+  activateApp: (key: string) => ipcRenderer.invoke('activate-app', key),
+  onOpenActivationModal: (handler: () => void) => {
+    ipcRenderer.removeAllListeners('open-activation-modal');
+    ipcRenderer.on('open-activation-modal', () => {
+      try { handler(); } catch {}
+    });
+  },
+  getActivationKey: () => ipcRenderer.invoke('get-activation-key')
 } as ElectronAPI);

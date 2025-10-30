@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Activate DALID Sales Manager</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { background: radial-gradient(80rem 80rem at 10% -10%, rgba(99,102,241,.12), transparent), radial-gradient(60rem 60rem at 110% 10%, rgba(124,58,237,.12), transparent), var(--bg-secondary); }
+    .activation-wrapper { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+    .activation-card { max-width: 720px; width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-2xl); box-shadow: var(--shadow-xl); overflow: hidden; transition: transform .2s ease, box-shadow .2s ease; }
+    .activation-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-2xl); }
+    .activation-hero { background: var(--primary-gradient); padding: 28px; color: var(--text-inverse); display: flex; gap: 16px; align-items: center; }
+    .hero-icon { width: 48px; height: 48px; display: inline-flex; align-items: center; justify-content: center; border-radius: 14px; background: rgba(255,255,255,.15); box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); }
+    .activation-hero h1 { margin: 0 0 6px 0; font-size: 1.9rem; letter-spacing: -.02em; }
+    .activation-hero p { margin: 0; opacity: .95; }
+    .activation-body { padding: 28px; display: grid; gap: 18px; }
+    .device-id-box { background: var(--bg-secondary); border: 1px dashed var(--border-color); border-radius: var(--radius-xl); padding: 12px 14px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; display: flex; align-items: center; justify-content: space-between; overflow:auto; }
+    .note { color: var(--text-secondary); font-size: .95rem; line-height: 1.6; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none; align-items: center; justify-content: center; z-index: 2000; }
+    .modal-overlay.active { display: flex; }
+    /* Override global .modal from app styles to ensure visibility inside overlay */
+    .modal-overlay .modal { display: block; position: relative; }
+    .modal { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-2xl); box-shadow: var(--shadow-2xl); width: 95%; max-width: 760px; overflow: hidden; animation: pop .18s ease-out; }
+    .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: linear-gradient(180deg, rgba(99,102,241,.08), transparent); }
+    .modal-body { padding: 20px; display: grid; gap: 14px; }
+    @keyframes pop { from { transform: scale(.98); opacity: .8; } to { transform: scale(1); opacity: 1; } }
+
+    /* Responsive tweaks */
+    @media (max-width: 640px) {
+      .activation-hero { flex-direction: column; align-items: flex-start; }
+      .activation-body { padding: 20px; }
+      .activation-card { border-radius: var(--radius-xl); }
+      .modal { max-width: 95vw; }
+      .device-id-box code { font-size: .85rem; }
+      .activation-body .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="activation-wrapper">
+    <div class="activation-card">
+      <div class="activation-hero">
+        <div class="hero-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1v6"/>
+            <path d="M5.5 10.5l-4.5 4.5 4.5 4.5"/>
+            <path d="M18.5 10.5l4.5 4.5-4.5 4.5"/>
+            <rect x="3" y="8" width="18" height="8" rx="2"/>
+          </svg>
+        </div>
+        <h1>Activation Required</h1>
+        <p>DALID Sales Manager needs to be activated to continue.</p>
+      </div>
+      <div class="activation-body">
+        <p class="note">This copy of DALID Sales Manager is not activated. Please activate to continue.</p>
+        <div style="display:flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
+          <button id="quitAppBtn" class="btn btn-secondary">Quit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Secret Modal -->
+  <div id="activationModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <strong>Enter Activation Key</strong>
+        <button id="closeModalBtn" class="btn btn-icon">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Your Device ID</label>
+          <div class="device-id-box">
+            <code id="deviceId">Loading…</code>
+            <button id="copyDeviceIdBtn" class="btn btn-secondary btn-small">Copy</button>
+          </div>
+          <p class="note">Provide this Device ID to receive an activation key.</p>
+        </div>
+        <div class="form-group">
+          <label>Your Activation Key (generated)</label>
+          <div class="device-id-box">
+            <code id="generatedKey">Loading…</code>
+            <button id="copyGeneratedKeyBtn" class="btn btn-secondary btn-small">Copy</button>
+          </div>
+          <p class="note">Copy and paste this key below to activate.</p>
+        </div>
+        <div class="form-group">
+          <label>Activation Key</label>
+          <input type="text" id="modalActivationKey" class="form-control" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX">
+        </div>
+        <div style="display:flex; gap: 10px; justify-content:flex-end; flex-wrap: wrap;">
+          <button id="modalActivateBtn" class="btn btn-primary" style="min-width: 140px;">Activate</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const api = window.electronAPI;
+    document.getElementById('quitAppBtn').addEventListener('click', () => {
+      window.close();
+    });
+
+    // Secret modal controls
+    const overlay = document.getElementById('activationModal');
+    document.getElementById('closeModalBtn').addEventListener('click', () => overlay.classList.remove('active'));
+    document.getElementById('modalActivateBtn').addEventListener('click', async () => {
+      const key = (document.getElementById('modalActivationKey')).value.trim();
+      const res = await api.activateApp(key);
+      if (!res.success) {
+        if (window.showError) window.showError('Invalid Key', res.message || 'Activation failed');
+      }
+    });
+
+    api.onOpenActivationModal(() => {
+      overlay.classList.add('active');
+      // Populate device id and generated key when opening
+      api.getActivationStatus().then(res => {
+        if (res.success) {
+          const el = document.getElementById('deviceId');
+          if (el) el.textContent = res.deviceId;
+        }
+      });
+      api.getActivationKey().then(res => {
+        if (res.success) {
+          const keyEl = document.getElementById('generatedKey');
+          if (keyEl) keyEl.textContent = res.key;
+          const input = document.getElementById('modalActivationKey');
+          if (input) input.value = res.key;
+        }
+      });
+    });
+
+    document.getElementById('copyDeviceIdBtn').addEventListener('click', async () => {
+      try {
+        const text = document.getElementById('deviceId').textContent;
+        await navigator.clipboard.writeText(text);
+        if (window.showSuccess) window.showSuccess('Copied', 'Device ID copied');
+      } catch {}
+    });
+
+    document.getElementById('copyGeneratedKeyBtn').addEventListener('click', async () => {
+      try {
+        const text = document.getElementById('generatedKey').textContent;
+        await navigator.clipboard.writeText(text);
+        if (window.showSuccess) window.showSuccess('Copied', 'Activation key copied');
+      } catch {}
+    });
+  </script>
+</body>
+</html>
+
+

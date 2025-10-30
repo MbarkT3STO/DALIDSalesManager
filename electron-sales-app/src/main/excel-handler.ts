@@ -132,7 +132,7 @@ export class ExcelHandler {
     
     const usersSheet = workbook.getWorksheet('Users');
     if (!usersSheet) {
-      console.log('Users sheet not found, creating it...');
+      
       
       // Create Users sheet
       const newUsersSheet = workbook.addWorksheet('Users');
@@ -159,7 +159,7 @@ export class ExcelHandler {
       });
 
       await workbook.xlsx.writeFile(this.workbookPath);
-      console.log('Users sheet created with default admin user');
+      
     }
   }
 
@@ -1163,7 +1163,7 @@ export class ExcelHandler {
   private readUsers(workbook: ExcelJS.Workbook): User[] {
     const sheet = workbook.getWorksheet('Users');
     if (!sheet) {
-      console.log('Users sheet not found');
+      
       return [];
     }
 
@@ -1188,7 +1188,7 @@ export class ExcelHandler {
       }
     });
 
-    console.log(`Found ${users.length} users in database`);
+    
     return users;
   }
 
@@ -1291,19 +1291,14 @@ export class ExcelHandler {
 
   async authenticateUser(username: string, password: string): Promise<User | null> {
     const data = await this.readWorkbook();
-    console.log(`Authenticating user: ${username}`);
-    console.log(`Total users in database: ${data.users.length}`);
+    
     
     const user = data.users.find(u => {
-      console.log(`Checking user: ${u.username}, active: ${u.isActive}`);
+      
       return u.username === username && u.password === password && u.isActive;
     });
     
-    if (user) {
-      console.log(`Authentication successful for: ${username}`);
-    } else {
-      console.log(`Authentication failed for: ${username}`);
-    }
+    
     
     return user || null;
   }

@@ -119,8 +119,6 @@ const api = (window as any).electronAPI;
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
   initializeApp();
-  // Open DevTools to inspect console for the reported tab issue
-  try { api.openDevTools(); } catch {}
 });
 
 // Localization functions
@@ -131,7 +129,7 @@ async function loadTranslations(language: string) {
     currentLanguage = language;
     applyTranslations();
   } catch (error) {
-    console.error('Failed to load translations:', error);
+    // swallow
     // Fallback to English
     if (language !== 'en') {
       await loadTranslations('en');
@@ -327,7 +325,7 @@ function loadSettings() {
     try {
       appSettings = { ...appSettings, ...JSON.parse(saved) };
     } catch (error) {
-      console.error('Failed to parse saved settings:', error);
+      // swallow
     }
   }
 }
@@ -2407,41 +2405,40 @@ function renderReports() {
 
 // Users rendering
 async function renderUsers() {
-  console.log('renderUsers called');
+  
   
   // Check if Users tab is visible
   const usersTab = (document as any).getElementById('usersTab');
   if (usersTab) {
     const isVisible = usersTab.classList.contains('active');
     const displayStyle = window.getComputedStyle(usersTab).display;
-    console.log('Users tab active:', isVisible, 'display:', displayStyle);
+    
   }
   
   const tbody = (document as any).getElementById('usersTableBody');
   if (!tbody) {
-    console.log('usersTableBody not found');
+    
     return;
   }
   
-  console.log('tbody element:', tbody);
-  console.log('tbody visible:', tbody.offsetParent !== null);
+  
 
   try {
-    console.log('Calling api.getUsers()');
+    
     const result = await api.getUsers();
-    console.log('getUsers result:', result);
+    
     
     if (!result.success || !result.users) {
-      console.log('Failed to load users or no users in result');
+      
       tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Failed to load users</td></tr>';
       return;
     }
 
     const users = result.users;
-    console.log('Users array:', users);
+    
 
     if (users.length === 0) {
-      console.log('No users found in array');
+      
       tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No users found</td></tr>';
       return;
     }
@@ -2484,11 +2481,11 @@ async function renderUsers() {
       `;
     }).join('');
     
-    console.log('Generated HTML:', html);
+    
     tbody.innerHTML = html;
-    console.log('tbody.innerHTML set, rows count:', tbody.querySelectorAll('tr').length);
+    
   } catch (error) {
-    console.error('Error in renderUsers:', error);
+    
     tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Error loading users</td></tr>';
   }
 }
@@ -3623,7 +3620,7 @@ async function exportAnalyticsToPDF() {
         try {
           return canvas.toDataURL('image/png');
         } catch (error) {
-          console.error(`Error converting chart ${chartId} to image:`, error);
+          // swallow
           return null;
         }
       }
@@ -3655,7 +3652,7 @@ async function exportAnalyticsToPDF() {
       showToast(result.message || 'Failed to export analytics to PDF', 'error');
     }
   } catch (error: any) {
-    console.error('Error exporting analytics to PDF:', error);
+    // swallow
     showToast(error.message || 'An error occurred while exporting', 'error');
   } finally {
     // Restore button state

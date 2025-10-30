@@ -1,6 +1,8 @@
-import { app, BrowserWindow, ipcMain, dialog, Notification, Menu } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, Notification, Menu, globalShortcut } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as os from 'os';
+import * as crypto from 'crypto';
 import { ExcelHandler, Product, Customer, Invoice, Payment, User, Account, JournalEntry } from './excel-handler';
 import { ExportHandler } from './export-handler';
 import { GDPRHandler } from './gdpr-handler';
@@ -8,6 +10,66 @@ import { GDPRHandler } from './gdpr-handler';
 let mainWindow: BrowserWindow | null = null;
 let excelHandler: ExcelHandler | null = null;
 let gdprHandler: GDPRHandler | null = null;
+
+// ================= Activation Manager =================
+const ACTIVATION_FILE = '.activation.json';
+const ACTIVATION_SECRET = 'DALID_SALES_MANAGER_PROD_SECRET_v1';
+
+function getDeviceFingerprint(): string {
+  try {
+    const nets = os.networkInterfaces();
+    const macs: string[] = [];
+    for (const name of Object.keys(nets)) {
+      for (const net of nets[name] || []) {
+        if (!net.internal && net.mac && net.mac !== '00:00:00:00:00:00') macs.push(net.mac);
+      }
+    }
+    const base = [
+      os.hostname(),
+      os.platform(),
+      os.arch(),
+      (os.cpus()?.[0]?.model) || '',
+      macs.sort().join('-')
+    ].join('|');
+    return crypto.createHash('sha256').update(base).digest('hex').toUpperCase();
+  } catch {
+    return crypto.createHash('sha256').update(os.hostname()).digest('hex').toUpperCase();
+  }
+}
+
+function expectedActivationKey(deviceId: string): string {
+  const raw = crypto.createHmac('sha256', ACTIVATION_SECRET).update(deviceId).digest('hex').toUpperCase();
+  // Group into XXXX-XXXX-XXXX-XXXX-XXXX
+  return raw.slice(0, 20).match(/.{1,4}/g)!.join('-');
+}
+
+function getActivationFilePath(): string {
+  return path.join(app.getPath('userData'), ACTIVATION_FILE);
+}
+
+function isActivated(): boolean {
+  try {
+    const p = getActivationFilePath();
+    if (!fs.existsSync(p)) return false;
+    const data = JSON.parse(fs.readFileSync(p, 'utf-8'));
+    const deviceId = getDeviceFingerprint();
+    const expected = expectedActivationKey(deviceId);
+    return data?.deviceId === deviceId && data?.key === expected;
+  } catch {
+    return false;
+  }
+}
+
+function saveActivation(key: string): boolean {
+  const deviceId = getDeviceFingerprint();
+  const expected = expectedActivationKey(deviceId);
+  if (key.replace(/\s/g, '').toUpperCase() === expected.replace(/\s/g, '').toUpperCase()) {
+    const payload = { deviceId, key: expected, activatedAt: new Date().toISOString() };
+    fs.writeFileSync(getActivationFilePath(), JSON.stringify(payload, null, 2));
+    return true;
+  }
+  return false;
+}
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -27,13 +89,14 @@ function createWindow(): void {
   // Remove the default menu
   Menu.setApplicationMenu(null);
 
-  // Load login page first
-  mainWindow.loadFile(path.join(__dirname, '../../src/renderer/login.html'));
-
-  // Open DevTools in development
-  if (process.env.NODE_ENV === 'development') {
-    mainWindow.webContents.openDevTools();
+  // Load activation or app based on activation status
+  if (isActivated()) {
+    mainWindow.loadFile(path.join(__dirname, '../../src/renderer/login.html'));
+  } else {
+    mainWindow.loadFile(path.join(__dirname, '../../src/renderer/activation.html'));
   }
+
+  // DevTools disabled by default
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -46,6 +109,12 @@ app.whenReady().then(() => {
   
   createWindow();
 
+  // Secret shortcut to open activation modal (Command/Ctrl+Shift+A)
+  globalShortcut.register('CommandOrControl+Shift+A', () => {
+    if (!mainWindow) return;
+    mainWindow.webContents.send('open-activation-modal');
+  });
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
@@ -53,18 +122,7 @@ app.whenReady().then(() => {
   });
 });
 
-// DevTools opener for debugging from renderer
-ipcMain.handle('open-devtools', async () => {
-  try {
-    if (mainWindow) {
-      mainWindow.webContents.openDevTools({ mode: 'detach' });
-      return { success: true };
-    }
-    return { success: false, message: 'No window available' };
-  } catch (error: any) {
-    return { success: false, message: error.message };
-  }
-});
+// DevTools opener removed
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -73,6 +131,38 @@ app.on('window-all-closed', () => {
 });
 
 // IPC Handlers
+// Activation IPC
+ipcMain.handle('get-activation-status', async () => {
+  try {
+    const deviceId = getDeviceFingerprint();
+    return { success: true, activated: isActivated(), deviceId };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+ipcMain.handle('activate-app', async (event, key: string) => {
+  try {
+    const ok = saveActivation(key);
+    if (ok && mainWindow) {
+      await mainWindow.loadFile(path.join(__dirname, '../../src/renderer/login.html'));
+    }
+    return { success: ok, activated: ok };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+ipcMain.handle('get-activation-key', async () => {
+  try {
+    const deviceId = getDeviceFingerprint();
+    const key = expectedActivationKey(deviceId);
+    return { success: true, deviceId, key };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
 
 // Export a copy of the current workbook
 ipcMain.handle('export-workbook-copy', async () => {
