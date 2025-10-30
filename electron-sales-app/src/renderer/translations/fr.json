@@ -253,7 +253,8 @@
     "profitMarginMetric": "Marge bénéficiaire",
     "today": "Aujourd'hui",
     "yesterday": "Hier",
-    "units": "unités"
+    "units": "unités",
+    "exportPdf": "Exporter en PDF"
   },
   "reports": {
     "title": "Rapports et analyses",

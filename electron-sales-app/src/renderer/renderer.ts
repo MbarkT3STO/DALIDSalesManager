@@ -731,7 +731,11 @@ function setupEventListeners() {
   });
 
   // Report filters
-  document.getElementById('filterReportBtn')?.addEventListener('click', filterReports);
+  document.getElementById('filterReportBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    filterReports();
+    showToast(t('reports.applyFilter', 'Apply Filter') + ' ✓', 'success');
+  });
   document.getElementById('exportReportBtn')?.addEventListener('click', exportReport);
 
   // Settings

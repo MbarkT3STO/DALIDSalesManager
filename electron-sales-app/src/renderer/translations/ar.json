@@ -253,7 +253,8 @@
     "profitMarginMetric": "هامش الربح",
     "today": "اليوم",
     "yesterday": "الأمس",
-    "units": "وحدات"
+    "units": "وحدات",
+    "exportPdf": "تصدير PDF"
   },
   "reports": {
     "title": "التقارير والتحليلات",

@@ -256,7 +256,8 @@
     "profitMarginMetric": "Profit Margin",
     "today": "Today",
     "yesterday": "Yesterday",
-    "units": "units"
+    "units": "units",
+    "exportPdf": "Export to PDF"
   },
   "reports": {
     "title": "Reports & Analytics",
