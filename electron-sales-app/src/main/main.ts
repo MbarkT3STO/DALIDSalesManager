@@ -14,6 +14,7 @@ let gdprHandler: GDPRHandler | null = null;
 // ================= Activation Manager =================
 const ACTIVATION_FILE = '.activation.json';
 const ACTIVATION_SECRET = 'DALID_SALES_MANAGER_PROD_SECRET_v1';
+const ACTIVATION_SIG_SECRET = 'DALID_SALES_MANAGER_SIG_v1';
 
 function getDeviceFingerprint(): string {
   try {
@@ -51,10 +52,19 @@ function isActivated(): boolean {
   try {
     const p = getActivationFilePath();
     if (!fs.existsSync(p)) return false;
-    const data = JSON.parse(fs.readFileSync(p, 'utf-8'));
+    const raw = fs.readFileSync(p, 'utf-8');
+    const data = JSON.parse(raw);
     const deviceId = getDeviceFingerprint();
     const expected = expectedActivationKey(deviceId);
-    return data?.deviceId === deviceId && data?.key === expected;
+    // verify signature to prevent file copy/tamper
+    const body = `${data?.deviceId}|${data?.key}|${data?.activatedAt}`;
+    const sig = crypto.createHmac('sha256', ACTIVATION_SIG_SECRET).update(body).digest('hex');
+    const valid = data?.deviceId === deviceId && data?.key === expected && data?.sig === sig;
+    if (!valid) {
+      // Invalidate suspicious file
+      try { fs.unlinkSync(p); } catch {}
+    }
+    return valid;
   } catch {
     return false;
   }
@@ -64,8 +74,16 @@ function saveActivation(key: string): boolean {
   const deviceId = getDeviceFingerprint();
   const expected = expectedActivationKey(deviceId);
   if (key.replace(/\s/g, '').toUpperCase() === expected.replace(/\s/g, '').toUpperCase()) {
-    const payload = { deviceId, key: expected, activatedAt: new Date().toISOString() };
-    fs.writeFileSync(getActivationFilePath(), JSON.stringify(payload, null, 2));
+    const activatedAt = new Date().toISOString();
+    const body = `${deviceId}|${expected}|${activatedAt}`;
+    const sig = crypto.createHmac('sha256', ACTIVATION_SIG_SECRET).update(body).digest('hex');
+    const payload = { deviceId, key: expected, activatedAt, sig };
+    const filePath = getActivationFilePath();
+    fs.writeFileSync(filePath, JSON.stringify(payload, null, 2));
+    try {
+      // tighten permissions where supported
+      if (process.platform !== 'win32') fs.chmodSync(filePath, 0o600);
+    } catch {}
     return true;
   }
   return false;
