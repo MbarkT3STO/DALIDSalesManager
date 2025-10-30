@@ -285,6 +285,15 @@
                 </svg>
                 <span data-translate="navigation.analytics">Analytics</span>
             </button>
+            <button class="nav-tab" data-tab="accounting" id="accountingNavBtn" style="display: none;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 3h18v6H3z"/>
+                    <path d="M3 13h18v8H3z"/>
+                    <path d="M7 16h4"/>
+                    <path d="M7 19h10"/>
+                </svg>
+                <span data-translate="navigation.accounting">Accounting</span>
+            </button>
             <button class="nav-tab" data-tab="reports">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M18 20V10"/>
@@ -383,6 +392,116 @@
                     <div id="lowStockAlert" class="alert-container">
                         <p class="empty-state" data-translate="common.allStocked">All products are well stocked</p>
                     </div>
+                </div>
+            </div>
+
+            <!-- Accounting Tab -->
+            <div id="accountingTab" class="tab-content">
+                <div class="tab-header">
+                    <h2 data-translate="accounting.title">Accounting</h2>
+                </div>
+
+                <div class="dashboard-grid" style="margin-bottom: 1.5rem;">
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h3 data-translate="accounting.quickJournal">Quick Journal Entry</h3>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: end;">
+                                <div class="form-group" style="min-width: 160px;">
+                                    <label data-translate="common.date">Date</label>
+                                    <input type="date" id="jeDate" class="form-control">
+                                </div>
+                                <div class="form-group" style="flex: 1; min-width: 200px;">
+                                    <label data-translate="common.description">Description</label>
+                                    <input type="text" id="jeDesc" class="form-control" data-translate-placeholder="common.description" placeholder="Description">
+                                </div>
+                                <div class="form-group" style="min-width: 140px;">
+                                    <label data-translate="accounting.reference">Reference</label>
+                                    <input type="text" id="jeRef" class="form-control" data-translate-placeholder="accounting.reference" placeholder="Ref#">
+                                </div>
+                            </div>
+                            <div style="margin-top: 10px;">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th data-translate="accounting.line">Line</th>
+                                            <th data-translate="accounting.account">Account</th>
+                                            <th data-translate="accounting.debit">Debit</th>
+                                            <th data-translate="accounting.credit">Credit</th>
+                                            <th data-translate="common.actions">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="jeLinesBody">
+                                        <tr>
+                                            <td>1</td>
+                                            <td><input class="form-control je-account" data-translate-placeholder="accounting.accountCodePlaceholder" placeholder="Account (code)" list="accountsDatalist"></td>
+                                            <td><input type="number" class="form-control je-debit" min="0" step="0.01"></td>
+                                            <td><input type="number" class="form-control je-credit" min="0" step="0.01"></td>
+                                            <td><button class="btn btn-secondary btn-small" id="jeAddLineBtn" data-translate="common.add">Add</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <!-- Accounts datalist for autocomplete -->
+                                <datalist id="accountsDatalist"></datalist>
+                                <div style="display:flex; gap: 10px; margin-top: 10px;">
+                                    <button class="btn btn-primary" id="jeSubmitBtn" data-translate="accounting.postJournal">Post Journal</button>
+                                    <span id="jeTotals" style="align-self: center; color: var(--text-secondary);"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-section">
+                    <h2 data-translate="accounting.trialBalance">Trial Balance</h2>
+                    <div style="display:flex; gap: 8px; margin-bottom: 10px; align-items: end; flex-wrap: wrap;">
+                        <div class="form-group">
+                            <label data-translate="reports.fromDate">From Date:</label>
+                            <input type="date" id="tbFrom" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label data-translate="reports.toDate">To Date:</label>
+                            <input type="date" id="tbTo" class="form-control">
+                        </div>
+                        <button class="btn btn-secondary" id="tbRefreshBtn" data-translate="common.refreshData">Refresh</button>
+                        <button class="btn btn-secondary" id="tbExportCsvBtn" data-translate="reports.exportCSV">Export CSV</button>
+                        <button class="btn btn-secondary" id="tbExportPdfBtn" data-translate="reports.exportPDF">Export PDF</button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th data-translate="accounting.code">Code</th>
+                                    <th data-translate="accounting.account">Account</th>
+                                    <th data-translate="accounting.type">Type</th>
+                                    <th data-translate="accounting.debit">Debit</th>
+                                    <th data-translate="accounting.credit">Credit</th>
+                                    <th data-translate="accounting.balance">Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbBody">
+                                <tr><td colspan="6" class="empty-state" data-translate="common.noData">No data</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="dashboard-section">
+                    <h2 data-translate="accounting.financialStatements">Financial Statements</h2>
+                    <div style="display:flex; gap: 8px; margin-bottom: 10px; align-items: end; flex-wrap: wrap;">
+                        <div class="form-group">
+                            <label data-translate="reports.fromDate">From Date:</label>
+                            <input type="date" id="fsFrom" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label data-translate="accounting.toOrAsOf">To / As of</label>
+                            <input type="date" id="fsTo" class="form-control">
+                        </div>
+                        <button class="btn btn-secondary" id="fsIncomeBtn" data-translate="accounting.incomeStatement">Income Statement</button>
+                        <button class="btn btn-secondary" id="fsBalanceBtn" data-translate="accounting.balanceSheet">Balance Sheet</button>
+                        <button class="btn btn-secondary" id="fsExportCsvBtn" data-translate="reports.exportCSV">Export CSV</button>
+                        <button class="btn btn-secondary" id="fsExportPdfBtn" data-translate="reports.exportPDF">Export PDF</button>
+                    </div>
+                    <div id="fsOutput" class="table-container"></div>
                 </div>
             </div>
 
@@ -987,6 +1106,14 @@
                                 <span class="toggle-slider"></span>
                             </div>
                             <p class="form-hint" data-translate="settings.autoRefreshHint">Automatically refresh data every 5 minutes.</p>
+                        </div>
+                        <div class="settings-group">
+                            <label for="accountingEnabledToggle" data-translate="settings.enableAccounting">Enable Accounting</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="accountingEnabledToggle">
+                                <span class="toggle-slider"></span>
+                            </div>
+                            <p class="form-hint" data-translate="settings.enableAccountingHint">Show or hide the Accounting module and tab.</p>
                         </div>
                     </div>
 

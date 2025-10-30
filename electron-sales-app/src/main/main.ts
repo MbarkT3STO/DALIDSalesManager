@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog, Notification, Menu } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
-import { ExcelHandler, Product, Customer, Invoice, Payment, User } from './excel-handler';
+import { ExcelHandler, Product, Customer, Invoice, Payment, User, Account, JournalEntry } from './excel-handler';
 import { ExportHandler } from './export-handler';
 import { GDPRHandler } from './gdpr-handler';
 
@@ -51,6 +51,19 @@ app.whenReady().then(() => {
       createWindow();
     }
   });
+});
+
+// DevTools opener for debugging from renderer
+ipcMain.handle('open-devtools', async () => {
+  try {
+    if (mainWindow) {
+      mainWindow.webContents.openDevTools({ mode: 'detach' });
+      return { success: true };
+    }
+    return { success: false, message: 'No window available' };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
 });
 
 app.on('window-all-closed', () => {
@@ -479,6 +492,113 @@ ipcMain.handle('export-invoice-pdf', async (event, invoice: Invoice) => {
     }
 
     await ExportHandler.exportInvoiceToPDF(invoice, result.filePath);
+    return { success: true, path: result.filePath };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+// ============= Accounting IPC Handlers =============
+ipcMain.handle('acc-list-accounts', async () => {
+  try {
+    if (!excelHandler) return { success: false, message: 'No workbook loaded' };
+    const accounts = await excelHandler.listAccounts();
+    return { success: true, accounts };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+ipcMain.handle('acc-add-account', async (event, account: Account) => {
+  try {
+    if (!excelHandler) return { success: false, message: 'No workbook loaded' };
+    await excelHandler.addAccount(account);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+ipcMain.handle('acc-update-account', async (event, code: string, account: Account) => {
+  try {
+    if (!excelHandler) return { success: false, message: 'No workbook loaded' };
+    await excelHandler.updateAccount(code, account);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+ipcMain.handle('acc-add-journal-entry', async (event, entry: JournalEntry) => {
+  try {
+    if (!excelHandler) return { success: false, message: 'No workbook loaded' };
+    await excelHandler.addJournalEntry(entry);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+ipcMain.handle('acc-get-trial-balance', async (event, startDate?: string, endDate?: string) => {
+  try {
+    if (!excelHandler) return { success: false, message: 'No workbook loaded' };
+    const data = await excelHandler.getTrialBalance(startDate, endDate);
+    return { success: true, data };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+ipcMain.handle('acc-get-income-statement', async (event, startDate?: string, endDate?: string) => {
+  try {
+    if (!excelHandler) return { success: false, message: 'No workbook loaded' };
+    const report = await excelHandler.getIncomeStatement(startDate, endDate);
+    return { success: true, report };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+ipcMain.handle('acc-get-balance-sheet', async (event, asOfDate?: string) => {
+  try {
+    if (!excelHandler) return { success: false, message: 'No workbook loaded' };
+    const report = await excelHandler.getBalanceSheet(asOfDate);
+    return { success: true, report };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+// Accounting exports: CSV
+ipcMain.handle('acc-export-csv', async (event, defaultFileName: string, csvContent: string) => {
+  try {
+    const result = await dialog.showSaveDialog({
+      title: 'Export CSV',
+      defaultPath: defaultFileName,
+      filters: [{ name: 'CSV Files', extensions: ['csv'] }]
+    });
+    if (result.canceled || !result.filePath) return { success: false, message: 'Export cancelled' };
+    fs.writeFileSync(result.filePath, csvContent, 'utf8');
+    return { success: true, path: result.filePath };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+// Generic HTML to PDF export
+ipcMain.handle('export-html-to-pdf', async (event, html: string, defaultFileName: string) => {
+  try {
+    const win = new BrowserWindow({ show: false, webPreferences: { nodeIntegration: false, contextIsolation: true } });
+    await win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+    const result = await dialog.showSaveDialog({
+      title: 'Export to PDF',
+      defaultPath: defaultFileName,
+      filters: [{ name: 'PDF Files', extensions: ['pdf'] }]
+    });
+    if (result.canceled || !result.filePath) { win.close(); return { success: false, message: 'Export cancelled' }; }
+    const pdfBuffer = await win.webContents.printToPDF({});
+    fs.writeFileSync(result.filePath, pdfBuffer);
+    win.close();
     return { success: true, path: result.filePath };
   } catch (error: any) {
     return { success: false, message: error.message };

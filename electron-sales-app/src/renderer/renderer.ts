@@ -91,6 +91,7 @@ interface AppSettings {
   soundNotifications: boolean;
   startupBehavior: string;
   autoRefresh: boolean;
+  accountingEnabled?: boolean;
 }
 
 let appSettings: AppSettings = {
@@ -103,7 +104,8 @@ let appSettings: AppSettings = {
   lowStockNotifications: true,
   soundNotifications: true,
   startupBehavior: 'lastWorkbook',
-  autoRefresh: false
+  autoRefresh: false,
+  accountingEnabled: false
 };
 
 let currentEditingProduct: string | null = null;
@@ -117,6 +119,8 @@ const api = (window as any).electronAPI;
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
   initializeApp();
+  // Open DevTools to inspect console for the reported tab issue
+  try { api.openDevTools(); } catch {}
 });
 
 // Localization functions
@@ -346,6 +350,18 @@ function applySettings() {
 
   // Apply language
   loadTranslations(appSettings.language);
+
+  // Show/hide Accounting tab
+  const accountingTabBtn = document.querySelector('.nav-tab[data-tab="accounting"]') as HTMLElement | null;
+  if (accountingTabBtn) {
+    accountingTabBtn.style.display = appSettings.accountingEnabled ? '' : 'none';
+  }
+
+  // If accounting disabled and currently on accounting, switch to dashboard
+  const accountingContent = document.getElementById('accountingTab');
+  if (!appSettings.accountingEnabled && accountingContent?.classList.contains('active')) {
+    switchTab('dashboard');
+  }
 }
 
 function renderSettings() {
@@ -360,6 +376,8 @@ function renderSettings() {
   (document.getElementById('soundNotificationsToggle') as HTMLInputElement).checked = appSettings.soundNotifications;
   (document.getElementById('startupBehaviorSelect') as HTMLSelectElement).value = appSettings.startupBehavior;
   (document.getElementById('autoRefreshToggle') as HTMLInputElement).checked = appSettings.autoRefresh;
+  const accToggle = document.getElementById('accountingEnabledToggle') as HTMLInputElement | null;
+  if (accToggle) accToggle.checked = !!appSettings.accountingEnabled;
   
   // Populate GDPR customer dropdowns
   populateGDPRCustomerDropdowns();
@@ -663,6 +681,11 @@ function setupEventListeners() {
     switchTab('users');
   });
 
+  // Ensure Accounting tab switches reliably
+  document.getElementById('accountingNavBtn')?.addEventListener('click', () => {
+    if (appSettings.accountingEnabled) switchTab('accounting');
+  });
+
   // File menu: download workbook copy
   document.getElementById('fileMenuBtn')?.addEventListener('click', async () => {
     try {
@@ -740,6 +763,40 @@ function setupEventListeners() {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     reportFromDate.value = thirtyDaysAgo.toISOString().split('T')[0];
   }
+
+  // Accounting events
+  document.getElementById('tbRefreshBtn')?.addEventListener('click', () => {
+    renderTrialBalance();
+  });
+  document.getElementById('jeAddLineBtn')?.addEventListener('click', addJournalLineRow);
+  document.getElementById('jeSubmitBtn')?.addEventListener('click', handlePostJournal);
+  document.getElementById('fsIncomeBtn')?.addEventListener('click', renderIncomeStatement);
+  document.getElementById('fsBalanceBtn')?.addEventListener('click', renderBalanceSheet);
+  document.getElementById('tbExportCsvBtn')?.addEventListener('click', exportTrialBalanceCSV);
+  document.getElementById('tbExportPdfBtn')?.addEventListener('click', exportTrialBalancePDF);
+  document.getElementById('fsExportCsvBtn')?.addEventListener('click', exportFinancialsCSV);
+  document.getElementById('fsExportPdfBtn')?.addEventListener('click', exportFinancialsPDF);
+
+  // Fix custom toggle switches to toggle when clicking the slider area
+  bindCustomToggle('autoBackupToggle');
+  bindCustomToggle('lowStockNotificationsToggle');
+  bindCustomToggle('soundNotificationsToggle');
+  bindCustomToggle('autoRefreshToggle');
+  bindCustomToggle('accountingEnabledToggle');
+}
+
+function bindCustomToggle(inputId: string) {
+  const input = document.getElementById(inputId) as HTMLInputElement | null;
+  if (!input) return;
+  const container = input.closest('.toggle-switch') as HTMLElement | null;
+  const slider = input.nextElementSibling as HTMLElement | null;
+  const target = slider || container;
+  if (!target) return;
+  target.style.cursor = 'pointer';
+  target.addEventListener('click', (e) => {
+    e.preventDefault();
+    input.checked = !input.checked;
+  });
 }
 
 // Tab switching
@@ -762,6 +819,7 @@ function switchTab(tabName: string | null) {
   if (tabName === 'reports') renderReports();
   if (tabName === 'users') renderUsers();
   if (tabName === 'settings') renderSettings();
+  if (tabName === 'accounting') renderAccounting();
 }
 
 // Theme toggle
@@ -777,6 +835,310 @@ function toggleTheme() {
   }
 
   localStorage.setItem('theme', newTheme);
+}
+
+// ============= Accounting (Renderer) =============
+async function renderAccounting() {
+  // Set defaults if empty
+  const today = new Date().toISOString().split('T')[0];
+  const tbTo = document.getElementById('tbTo') as HTMLInputElement;
+  const fsTo = document.getElementById('fsTo') as HTMLInputElement;
+  if (tbTo && !tbTo.value) tbTo.value = today;
+  if (fsTo && !fsTo.value) fsTo.value = today;
+
+  await populateAccountsDatalist();
+  await renderTrialBalance();
+}
+
+function addJournalLineRow() {
+  const tbody = document.getElementById('jeLinesBody');
+  if (!tbody) return;
+  const lineCount = tbody.querySelectorAll('tr').length + 1;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${lineCount}</td>
+    <td><input class="form-control je-account" placeholder="Account (code)" list="accountsDatalist"></td>
+    <td><input type="number" class="form-control je-debit" min="0" step="0.01"></td>
+    <td><input type="number" class="form-control je-credit" min="0" step="0.01"></td>
+    <td><button class="btn btn-secondary btn-small" onclick="this.closest('tr').remove()">Remove</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+async function populateAccountsDatalist() {
+  const dl = document.getElementById('accountsDatalist');
+  if (!dl) return;
+  try {
+    const res = await api.accListAccounts();
+    if (!res.success) return;
+    const accounts = res.accounts as Array<{ code: string; name: string; type: string; isActive: boolean }>;
+    (dl as HTMLElement).innerHTML = accounts.filter(a => a.isActive).map(a => `<option value="${a.code}">${a.code} - ${a.name}</option>`).join('');
+  } catch {}
+}
+
+async function handlePostJournal() {
+  const date = (document.getElementById('jeDate') as HTMLInputElement)?.value || new Date().toISOString().split('T')[0];
+  const description = (document.getElementById('jeDesc') as HTMLInputElement)?.value || '';
+  const reference = (document.getElementById('jeRef') as HTMLInputElement)?.value || '';
+  const rows = Array.from(document.querySelectorAll('#jeLinesBody tr')) as HTMLTableRowElement[];
+  const lines = rows.map((row, idx) => {
+    const account = (row.querySelector('.je-account') as HTMLInputElement)?.value?.trim();
+    const debit = parseFloat((row.querySelector('.je-debit') as HTMLInputElement)?.value || '0');
+    const credit = parseFloat((row.querySelector('.je-credit') as HTMLInputElement)?.value || '0');
+    return { lineNumber: idx + 1, accountCode: account, debit: isNaN(debit) ? 0 : debit, credit: isNaN(credit) ? 0 : credit };
+  }).filter(l => l.accountCode && (l.debit > 0 || l.credit > 0));
+
+  const totalDebit = lines.reduce((s, l) => s + l.debit, 0);
+  const totalCredit = lines.reduce((s, l) => s + l.credit, 0);
+  const totalsSpan = document.getElementById('jeTotals');
+  if (totalsSpan) totalsSpan.textContent = `Debit: ${totalDebit.toFixed(2)} | Credit: ${totalCredit.toFixed(2)}`;
+
+  if (lines.length === 0) { showToast('Add at least one journal line', 'error'); return; }
+  if (Math.abs(totalDebit - totalCredit) > 0.0001) { showToast('Entry must be balanced', 'error'); return; }
+
+  const entry = {
+    entryId: 'JE-' + Date.now(),
+    date,
+    description,
+    reference,
+    lines
+  };
+
+  try {
+    const res = await api.accAddJournalEntry(entry);
+    if (res.success) {
+      showToast('Journal posted', 'success');
+      // Clear lines except first row
+      const tbody = document.getElementById('jeLinesBody');
+      if (tbody) tbody.innerHTML = `
+        <tr>
+          <td>1</td>
+          <td><input class="form-control je-account" placeholder="Account (code)" list="accountsDatalist"></td>
+          <td><input type="number" class="form-control je-debit" min="0" step="0.01"></td>
+          <td><input type="number" class="form-control je-credit" min="0" step="0.01"></td>
+          <td><button class="btn btn-secondary btn-small" id="jeAddLineBtn">Add</button></td>
+        </tr>`;
+      // Re-bind add button in the recreated row
+      document.getElementById('jeAddLineBtn')?.addEventListener('click', addJournalLineRow);
+      await populateAccountsDatalist();
+      await renderTrialBalance();
+    } else {
+      showToast(res.message || 'Failed to post journal', 'error');
+    }
+  } catch (e: any) {
+    showToast(e.message || 'Error posting journal', 'error');
+  }
+}
+
+async function renderTrialBalance() {
+  const from = (document.getElementById('tbFrom') as HTMLInputElement)?.value || undefined;
+  const to = (document.getElementById('tbTo') as HTMLInputElement)?.value || undefined;
+  const tbody = document.getElementById('tbBody');
+  if (!tbody) return;
+  try {
+    const res = await api.accGetTrialBalance(from, to);
+    if (!res.success) throw new Error(res.message || 'Failed');
+    const rows = res.data as Array<{ accountCode: string; accountName: string; type: string; debit: number; credit: number; balance: number }>;
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state" data-translate="common.noData">No data</td></tr>';
+      return;
+    }
+    const totalDebit = rows.reduce((s, r) => s + r.debit, 0);
+    const totalCredit = rows.reduce((s, r) => s + r.credit, 0);
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td>${r.accountCode}</td>
+        <td>${r.accountName}</td>
+        <td>${r.type}</td>
+        <td>${formatCurrency(r.debit)}</td>
+        <td>${formatCurrency(r.credit)}</td>
+        <td>${formatCurrency(r.balance)}</td>
+      </tr>
+    `).join('') + `
+      <tr>
+        <td colspan="3" style="text-align:right"><strong>${t('reports.totals','Totals')}</strong></td>
+        <td><strong>${formatCurrency(totalDebit)}</strong></td>
+        <td><strong>${formatCurrency(totalCredit)}</strong></td>
+        <td></td>
+      </tr>`;
+  } catch (e: any) {
+    showToast(e.message || 'Failed to load trial balance', 'error');
+  }
+}
+
+function buildTrialBalanceCSV(rows: Array<{ accountCode: string; accountName: string; type: string; debit: number; credit: number; balance: number }>): string {
+  const header = 'Code,Account,Type,Debit,Credit,Balance';
+  const lines = rows.map(r => [r.accountCode, r.accountName, r.type, r.debit.toFixed(2), r.credit.toFixed(2), r.balance.toFixed(2)].join(','));
+  const totals = rows.reduce((acc, r) => { acc.debit += r.debit; acc.credit += r.credit; return acc; }, { debit: 0, credit: 0 });
+  const footer = ["", "Totals", "", totals.debit.toFixed(2), totals.credit.toFixed(2), ""].join(',');
+  return [header, ...lines, footer].join('\n');
+}
+
+async function exportTrialBalanceCSV() {
+  const from = (document.getElementById('tbFrom') as HTMLInputElement)?.value || undefined;
+  const to = (document.getElementById('tbTo') as HTMLInputElement)?.value || undefined;
+  try {
+    const res = await api.accGetTrialBalance(from, to);
+    if (!res.success) throw new Error(res.message || 'Failed');
+    const csv = buildTrialBalanceCSV(res.data);
+    const name = `trial-balance${from ? '-' + from : ''}${to ? '-' + to : ''}.csv`;
+    const out = await api.accExportCSV(name, csv);
+    if (out.success) showToast('Trial Balance exported', 'success');
+  } catch (e: any) {
+    showToast(e.message || 'Failed to export', 'error');
+  }
+}
+
+async function exportTrialBalancePDF() {
+  const table = document.querySelector('#accountingTab .table-container') as HTMLElement;
+  if (!table) return;
+  const html = `<!doctype html><html><head><meta charset='utf-8'><title>Trial Balance</title>
+    <style>body{font-family:Arial,Helvetica,sans-serif;padding:16px;color:#111}
+    table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px;text-align:left}
+    th{background:#f3f4f6}</style></head><body><h2>Trial Balance</h2>${table.innerHTML}</body></html>`;
+  const name = 'trial-balance.pdf';
+  try {
+    const out = await api.exportHtmlToPDF(html, name);
+    if (out.success) showToast('Trial Balance PDF exported', 'success');
+  } catch (e: any) {
+    showToast(e.message || 'Failed to export PDF', 'error');
+  }
+}
+
+function buildIncomeStatementCSV(report: any): string {
+  const revHeader = 'Revenue,,Amount';
+  const revLines = report.revenue.map((x: any) => [x.accountCode, x.name, x.amount.toFixed(2)].join(','));
+  const revTotal = ["Total Revenue", "", report.totalRevenue.toFixed(2)].join(',');
+  const expHeader = 'Expenses,,Amount';
+  const expLines = report.expenses.map((x: any) => [x.accountCode, x.name, x.amount.toFixed(2)].join(','));
+  const expTotal = ["Total Expenses", "", report.totalExpenses.toFixed(2)].join(',');
+  const net = ["Net Income", "", report.netIncome.toFixed(2)].join(',');
+  return [revHeader, ...revLines, revTotal, '', expHeader, ...expLines, expTotal, '', net].join('\n');
+}
+
+function buildBalanceSheetCSV(report: any): string {
+  const aHeader = 'Assets,,Amount';
+  const aLines = report.assets.map((x: any) => [x.accountCode, x.name, x.amount.toFixed(2)].join(','));
+  const aTotal = ["Total Assets", "", report.totalAssets.toFixed(2)].join(',');
+  const lHeader = 'Liabilities,,Amount';
+  const lLines = report.liabilities.map((x: any) => [x.accountCode, x.name, x.amount.toFixed(2)].join(','));
+  const eHeader = 'Equity,,Amount';
+  const eLines = report.equity.map((x: any) => [x.accountCode, x.name, x.amount.toFixed(2)].join(','));
+  const leTotal = ["Total L + E", "", (report.totalLiabilities + report.totalEquity).toFixed(2)].join(',');
+  return [aHeader, ...aLines, aTotal, '', lHeader, ...lLines, '', eHeader, ...eLines, leTotal].join('\n');
+}
+
+async function exportFinancialsCSV() {
+  const from = (document.getElementById('fsFrom') as HTMLInputElement)?.value || undefined;
+  const to = (document.getElementById('fsTo') as HTMLInputElement)?.value || undefined;
+  try {
+    // Create both and ask two saves (simple approach)
+    const isRes = await api.accGetIncomeStatement(from, to);
+    if (isRes.success) {
+      const csv = buildIncomeStatementCSV(isRes.report);
+      await api.accExportCSV(`income-statement${from?'-'+from:''}${to?'-'+to:''}.csv`, csv);
+    }
+    const bsRes = await api.accGetBalanceSheet(to);
+    if (bsRes.success) {
+      const csv2 = buildBalanceSheetCSV(bsRes.report);
+      await api.accExportCSV(`balance-sheet${to?'-'+to:''}.csv`, csv2);
+    }
+    showToast('Financial statements exported', 'success');
+  } catch (e: any) {
+    showToast(e.message || 'Failed to export', 'error');
+  }
+}
+
+async function exportFinancialsPDF() {
+  const from = (document.getElementById('fsFrom') as HTMLInputElement)?.value || undefined;
+  const to = (document.getElementById('fsTo') as HTMLInputElement)?.value || undefined;
+  try {
+    const isRes = await api.accGetIncomeStatement(from, to);
+    const bsRes = await api.accGetBalanceSheet(to);
+    let body = `<h2>${t('accounting.incomeStatement','Income Statement')}</h2>`;
+    if (isRes.success) {
+      const r = isRes.report;
+      const revRows = r.revenue.map((x: any) => `<tr><td>${x.accountCode}</td><td>${x.name}</td><td style=\"text-align:right\">${formatCurrency(x.amount)}</td></tr>`).join('') || `<tr><td colspan=\"3\">${t('accounting.noRevenue','No revenue')}</td></tr>`;
+      const expRows = r.expenses.map((x: any) => `<tr><td>${x.accountCode}</td><td>${x.name}</td><td style=\"text-align:right\">${formatCurrency(x.amount)}</td></tr>`).join('') || `<tr><td colspan=\"3\">${t('accounting.noExpenses','No expenses')}</td></tr>`;
+      body += `<table><thead><tr><th colspan=3>${t('accounting.revenue','Revenue')}</th></tr></thead><tbody>${revRows}</tbody><tfoot><tr><td colspan=2>${t('accounting.totalRevenue','Total Revenue')}</td><td style=\"text-align:right\">${formatCurrency(r.totalRevenue)}</td></tr></tfoot></table>`;
+      body += `<table><thead><tr><th colspan=3>${t('accounting.expenses','Expenses')}</th></tr></thead><tbody>${expRows}</tbody><tfoot><tr><td colspan=2>${t('accounting.totalExpenses','Total Expenses')}</td><td style=\"text-align:right\">${formatCurrency(r.totalExpenses)}</td></tr></tfoot></table>`;
+      body += `<div style=\"text-align:right;margin:8px 0\"><strong>${t('accounting.netIncome','Net Income')}: ${formatCurrency(r.netIncome)}</strong></div>`;
+    }
+    body += `<h2 style=\"margin-top:16px\">${t('accounting.balanceSheet','Balance Sheet')}</h2>`;
+    if (bsRes.success) {
+      const r2 = bsRes.report;
+      const a = r2.assets.map((x: any) => `<tr><td>${x.accountCode}</td><td>${x.name}</td><td style=\"text-align:right\">${formatCurrency(x.amount)}</td></tr>`).join('') || `<tr><td colspan=\"3\">${t('accounting.noAssets','No assets')}</td></tr>`;
+      const l = r2.liabilities.map((x: any) => `<tr><td>${x.accountCode}</td><td>${x.name}</td><td style=\"text-align:right\">${formatCurrency(x.amount)}</td></tr>`).join('') || `<tr><td colspan=\"3\">${t('accounting.noLiabilities','No liabilities')}</td></tr>`;
+      const e = r2.equity.map((x: any) => `<tr><td>${x.accountCode}</td><td>${x.name}</td><td style=\"text-align:right\">${formatCurrency(x.amount)}</td></tr>`).join('') || `<tr><td colspan=\"3\">${t('accounting.noEquity','No equity')}</td></tr>`;
+      body += `<div style=\"display:grid;grid-template-columns:1fr 1fr;gap:12px\">`;
+      body += `<table><thead><tr><th colspan=3>${t('accounting.assets','Assets')}</th></tr></thead><tbody>${a}</tbody><tfoot><tr><td colspan=2>${t('accounting.totalAssets','Total Assets')}</td><td style=\"text-align:right\">${formatCurrency(r2.totalAssets)}</td></tr></tfoot></table>`;
+      body += `<table><thead><tr><th colspan=3>${t('accounting.liabilitiesEquity','Liabilities & Equity')}</th></tr></thead><tbody>${l}${e}</tbody><tfoot><tr><td colspan=2>${t('accounting.totalLE','Total L + E')}</td><td style=\"text-align:right\">${formatCurrency(r2.totalLiabilities + r2.totalEquity)}</td></tr></tfoot></table>`;
+      body += `</div>`;
+    }
+    const html = `<!doctype html><html><head><meta charset='utf-8'><title>Financial Statements</title>
+      <style>body{font-family:Arial,Helvetica,sans-serif;padding:16px;color:#111}table{width:100%;border-collapse:collapse;margin:8px 0}th,td{border:1px solid #ccc;padding:6px;text-align:left}th{background:#f3f4f6}</style>
+      </head><body>${body}</body></html>`;
+    const out = await api.exportHtmlToPDF(html, `financial-statements${from?'-'+from:''}${to?'-'+to:''}.pdf`);
+    if (out.success) showToast('Financial statements PDF exported', 'success');
+  } catch (e: any) {
+    showToast(e.message || 'Failed to export PDF', 'error');
+  }
+}
+
+async function renderIncomeStatement() {
+  const from = (document.getElementById('fsFrom') as HTMLInputElement)?.value || undefined;
+  const to = (document.getElementById('fsTo') as HTMLInputElement)?.value || undefined;
+  const container = document.getElementById('fsOutput');
+  if (!container) return;
+  try {
+    const res = await api.accGetIncomeStatement(from, to);
+    if (!res.success) throw new Error(res.message || 'Failed');
+    const r = res.report;
+    const revRows = r.revenue.map((x: any) => `<tr><td>${x.accountCode}</td><td>${x.name}</td><td style="text-align:right">${formatCurrency(x.amount)}</td></tr>`).join('') || `<tr><td colspan="3" class="empty-state">${t('accounting.noRevenue','No revenue')}</td></tr>`;
+    const expRows = r.expenses.map((x: any) => `<tr><td>${x.accountCode}</td><td>${x.name}</td><td style="text-align:right">${formatCurrency(x.amount)}</td></tr>`).join('') || `<tr><td colspan="3" class="empty-state">${t('accounting.noExpenses','No expenses')}</td></tr>`;
+    container.innerHTML = `
+      <div class="table-container">
+        <h3>${t('accounting.incomeStatement','Income Statement')}</h3>
+        <table class="data-table"><thead><tr><th colspan="3">${t('accounting.revenue','Revenue')}</th></tr></thead><tbody>${revRows}</tbody>
+          <tfoot><tr><td colspan="2"><strong>${t('accounting.totalRevenue','Total Revenue')}</strong></td><td style="text-align:right"><strong>${formatCurrency(r.totalRevenue)}</strong></td></tr></tfoot>
+        </table>
+        <table class="data-table" style="margin-top:10px"><thead><tr><th colspan="3">${t('accounting.expenses','Expenses')}</th></tr></thead><tbody>${expRows}</tbody>
+          <tfoot><tr><td colspan="2"><strong>${t('accounting.totalExpenses','Total Expenses')}</strong></td><td style="text-align:right"><strong>${formatCurrency(r.totalExpenses)}</strong></td></tr></tfoot>
+        </table>
+        <div style="text-align:right; margin-top:10px;"><strong>${t('accounting.netIncome','Net Income')}: ${formatCurrency(r.netIncome)}</strong></div>
+      </div>`;
+  } catch (e: any) {
+    showToast(e.message || 'Failed to load income statement', 'error');
+  }
+}
+
+async function renderBalanceSheet() {
+  const asOf = (document.getElementById('fsTo') as HTMLInputElement)?.value || undefined;
+  const container = document.getElementById('fsOutput');
+  if (!container) return;
+  try {
+    const res = await api.accGetBalanceSheet(asOf);
+    if (!res.success) throw new Error(res.message || 'Failed');
+    const r = res.report;
+    const assets = r.assets.map((x: any) => `<tr><td>${x.accountCode}</td><td>${x.name}</td><td style=\"text-align:right\">${formatCurrency(x.amount)}</td></tr>`).join('') || `<tr><td colspan=\"3\" class=\"empty-state\">${t('accounting.noAssets','No assets')}</td></tr>`;
+    const liab = r.liabilities.map((x: any) => `<tr><td>${x.accountCode}</td><td>${x.name}</td><td style=\"text-align:right\">${formatCurrency(x.amount)}</td></tr>`).join('') || `<tr><td colspan=\"3\" class=\"empty-state\">${t('accounting.noLiabilities','No liabilities')}</td></tr>`;
+    const eq = r.equity.map((x: any) => `<tr><td>${x.accountCode}</td><td>${x.name}</td><td style=\"text-align:right\">${formatCurrency(x.amount)}</td></tr>`).join('') || `<tr><td colspan=\"3\" class=\"empty-state\">${t('accounting.noEquity','No equity')}</td></tr>`;
+    container.innerHTML = `
+      <div class="table-container">
+        <h3>${t('accounting.balanceSheet','Balance Sheet')}</h3>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <table class="data-table"><thead><tr><th colspan="3">${t('accounting.assets','Assets')}</th></tr></thead><tbody>${assets}</tbody>
+            <tfoot><tr><td colspan="2"><strong>${t('accounting.totalAssets','Total Assets')}</strong></td><td style="text-align:right"><strong>${formatCurrency(r.totalAssets)}</strong></td></tr></tfoot>
+          </table>
+          <table class="data-table"><thead><tr><th colspan="3">${t('accounting.liabilitiesEquity','Liabilities & Equity')}</th></tr></thead>
+            <tbody>${liab}${eq}</tbody>
+            <tfoot><tr><td colspan="2"><strong>${t('accounting.totalLE','Total L + E')}</strong></td><td style="text-align:right"><strong>${formatCurrency(r.totalLiabilities + r.totalEquity)}</strong></td></tr></tfoot>
+          </table>
+        </div>
+      </div>`;
+  } catch (e: any) {
+    showToast(e.message || 'Failed to load balance sheet', 'error');
+  }
 }
 
 // Load saved theme
@@ -799,6 +1161,7 @@ function renderAllData() {
   renderAnalytics();
   renderReports();
   renderUsers();
+  // Initialize accounting visuals lazily when tab is opened
 }
 
 // Dashboard rendering
@@ -3146,6 +3509,8 @@ function handleSaveSettings() {
   appSettings.soundNotifications = (document.getElementById('soundNotificationsToggle') as HTMLInputElement).checked;
   appSettings.startupBehavior = (document.getElementById('startupBehaviorSelect') as HTMLSelectElement).value;
   appSettings.autoRefresh = (document.getElementById('autoRefreshToggle') as HTMLInputElement).checked;
+  const accToggle = document.getElementById('accountingEnabledToggle') as HTMLInputElement | null;
+  if (accToggle) appSettings.accountingEnabled = accToggle.checked;
 
   // Save and apply settings
   saveSettings();
@@ -3166,7 +3531,8 @@ function handleResetSettings() {
     lowStockNotifications: true,
     soundNotifications: true,
     startupBehavior: 'lastWorkbook',
-    autoRefresh: false
+    autoRefresh: false,
+    accountingEnabled: false
   };
 
   // Save and apply settings

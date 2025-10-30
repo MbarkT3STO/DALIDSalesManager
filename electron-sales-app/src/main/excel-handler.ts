@@ -82,6 +82,32 @@ export interface WorkbookData {
   users: User[];
 }
 
+// Accounting types
+export type AccountType = 'Asset' | 'Liability' | 'Equity' | 'Revenue' | 'Expense';
+
+export interface Account {
+  code: string; // Unique account code, e.g., 1000
+  name: string;
+  type: AccountType;
+  parentCode?: string;
+  isActive: boolean;
+}
+
+export interface JournalLine {
+  lineNumber: number;
+  accountCode: string;
+  debit: number; // >= 0
+  credit: number; // >= 0
+}
+
+export interface JournalEntry {
+  entryId: string;
+  date: string; // YYYY-MM-DD
+  description: string;
+  reference?: string;
+  lines: JournalLine[]; // Must balance (sum debit == sum credit)
+}
+
 export class ExcelHandler {
   private workbookPath: string;
   private maxBackups = 5;
@@ -96,6 +122,7 @@ export class ExcelHandler {
     } else {
       // Check if Users sheet exists, if not add it
       await this.ensureUsersSheet();
+      await this.ensureAccountingSheets();
     }
   }
 
@@ -238,7 +265,107 @@ export class ExcelHandler {
       isActive: true
     });
 
+    // Accounting: Accounts sheet
+    const accountsSheet = workbook.addWorksheet('Accounts');
+    accountsSheet.columns = [
+      { header: 'Code', key: 'code', width: 12 },
+      { header: 'Name', key: 'name', width: 30 },
+      { header: 'Type', key: 'type', width: 12 },
+      { header: 'ParentCode', key: 'parentCode', width: 12 },
+      { header: 'IsActive', key: 'isActive', width: 10 }
+    ];
+    accountsSheet.getRow(1).font = { bold: true };
+
+    // Seed minimal chart of accounts
+    const seedAccounts: Account[] = [
+      { code: '1000', name: 'Cash', type: 'Asset', isActive: true },
+      { code: '1100', name: 'Accounts Receivable', type: 'Asset', isActive: true },
+      { code: '2000', name: 'Accounts Payable', type: 'Liability', isActive: true },
+      { code: '3000', name: 'Owner Equity', type: 'Equity', isActive: true },
+      { code: '4000', name: 'Sales Revenue', type: 'Revenue', isActive: true },
+      { code: '5000', name: 'Cost of Goods Sold', type: 'Expense', isActive: true }
+    ];
+    seedAccounts.forEach(a => accountsSheet.addRow([a.code, a.name, a.type, a.parentCode || '', a.isActive]));
+
+    // Accounting: Journal sheet (line-based)
+    const journalSheet = workbook.addWorksheet('Journal');
+    journalSheet.columns = [
+      { header: 'EntryID', key: 'entryId', width: 18 },
+      { header: 'Date', key: 'date', width: 12 },
+      { header: 'Description', key: 'description', width: 40 },
+      { header: 'Reference', key: 'reference', width: 18 },
+      { header: 'LineNumber', key: 'lineNumber', width: 10 },
+      { header: 'AccountCode', key: 'accountCode', width: 14 },
+      { header: 'Debit', key: 'debit', width: 12 },
+      { header: 'Credit', key: 'credit', width: 12 }
+    ];
+    journalSheet.getRow(1).font = { bold: true };
+
     await workbook.xlsx.writeFile(this.workbookPath);
+  }
+
+  private async ensureAccountingSheets(): Promise<void> {
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(this.workbookPath);
+
+    let changed = false;
+
+    // Ensure Accounts
+    let accountsSheet = workbook.getWorksheet('Accounts');
+    if (!accountsSheet) {
+      accountsSheet = workbook.addWorksheet('Accounts');
+      accountsSheet.columns = [
+        { header: 'Code', key: 'code', width: 12 },
+        { header: 'Name', key: 'name', width: 30 },
+        { header: 'Type', key: 'type', width: 12 },
+        { header: 'ParentCode', key: 'parentCode', width: 12 },
+        { header: 'IsActive', key: 'isActive', width: 10 }
+      ];
+      accountsSheet.getRow(1).font = { bold: true };
+      changed = true;
+    }
+
+    // Ensure Journal
+    if (!workbook.getWorksheet('Journal')) {
+      const journalSheet = workbook.addWorksheet('Journal');
+      journalSheet.columns = [
+        { header: 'EntryID', key: 'entryId', width: 18 },
+        { header: 'Date', key: 'date', width: 12 },
+        { header: 'Description', key: 'description', width: 40 },
+        { header: 'Reference', key: 'reference', width: 18 },
+        { header: 'LineNumber', key: 'lineNumber', width: 10 },
+        { header: 'AccountCode', key: 'accountCode', width: 14 },
+        { header: 'Debit', key: 'debit', width: 12 },
+        { header: 'Credit', key: 'credit', width: 12 }
+      ];
+      journalSheet.getRow(1).font = { bold: true };
+      changed = true;
+    }
+
+    // Seed Algeria/European-style COA if Accounts is empty (header only)
+    if (accountsSheet) {
+      const hasData = accountsSheet.rowCount > 1;
+      if (!hasData) {
+        const dzAccounts: Account[] = [
+          { code: '1000', name: 'Caisse (Cash)', type: 'Asset', isActive: true },
+          { code: '1100', name: 'Banque (Bank)', type: 'Asset', isActive: true },
+          { code: '1200', name: 'Clients (Accounts Receivable)', type: 'Asset', isActive: true },
+          { code: '2000', name: 'Fournisseurs (Accounts Payable)', type: 'Liability', isActive: true },
+          { code: '3000', name: 'Capital (Equity)', type: 'Equity', isActive: true },
+          { code: '4000', name: 'Ventes (Sales Revenue)', type: 'Revenue', isActive: true },
+          { code: '5000', name: 'Achats (Purchases/COGS)', type: 'Expense', isActive: true },
+          { code: '5100', name: 'Charges d\'exploitation (Operating Expenses)', type: 'Expense', isActive: true },
+          { code: '5200', name: 'Salaires (Salaries Expense)', type: 'Expense', isActive: true },
+          { code: '5300', name: 'Loyer (Rent Expense)', type: 'Expense', isActive: true }
+        ];
+        dzAccounts.forEach(a => accountsSheet!.addRow([a.code, a.name, a.type, a.parentCode || '', a.isActive]));
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      await workbook.xlsx.writeFile(this.workbookPath);
+    }
   }
 
   async readWorkbook(): Promise<WorkbookData> {
@@ -256,6 +383,214 @@ export class ExcelHandler {
     const users = this.readUsers(workbook);
 
     return { products, customers, sales, invoices, inventory, payments, users };
+  }
+
+  // ============= Accounting API =============
+  async listAccounts(): Promise<Account[]> {
+    await this.ensureWorkbook();
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(this.workbookPath);
+    const sheet = workbook.getWorksheet('Accounts');
+    if (!sheet) return [];
+
+    const accounts: Account[] = [];
+    sheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return;
+      const code = String(row.getCell(1).value || '');
+      if (!code) return;
+      accounts.push({
+        code,
+        name: String(row.getCell(2).value || ''),
+        type: String(row.getCell(3).value || '') as AccountType,
+        parentCode: String(row.getCell(4).value || '') || undefined,
+        isActive: row.getCell(5).value === true || row.getCell(5).value === 'true' || row.getCell(5).value === 1
+      });
+    });
+    return accounts;
+  }
+
+  async addAccount(account: Account): Promise<void> {
+    const workbook = await this.loadWorkbook();
+    const sheet = workbook.getWorksheet('Accounts');
+    if (!sheet) throw new Error('Accounts sheet not found');
+
+    // Prevent duplicates
+    let exists = false;
+    sheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return;
+      if (String(row.getCell(1).value) === account.code) exists = true;
+    });
+    if (exists) throw new Error(`Account code "${account.code}" already exists`);
+
+    sheet.addRow([
+      account.code,
+      account.name,
+      account.type,
+      account.parentCode || '',
+      account.isActive
+    ]);
+    await this.saveWorkbook(workbook);
+  }
+
+  async updateAccount(code: string, account: Account): Promise<void> {
+    const workbook = await this.loadWorkbook();
+    const sheet = workbook.getWorksheet('Accounts');
+    if (!sheet) throw new Error('Accounts sheet not found');
+
+    let found = false;
+    sheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return;
+      if (String(row.getCell(1).value) === code) {
+        row.getCell(1).value = account.code;
+        row.getCell(2).value = account.name;
+        row.getCell(3).value = account.type;
+        row.getCell(4).value = account.parentCode || '';
+        row.getCell(5).value = account.isActive;
+        found = true;
+      }
+    });
+    if (!found) throw new Error(`Account code "${code}" not found`);
+    await this.saveWorkbook(workbook);
+  }
+
+  async addJournalEntry(entry: JournalEntry): Promise<void> {
+    if (!entry.lines || entry.lines.length === 0) throw new Error('Journal entry must have lines');
+    const totalDebit = entry.lines.reduce((s, l) => s + (Number(l.debit) || 0), 0);
+    const totalCredit = entry.lines.reduce((s, l) => s + (Number(l.credit) || 0), 0);
+    if (Math.abs(totalDebit - totalCredit) > 0.0001) throw new Error('Journal entry is not balanced');
+
+    const workbook = await this.loadWorkbook();
+    const journalSheet = workbook.getWorksheet('Journal');
+    const accountsSheet = workbook.getWorksheet('Accounts');
+    if (!journalSheet || !accountsSheet) throw new Error('Accounting sheets not found');
+
+    // Validate accounts exist and active
+    const activeCodes = new Set<string>();
+    accountsSheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return;
+      const code = String(row.getCell(1).value || '');
+      const isActive = row.getCell(5).value === true || row.getCell(5).value === 'true' || row.getCell(5).value === 1;
+      if (code && isActive) activeCodes.add(code);
+    });
+    for (const line of entry.lines) {
+      if (!activeCodes.has(line.accountCode)) throw new Error(`Account code ${line.accountCode} not found or inactive`);
+    }
+
+    // Append lines
+    entry.lines.forEach(line => {
+      journalSheet.addRow([
+        entry.entryId,
+        entry.date,
+        entry.description,
+        entry.reference || '',
+        line.lineNumber,
+        line.accountCode,
+        Number(line.debit) || 0,
+        Number(line.credit) || 0
+      ]);
+    });
+
+    await this.saveWorkbook(workbook);
+  }
+
+  async getTrialBalance(startDate?: string, endDate?: string): Promise<Array<{ accountCode: string; accountName: string; type: AccountType; debit: number; credit: number; balance: number }>> {
+    await this.ensureWorkbook();
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(this.workbookPath);
+    const accountsSheet = workbook.getWorksheet('Accounts');
+    const journalSheet = workbook.getWorksheet('Journal');
+    if (!accountsSheet || !journalSheet) return [];
+
+    const codeToMeta = new Map<string, { name: string; type: AccountType }>();
+    accountsSheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return;
+      const code = String(row.getCell(1).value || '');
+      if (!code) return;
+      codeToMeta.set(code, { name: String(row.getCell(2).value || ''), type: String(row.getCell(3).value || '') as AccountType });
+    });
+
+    const sums = new Map<string, { debit: number; credit: number }>();
+    journalSheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return;
+      const date = String(row.getCell(2).value || '');
+      if (startDate && date < startDate) return;
+      if (endDate && date > endDate) return;
+      const code = String(row.getCell(6).value || '');
+      const debit = Number(row.getCell(7).value || 0);
+      const credit = Number(row.getCell(8).value || 0);
+      if (!code) return;
+      const prev = sums.get(code) || { debit: 0, credit: 0 };
+      prev.debit += debit;
+      prev.credit += credit;
+      sums.set(code, prev);
+    });
+
+    const results: Array<{ accountCode: string; accountName: string; type: AccountType; debit: number; credit: number; balance: number }> = [];
+    for (const [code, { debit, credit }] of sums) {
+      const meta = codeToMeta.get(code) || { name: '', type: 'Asset' as AccountType };
+      const isDebitNormal = meta.type === 'Asset' || meta.type === 'Expense';
+      const balance = isDebitNormal ? debit - credit : credit - debit;
+      results.push({ accountCode: code, accountName: meta.name, type: meta.type, debit, credit, balance });
+    }
+    // Sort by code
+    results.sort((a, b) => a.accountCode.localeCompare(b.accountCode));
+    return results;
+  }
+
+  async getIncomeStatement(startDate?: string, endDate?: string): Promise<{
+    revenue: Array<{ accountCode: string; name: string; amount: number }>,
+    expenses: Array<{ accountCode: string; name: string; amount: number }>,
+    totalRevenue: number,
+    totalExpenses: number,
+    netIncome: number
+  }> {
+    const tb = await this.getTrialBalance(startDate, endDate);
+    const revenue: Array<{ accountCode: string; name: string; amount: number }> = [];
+    const expenses: Array<{ accountCode: string; name: string; amount: number }> = [];
+    for (const row of tb) {
+      if (row.type === 'Revenue') {
+        const amount = row.credit - row.debit; // credit-normal
+        if (Math.abs(amount) > 1e-9) revenue.push({ accountCode: row.accountCode, name: row.accountName, amount });
+      } else if (row.type === 'Expense') {
+        const amount = row.debit - row.credit; // debit-normal
+        if (Math.abs(amount) > 1e-9) expenses.push({ accountCode: row.accountCode, name: row.accountName, amount });
+      }
+    }
+    const totalRevenue = revenue.reduce((s, r) => s + r.amount, 0);
+    const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
+    const netIncome = totalRevenue - totalExpenses;
+    return { revenue, expenses, totalRevenue, totalExpenses, netIncome };
+  }
+
+  async getBalanceSheet(asOfDate?: string): Promise<{
+    assets: Array<{ accountCode: string; name: string; amount: number }>,
+    liabilities: Array<{ accountCode: string; name: string; amount: number }>,
+    equity: Array<{ accountCode: string; name: string; amount: number }>,
+    totalAssets: number,
+    totalLiabilities: number,
+    totalEquity: number
+  }> {
+    // Use trial balance up to asOfDate
+    const tb = await this.getTrialBalance(undefined, asOfDate);
+    const assets: Array<{ accountCode: string; name: string; amount: number }> = [];
+    const liabilities: Array<{ accountCode: string; name: string; amount: number }> = [];
+    const equity: Array<{ accountCode: string; name: string; amount: number }> = [];
+    for (const row of tb) {
+      if (row.type === 'Asset') {
+        const amount = row.debit - row.credit; // debit-normal
+        if (Math.abs(amount) > 1e-9) assets.push({ accountCode: row.accountCode, name: row.accountName, amount });
+      } else if (row.type === 'Liability') {
+        const amount = row.credit - row.debit; // credit-normal
+        if (Math.abs(amount) > 1e-9) liabilities.push({ accountCode: row.accountCode, name: row.accountName, amount });
+      } else if (row.type === 'Equity') {
+        const amount = row.credit - row.debit; // credit-normal
+        if (Math.abs(amount) > 1e-9) equity.push({ accountCode: row.accountCode, name: row.accountName, amount });
+      }
+    }
+    const totalAssets = assets.reduce((s, a) => s + a.amount, 0);
+    const totalLiabilities = liabilities.reduce((s, l) => s + l.amount, 0);
+    const totalEquity = equity.reduce((s, e) => s + e.amount, 0);
+    return { assets, liabilities, equity, totalAssets, totalLiabilities, totalEquity };
   }
 
   private readProducts(workbook: ExcelJS.Workbook): Product[] {

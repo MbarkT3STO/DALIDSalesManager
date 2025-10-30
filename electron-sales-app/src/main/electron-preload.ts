@@ -49,6 +49,17 @@ export interface ElectronAPI {
   auditGetLogs: (filters: any) => Promise<any>;
   auditGenerateReport: (startDate: string, endDate: string) => Promise<any>;
   auditExportLogs: (startDate: string, endDate: string, format: 'json' | 'csv') => Promise<any>;
+  // Accounting
+  accListAccounts: () => Promise<any>;
+  accAddAccount: (account: any) => Promise<any>;
+  accUpdateAccount: (code: string, account: any) => Promise<any>;
+  accAddJournalEntry: (entry: any) => Promise<any>;
+  accGetTrialBalance: (startDate?: string, endDate?: string) => Promise<any>;
+  accGetIncomeStatement: (startDate?: string, endDate?: string) => Promise<any>;
+  accGetBalanceSheet: (asOfDate?: string) => Promise<any>;
+  accExportCSV: (defaultFileName: string, csvContent: string) => Promise<any>;
+  exportHtmlToPDF: (html: string, defaultFileName: string) => Promise<any>;
+  openDevTools: () => Promise<any>;
 }
 
 // Expose protected methods that allow the renderer process to use
@@ -104,4 +115,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   exportCustomerHistoryPDF: (data: any) => ipcRenderer.invoke('export-customer-history-pdf', data),
   exportCustomerHistoryExcel: (data: any) => ipcRenderer.invoke('export-customer-history-excel', data),
   auditExportLogs: (startDate: string, endDate: string, format: 'json' | 'csv') => ipcRenderer.invoke('audit-export-logs', startDate, endDate, format)
+  ,
+  // Accounting
+  accListAccounts: () => ipcRenderer.invoke('acc-list-accounts'),
+  accAddAccount: (account: any) => ipcRenderer.invoke('acc-add-account', account),
+  accUpdateAccount: (code: string, account: any) => ipcRenderer.invoke('acc-update-account', code, account),
+  accAddJournalEntry: (entry: any) => ipcRenderer.invoke('acc-add-journal-entry', entry),
+  accGetTrialBalance: (startDate?: string, endDate?: string) => ipcRenderer.invoke('acc-get-trial-balance', startDate, endDate),
+  accGetIncomeStatement: (startDate?: string, endDate?: string) => ipcRenderer.invoke('acc-get-income-statement', startDate, endDate),
+  accGetBalanceSheet: (asOfDate?: string) => ipcRenderer.invoke('acc-get-balance-sheet', asOfDate),
+  accExportCSV: (defaultFileName: string, csvContent: string) => ipcRenderer.invoke('acc-export-csv', defaultFileName, csvContent),
+  exportHtmlToPDF: (html: string, defaultFileName: string) => ipcRenderer.invoke('export-html-to-pdf', html, defaultFileName),
+  openDevTools: () => ipcRenderer.invoke('open-devtools')
 } as ElectronAPI);
