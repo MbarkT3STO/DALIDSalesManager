@@ -352,7 +352,11 @@
     "arabic": "العربية",
     "threeBackups": "3 backups",
     "fiveBackups": "5 backups",
-    "tenBackups": "10 backups"
+    "tenBackups": "10 backups",
+    "workbookSource": "Workbook Source",
+    "workbookSourceHint": "Choose a specific Excel file to override the default.",
+    "selectWorkbook": "Select Excel file",
+    "useDefaultFile": "Use default"
   },
   "login": {
     "title": "DALID Sales Manager",

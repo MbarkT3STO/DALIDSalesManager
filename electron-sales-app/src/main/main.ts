@@ -269,6 +269,19 @@ ipcMain.handle('use-default-workbook', async () => {
   }
 });
 
+ipcMain.handle('use-workbook', async (event, filePath: string) => {
+  try {
+    if (!filePath) {
+      return { success: false, message: 'Invalid path' };
+    }
+    excelHandler = new ExcelHandler(filePath);
+    await excelHandler.ensureWorkbook();
+    return { success: true, path: filePath };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
 ipcMain.handle('read-workbook', async () => {
   try {
     if (!excelHandler) {

@@ -92,6 +92,7 @@ interface AppSettings {
   startupBehavior: string;
   autoRefresh: boolean;
   accountingEnabled?: boolean;
+  customWorkbookPath?: string | null;
 }
 
 let appSettings: AppSettings = {
@@ -105,7 +106,8 @@ let appSettings: AppSettings = {
   soundNotifications: true,
   startupBehavior: 'lastWorkbook',
   autoRefresh: false,
-  accountingEnabled: false
+  accountingEnabled: false,
+  customWorkbookPath: null
 };
 
 let currentEditingProduct: string | null = null;
@@ -376,6 +378,10 @@ function renderSettings() {
   (document.getElementById('autoRefreshToggle') as HTMLInputElement).checked = appSettings.autoRefresh;
   const accToggle = document.getElementById('accountingEnabledToggle') as HTMLInputElement | null;
   if (accToggle) accToggle.checked = !!appSettings.accountingEnabled;
+  const customPathInput = document.getElementById('customWorkbookPathInput') as HTMLInputElement | null;
+  if (customPathInput) {
+    customPathInput.value = appSettings.customWorkbookPath || '';
+  }
   
   // Populate GDPR customer dropdowns
   populateGDPRCustomerDropdowns();
@@ -602,7 +608,7 @@ async function initializeApp() {
   await autoLoadDefaultWorkbook();
 }
 
-// Auto-load default workbook
+// Auto-load workbook based on settings (custom path if set, else default)
 async function autoLoadDefaultWorkbook() {
   const setupModal = document.getElementById('setupModal');
   const app = document.getElementById('app');
@@ -611,8 +617,13 @@ async function autoLoadDefaultWorkbook() {
   if (setupModal) setupModal.style.display = 'none';
   if (app) app.style.display = 'flex';
 
-  // Use default workbook automatically
-  const result = await api.useDefaultWorkbook();
+  let result: any;
+  if (appSettings.customWorkbookPath) {
+    result = await api.useWorkbook(appSettings.customWorkbookPath);
+  } else {
+    // Use default workbook automatically
+    result = await api.useDefaultWorkbook();
+  }
   if (result.success) {
     await loadWorkbookData();
   } else {
@@ -677,6 +688,36 @@ function setupEventListeners() {
   // Users header button
   document.getElementById('usersHeaderBtn')?.addEventListener('click', () => {
     switchTab('users');
+  });
+
+  // Settings: select custom workbook
+  document.getElementById('selectWorkbookBtn')?.addEventListener('click', async () => {
+    const result = await api.openWorkbook();
+    if (result?.success && result.path) {
+      appSettings.customWorkbookPath = result.path;
+      saveSettings();
+      const input = document.getElementById('customWorkbookPathInput') as HTMLInputElement | null;
+      if (input) input.value = result.path;
+      await loadWorkbookData();
+      showToast('Workbook switched', 'success');
+    } else if (result && result.message) {
+      showToast(result.message, 'warning');
+    }
+  });
+
+  // Settings: clear to default workbook
+  document.getElementById('clearWorkbookBtn')?.addEventListener('click', async () => {
+    appSettings.customWorkbookPath = null;
+    saveSettings();
+    const input = document.getElementById('customWorkbookPathInput') as HTMLInputElement | null;
+    if (input) input.value = '';
+    const res = await api.useDefaultWorkbook();
+    if (res.success) {
+      await loadWorkbookData();
+      showToast('Using default workbook', 'success');
+    } else {
+      showToast(res.message || 'Failed to switch to default workbook', 'error');
+    }
   });
 
   // Ensure Accounting tab switches reliably

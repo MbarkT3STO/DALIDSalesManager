@@ -349,7 +349,11 @@
     "arabic": "العربية",
     "threeBackups": "3 sauvegardes",
     "fiveBackups": "5 sauvegardes",
-    "tenBackups": "10 sauvegardes"
+    "tenBackups": "10 sauvegardes",
+    "workbookSource": "Source du classeur",
+    "workbookSourceHint": "Choisissez un fichier Excel spécifique pour remplacer le défaut.",
+    "selectWorkbook": "Sélectionner un fichier Excel",
+    "useDefaultFile": "Utiliser le défaut"
   },
   "login": {
     "title": "DALID Gestionnaire de ventes",

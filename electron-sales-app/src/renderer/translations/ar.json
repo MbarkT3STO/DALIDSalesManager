@@ -349,7 +349,11 @@
     "arabic": "العربية",
     "threeBackups": "3 نسخ احتياطية",
     "fiveBackups": "5 نسخ احتياطية",
-    "tenBackups": "10 نسخ احتياطية"
+    "tenBackups": "10 نسخ احتياطية",
+    "workbookSource": "مصدر المصنف",
+    "workbookSourceHint": "اختر ملف Excel محددًا لاستبدال الملف الافتراضي.",
+    "selectWorkbook": "اختر ملف Excel",
+    "useDefaultFile": "استخدم الافتراضي"
   },
   "login": {
     "title": "مدير المبيعات DALID",

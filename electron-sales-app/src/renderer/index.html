@@ -1113,6 +1113,19 @@
                             </div>
                             <p class="form-hint" data-translate="settings.enableAccountingHint">Show or hide the Accounting module and tab.</p>
                         </div>
+                        <div class="settings-group">
+                            <label data-translate="settings.workbookSource">Workbook Source</label>
+                            <div class="input-with-button" style="display: flex; gap: 10px; align-items: center;">
+                                <input id="customWorkbookPathInput" type="text" class="form-control" placeholder="/path/to/file.xlsx" readonly style="flex: 1; min-width: 0;">
+                                <button id="selectWorkbookBtn" class="btn btn-secondary" type="button" style="white-space: nowrap;">
+                                    <span data-translate="settings.selectWorkbook">Select Excel file</span>
+                                </button>
+                                <button id="clearWorkbookBtn" class="btn btn-tertiary" type="button" style="white-space: nowrap;">
+                                    <span data-translate="settings.useDefaultFile">Use default</span>
+                                </button>
+                            </div>
+                            <p class="form-hint" data-translate="settings.workbookSourceHint">Choose a specific Excel file to override the default.</p>
+                        </div>
                     </div>
 
                     <!-- GDPR & Data Privacy -->

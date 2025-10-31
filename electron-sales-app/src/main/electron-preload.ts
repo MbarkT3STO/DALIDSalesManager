@@ -5,6 +5,7 @@ export interface ElectronAPI {
   openWorkbook: () => Promise<any>;
   createWorkbook: () => Promise<any>;
   useDefaultWorkbook: () => Promise<any>;
+  useWorkbook: (filePath: string) => Promise<any>;
   readWorkbook: () => Promise<any>;
   addProduct: (product: any) => Promise<any>;
   updateProduct: (oldName: string, product: any) => Promise<any>;
@@ -73,6 +74,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openWorkbook: () => ipcRenderer.invoke('open-workbook'),
   createWorkbook: () => ipcRenderer.invoke('create-workbook'),
   useDefaultWorkbook: () => ipcRenderer.invoke('use-default-workbook'),
+  useWorkbook: (filePath: string) => ipcRenderer.invoke('use-workbook', filePath),
   readWorkbook: () => ipcRenderer.invoke('read-workbook'),
   addProduct: (product: any) => ipcRenderer.invoke('add-product', product),
   updateProduct: (oldName: string, product: any) => ipcRenderer.invoke('update-product', oldName, product),
