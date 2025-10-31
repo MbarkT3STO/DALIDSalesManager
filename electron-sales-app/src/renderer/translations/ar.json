@@ -224,7 +224,8 @@
     "currentStock": "المخزون الحالي:",
     "saveMovement": "حفظ الحركة",
     "quantitySold": "الكمية المباعة",
-    "required": "*"
+    "required": "*",
+    "exportPdf": "تصدير PDF"
   },
   "analytics": {
     "title": "التحليلات والإحصائيات",

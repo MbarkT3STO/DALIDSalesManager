@@ -224,7 +224,8 @@
     "currentStock": "Stock actuel:",
     "saveMovement": "Enregistrer le mouvement",
     "quantitySold": "Quantité vendue",
-    "required": "*"
+    "required": "*",
+    "exportPdf": "Exporter en PDF"
   },
   "analytics": {
     "title": "Analyses et statistiques",
