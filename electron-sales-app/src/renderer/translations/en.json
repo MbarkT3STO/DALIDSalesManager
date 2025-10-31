@@ -106,11 +106,15 @@
     "lowStockAlert": "Low Stock Alert",
     "noData": "No data available",
     "invoiceId": "Invoice ID",
-    "profit": "Profit"
+    "profit": "Profit",
+    "insights": "Insights",
+    "overview": "Business Overview"
   },
   "products": {
     "title": "Products",
     "management": "Products Management",
+    "viewLowStock": "View Low Stock",
+    "lowStockTitle": "Low Stock Products",
     "addProduct": "Add Product",
     "productName": "Product Name",
     "quantity": "Quantity",
@@ -324,6 +328,8 @@
     "unlimited": "Unlimited",
     "notifications": "Notifications",
     "lowStockAlerts": "Low Stock Alerts",
+    "lowStockThreshold": "Low stock threshold",
+    "lowStockThresholdHint": "Products at or below this quantity will be highlighted and shown in alerts.",
     "soundNotifications": "Sound Notifications",
     "application": "Application",
     "startupBehavior": "Startup Behavior",

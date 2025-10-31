@@ -95,6 +95,8 @@
   },
   "dashboard": {
     "title": "لوحة التحكم",
+    "insights": "رؤى",
+    "overview": "نظرة عامة على الأعمال",
     "allProductsStocked": "جميع المنتجات متوفرة بشكل جيد",
     "only": "فقط",
     "unitsRemaining": "وحدات متبقية",
@@ -111,6 +113,8 @@
   "products": {
     "title": "المنتجات",
     "management": "إدارة المنتجات",
+    "viewLowStock": "عرض المخزون المنخفض",
+    "lowStockTitle": "منتجات ذات مخزون منخفض",
     "addProduct": "إضافة منتج",
     "productName": "اسم المنتج",
     "quantity": "الكمية",

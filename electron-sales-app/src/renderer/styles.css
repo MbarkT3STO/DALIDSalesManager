@@ -978,6 +978,32 @@ body {
     border: 1px solid var(--border-color);
 }
 
+/* Dashboard Insights */
+.dashboard-insights {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+}
+
+.insight-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.insight-card canvas {
+    width: 100% !important;
+    height: 260px !important;
+}
+
+@media (max-width: 1024px) {
+    .insight-card canvas {
+        height: 220px !important;
+    }
+}
+
 .modal-small {
     max-width: 500px;
 }
@@ -1783,6 +1809,14 @@ select.form-control {
 .data-table .btn-icon svg {
     width: 18px;
     height: 18px;
+}
+
+.low-stock-row {
+    background: linear-gradient(90deg, rgba(250, 204, 21, 0.12), transparent);
+}
+
+.badge-low {
+    margin-left: 8px;
 }
 
 .data-table .btn-danger {

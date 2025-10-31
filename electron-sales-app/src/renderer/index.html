@@ -386,6 +386,16 @@
                 </div>
 
                 <div class="dashboard-section">
+                    <h2 data-translate="dashboard.insights">Insights</h2>
+                    <div class="dashboard-insights">
+                        <div class="insight-card">
+                            <h3 data-translate="dashboard.overview">Business Overview</h3>
+                            <canvas id="dashboardOverviewChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-section">
                     <h2 data-translate="dashboard.lowStockAlert">Low Stock Alert</h2>
                     <div id="lowStockAlert" class="alert-container">
                         <p class="empty-state" data-translate="common.allStocked">All products are well stocked</p>
@@ -535,11 +545,20 @@
             <div id="productsTab" class="tab-content">
                 <div class="tab-header">
                     <h2 data-translate="products.management">Products Management</h2>
-                    <button id="addProductBtn" class="btn btn-primary btn-icon-only" title="Add Product">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 5v14M5 12h14"/>
-                        </svg>
-                    </button>
+                    <div style="display: flex; gap: 0.75rem; align-items: center;">
+                        <button id="showLowStockBtn" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                <path d="M12 9v4M12 17h.01"/>
+                            </svg>
+                            <span data-translate="products.viewLowStock">View Low Stock</span>
+                        </button>
+                        <button id="addProductBtn" class="btn btn-primary btn-icon-only" title="Add Product">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 5v14M5 12h14"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="search-bar">
@@ -564,6 +583,36 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- Low Stock Products Modal -->
+            <div id="lowStockModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 data-translate="products.lowStockTitle">Low Stock Products</h2>
+                        <button class="modal-close">&times;</button>
+                    </div>
+                    <div class="modal-form">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th data-translate="common.product">Product</th>
+                                        <th data-translate="common.quantity">Quantity</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lowStockTableBody">
+                                    <tr>
+                                        <td colspan="2" class="empty-state" data-translate="common.allStocked">All products are well stocked</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary modal-cancel" data-translate="common.close">Close</button>
+                    </div>
                 </div>
             </div>
 
@@ -1109,6 +1158,11 @@
                                 <span class="toggle-slider"></span>
                             </div>
                             <p class="form-hint" data-translate="settings.lowStockHint">Receive notifications when products are running low on stock.</p>
+                        </div>
+                        <div class="settings-group">
+                            <label for="lowStockThreshold" data-translate="settings.lowStockThreshold">Low stock threshold</label>
+                            <input type="number" id="lowStockThreshold" class="form-control" min="0" step="1" value="5">
+                            <p class="form-hint" data-translate="settings.lowStockThresholdHint">Products at or below this quantity will be highlighted and shown in alerts.</p>
                         </div>
                         <div class="settings-group">
                             <label for="soundNotificationsToggle" data-translate="settings.soundNotifications">Sound Notifications</label>

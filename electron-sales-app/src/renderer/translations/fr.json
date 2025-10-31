@@ -95,6 +95,8 @@
   },
   "dashboard": {
     "title": "Tableau de bord",
+    "insights": "Aperçus",
+    "overview": "Aperçu d'entreprise",
     "allProductsStocked": "Tous les produits sont bien approvisionnés",
     "only": "Seulement",
     "unitsRemaining": "unités restantes",
@@ -111,6 +113,8 @@
   "products": {
     "title": "Produits",
     "management": "Gestion des produits",
+    "viewLowStock": "Voir le stock faible",
+    "lowStockTitle": "Produits en stock faible",
     "addProduct": "Ajouter un produit",
     "productName": "Nom du produit",
     "quantity": "Quantité",

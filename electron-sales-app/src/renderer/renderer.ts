@@ -88,6 +88,7 @@ interface AppSettings {
   autoBackup: boolean;
   backupRetention: number;
   lowStockNotifications: boolean;
+  lowStockThreshold?: number;
   soundNotifications: boolean;
   startupBehavior: string;
   autoRefresh: boolean;
@@ -103,6 +104,7 @@ let appSettings: AppSettings = {
   autoBackup: true,
   backupRetention: 5,
   lowStockNotifications: true,
+  lowStockThreshold: 5,
   soundNotifications: true,
   startupBehavior: 'lastWorkbook',
   autoRefresh: false,
@@ -373,6 +375,8 @@ function renderSettings() {
   (document.getElementById('autoBackupToggle') as HTMLInputElement).checked = appSettings.autoBackup;
   (document.getElementById('backupRetentionSelect') as HTMLSelectElement).value = appSettings.backupRetention.toString();
   (document.getElementById('lowStockNotificationsToggle') as HTMLInputElement).checked = appSettings.lowStockNotifications;
+  const lowStockThresholdInput = document.getElementById('lowStockThreshold') as HTMLInputElement | null;
+  if (lowStockThresholdInput) lowStockThresholdInput.value = String(appSettings.lowStockThreshold ?? 5);
   (document.getElementById('soundNotificationsToggle') as HTMLInputElement).checked = appSettings.soundNotifications;
   (document.getElementById('startupBehaviorSelect') as HTMLSelectElement).value = appSettings.startupBehavior;
   (document.getElementById('autoRefreshToggle') as HTMLInputElement).checked = appSettings.autoRefresh;
@@ -745,6 +749,7 @@ function setupEventListeners() {
   document.getElementById('addProductBtn')?.addEventListener('click', () => openProductModal());
   document.getElementById('productForm')?.addEventListener('submit', handleProductSubmit);
   document.getElementById('productSearch')?.addEventListener('input', filterProducts);
+  document.getElementById('showLowStockBtn')?.addEventListener('click', openLowStockModal);
 
   // Customer management
   document.getElementById('addCustomerBtn')?.addEventListener('click', () => openCustomerModal());
@@ -1227,6 +1232,9 @@ function renderDashboard() {
 
   // Render low stock alert
   renderLowStockAlert();
+
+  // Render overview chart
+  renderDashboardOverviewChart();
 }
 
 // Helper function to translate status
@@ -1293,7 +1301,8 @@ function renderLowStockAlert() {
   const container = document.getElementById('lowStockAlert');
   if (!container) return;
 
-  const lowStockProducts = workbookData.products.filter(p => p.quantity < 10);
+  const threshold = appSettings.lowStockThreshold ?? 5;
+  const lowStockProducts = workbookData.products.filter(p => p.quantity <= threshold);
 
   if (lowStockProducts.length === 0) {
     container.innerHTML = `<p class="empty-state">${t('dashboard.allProductsStocked')}</p>`;
@@ -1307,6 +1316,30 @@ function renderLowStockAlert() {
   `).join('');
 }
 
+function openLowStockModal() {
+  const modal = document.getElementById('lowStockModal');
+  const tbody = document.getElementById('lowStockTableBody');
+  if (!modal || !tbody) return;
+
+  const threshold = appSettings.lowStockThreshold ?? 5;
+  const lowStockProducts = workbookData.products
+    .filter(p => p.quantity <= threshold)
+    .sort((a, b) => a.quantity - b.quantity || a.name.localeCompare(b.name));
+
+  if (lowStockProducts.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="2" class="empty-state">${t('common.allStocked', 'All products are well stocked')}</td></tr>`;
+  } else {
+    tbody.innerHTML = lowStockProducts.map(p => `
+      <tr>
+        <td><strong>${p.name}</strong></td>
+        <td>${p.quantity}</td>
+      </tr>
+    `).join('');
+  }
+
+  modal.classList.add('active');
+}
+
 // Products rendering
 function renderProducts() {
   const tbody = document.getElementById('productsTableBody');
@@ -1317,11 +1350,13 @@ function renderProducts() {
     return;
   }
 
+  const threshold = appSettings.lowStockThreshold ?? 5;
   tbody.innerHTML = workbookData.products.map(product => {
     const profitMargin = ((product.salePrice - product.buyPrice) / product.buyPrice * 100).toFixed(1);
+    const isLow = product.quantity <= threshold;
     return `
-      <tr>
-        <td><strong>${product.name}</strong></td>
+      <tr class="${isLow ? 'low-stock-row' : ''}">
+        <td><strong>${product.name}</strong> ${isLow ? '<span class="badge badge-warning badge-low">'+t('inventory.lowStockItems','Low Stock')+'</span>' : ''}</td>
         <td>${product.quantity}</td>
         <td>${formatCurrency(product.buyPrice)}</td>
         <td>${formatCurrency(product.salePrice)}</td>
@@ -1361,11 +1396,13 @@ function filterProducts() {
     return;
   }
 
+  const threshold = appSettings.lowStockThreshold ?? 5;
   tbody.innerHTML = filteredProducts.map(product => {
     const profitMargin = ((product.salePrice - product.buyPrice) / product.buyPrice * 100).toFixed(1);
+    const isLow = product.quantity <= threshold;
     return `
-      <tr>
-        <td><strong>${product.name}</strong></td>
+      <tr class="${isLow ? 'low-stock-row' : ''}">
+        <td><strong>${product.name}</strong> ${isLow ? '<span class="badge badge-warning badge-low">'+t('inventory.lowStockItems','Low Stock')+'</span>' : ''}</td>
         <td>${product.quantity}</td>
         <td>${formatCurrency(product.buyPrice)}</td>
         <td>${formatCurrency(product.salePrice)}</td>
@@ -2848,7 +2885,8 @@ function renderInventory() {
   // Render inventory statistics
   const totalStockItems = workbookData.products.reduce((sum, p) => sum + p.quantity, 0);
   const totalStockValue = workbookData.products.reduce((sum, p) => sum + (p.quantity * p.buyPrice), 0);
-  const lowStockCount = workbookData.products.filter(p => p.quantity < 10).length;
+  const threshold = appSettings.lowStockThreshold ?? 5;
+  const lowStockCount = workbookData.products.filter(p => p.quantity <= threshold).length;
 
   (document as any).getElementById('totalStockItems').textContent = totalStockItems;
   (document as any).getElementById('totalStockValue').textContent = formatCurrency(totalStockValue);
@@ -2893,7 +2931,8 @@ async function exportInventoryToPDF() {
     // Compute summary
     const totalStockItems = workbookData.products.reduce((sum, p) => sum + p.quantity, 0);
     const totalStockValueNum = workbookData.products.reduce((sum, p) => sum + (p.quantity * p.buyPrice), 0);
-    const lowStockCount = workbookData.products.filter(p => p.quantity < 10).length;
+    const threshold = appSettings.lowStockThreshold ?? 5;
+    const lowStockCount = workbookData.products.filter(p => p.quantity <= threshold).length;
 
     // Recent movements (limit to 100 for PDF)
     const recentMovements = [...workbookData.inventory].reverse().slice(0, 100);
@@ -3113,6 +3152,73 @@ function renderAnalytics() {
   renderProductCategoriesChart();
   renderTopCustomersChart();
   renderInventoryStatusChart();
+}
+
+// Dashboard charts
+function renderDashboardOverviewChart() {
+  const canvas = document.getElementById('dashboardOverviewChart') as any;
+  if (!canvas) return;
+
+  const css = getComputedStyle(document.documentElement);
+  const primary = css.getPropertyValue('--primary-color').trim() || '#6366f1';
+  const success = css.getPropertyValue('--success-color').trim() || '#10b981';
+  const textSecondary = css.getPropertyValue('--text-secondary').trim() || '#64748b';
+
+  // Last 30 days sales and profit
+  const last30 = new Date();
+  last30.setDate(last30.getDate() - 29);
+  const byDate: Record<string, { sales: number; profit: number }> = {};
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(last30);
+    d.setDate(last30.getDate() + i);
+    const key = d.toISOString().split('T')[0];
+    byDate[key] = { sales: 0, profit: 0 };
+  }
+  workbookData.invoices
+    .filter(inv => inv.status !== 'Cancelled')
+    .forEach(inv => {
+      const key = new Date(inv.date).toISOString().split('T')[0];
+      if (byDate[key]) {
+        byDate[key].sales += inv.totalAmount;
+        byDate[key].profit += inv.totalProfit;
+      }
+    });
+  const labels = Object.keys(byDate);
+  const sales = labels.map(k => byDate[k].sales);
+  const profit = labels.map(k => byDate[k].profit);
+
+  new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: t('dashboard.totalSales', 'Total Sales'),
+          data: sales,
+          borderColor: primary,
+          backgroundColor: primary + '26',
+          fill: true,
+          tension: 0.35
+        },
+        {
+          label: t('dashboard.profit', 'Profit'),
+          data: profit,
+          borderColor: success,
+          backgroundColor: success + '26',
+          fill: true,
+          tension: 0.35
+        }
+      ]
+    },
+    options: {
+      plugins: { legend: { labels: { color: textSecondary } } },
+      scales: {
+        x: { ticks: { color: textSecondary }, grid: { display: false } },
+        y: { ticks: { color: textSecondary }, grid: { color: '#E5E7EB22' } }
+      },
+      maintainAspectRatio: false
+    }
+  });
 }
 
 function renderSalesTrendChart() {
@@ -3667,6 +3773,8 @@ function handleSaveSettings() {
   appSettings.autoBackup = (document.getElementById('autoBackupToggle') as HTMLInputElement).checked;
   appSettings.backupRetention = parseInt((document.getElementById('backupRetentionSelect') as HTMLSelectElement).value);
   appSettings.lowStockNotifications = (document.getElementById('lowStockNotificationsToggle') as HTMLInputElement).checked;
+  const lowStockThresholdVal = parseInt((document.getElementById('lowStockThreshold') as HTMLInputElement)?.value || '5', 10);
+  appSettings.lowStockThreshold = isNaN(lowStockThresholdVal) ? 5 : Math.max(0, lowStockThresholdVal);
   appSettings.soundNotifications = (document.getElementById('soundNotificationsToggle') as HTMLInputElement).checked;
   appSettings.startupBehavior = (document.getElementById('startupBehaviorSelect') as HTMLSelectElement).value;
   appSettings.autoRefresh = (document.getElementById('autoRefreshToggle') as HTMLInputElement).checked;
@@ -3690,6 +3798,7 @@ function handleResetSettings() {
     autoBackup: true,
     backupRetention: 5,
     lowStockNotifications: true,
+    lowStockThreshold: 5,
     soundNotifications: true,
     startupBehavior: 'lastWorkbook',
     autoRefresh: false,
