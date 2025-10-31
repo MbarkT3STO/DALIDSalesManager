@@ -434,7 +434,11 @@
                                             <td><input class="form-control je-account" data-translate-placeholder="accounting.accountCodePlaceholder" placeholder="Account (code)" list="accountsDatalist"></td>
                                             <td><input type="number" class="form-control je-debit" min="0" step="0.01"></td>
                                             <td><input type="number" class="form-control je-credit" min="0" step="0.01"></td>
-                                            <td><button class="btn btn-secondary btn-small" id="jeAddLineBtn" data-translate="common.add">Add</button></td>
+                                            <td><button class="btn btn-secondary btn-small btn-icon-only" id="jeAddLineBtn" title="Add Line">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M12 5v14M5 12h14"/>
+                                                </svg>
+                                            </button></td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -461,8 +465,20 @@
                             <input type="date" id="tbTo" class="form-control">
                         </div>
                         <button class="btn btn-secondary" id="tbRefreshBtn" data-translate="common.refreshData">Refresh</button>
-                        <button class="btn btn-secondary" id="tbExportCsvBtn" data-translate="reports.exportCSV">Export CSV</button>
-                        <button class="btn btn-secondary" id="tbExportPdfBtn" data-translate="reports.exportPDF">Export PDF</button>
+                        <button class="btn btn-secondary btn-icon-only" id="tbExportCsvBtn" title="Export CSV">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                                <circle cx="12" cy="5" r="2"/>
+                            </svg>
+                        </button>
+                        <button class="btn btn-secondary btn-icon-only" id="tbExportPdfBtn" title="Export PDF">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                            </svg>
+                        </button>
                     </div>
                     <div class="table-container">
                         <table class="data-table">
@@ -496,8 +512,20 @@
                         </div>
                         <button class="btn btn-secondary" id="fsIncomeBtn" data-translate="accounting.incomeStatement">Income Statement</button>
                         <button class="btn btn-secondary" id="fsBalanceBtn" data-translate="accounting.balanceSheet">Balance Sheet</button>
-                        <button class="btn btn-secondary" id="fsExportCsvBtn" data-translate="reports.exportCSV">Export CSV</button>
-                        <button class="btn btn-secondary" id="fsExportPdfBtn" data-translate="reports.exportPDF">Export PDF</button>
+                        <button class="btn btn-secondary btn-icon-only" id="fsExportCsvBtn" title="Export CSV">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                                <circle cx="12" cy="5" r="2"/>
+                            </svg>
+                        </button>
+                        <button class="btn btn-secondary btn-icon-only" id="fsExportPdfBtn" title="Export PDF">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                            </svg>
+                        </button>
                     </div>
                     <div id="fsOutput" class="table-container"></div>
                 </div>
@@ -507,11 +535,10 @@
             <div id="productsTab" class="tab-content">
                 <div class="tab-header">
                     <h2 data-translate="products.management">Products Management</h2>
-                    <button id="addProductBtn" class="btn btn-primary">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <button id="addProductBtn" class="btn btn-primary btn-icon-only" title="Add Product">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 5v14M5 12h14"/>
                         </svg>
-                        <span data-translate="products.addProduct">Add Product</span>
                     </button>
                 </div>
 
@@ -543,12 +570,11 @@
             <!-- Customers Tab -->
             <div id="customersTab" class="tab-content">
                 <div class="tab-header">
-                    <h2 data-translate="customers.management">Customers Management</h2>
-                    <button id="addCustomerBtn" class="btn btn-primary">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <h2 data-translate="customers.title">Customers</h2>
+                    <button id="addCustomerBtn" class="btn btn-primary btn-icon-only" title="Add Customer">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 5v14M5 12h14"/>
                         </svg>
-                        <span data-translate="customers.addCustomer">Add Customer</span>
                     </button>
                 </div>
 
@@ -580,11 +606,10 @@
             <div id="salesTab" class="tab-content">
                 <div class="tab-header">
                     <h2 data-translate="sales.title">Sales & Invoices</h2>
-                    <button id="newInvoiceBtn" class="btn btn-primary">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <button id="newInvoiceBtn" class="btn btn-primary btn-icon-only" title="New Invoice">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 5v14M5 12h14"/>
                         </svg>
-                        <span data-translate="sales.newInvoice">New Invoice</span>
                     </button>
                 </div>
 
@@ -609,11 +634,12 @@
                         <label for="invoiceDateFilter" data-translate="common.date">Date:</label>
                         <input type="date" id="invoiceDateFilter" class="form-control" data-translate-placeholder="sales.selectDate">
                     </div>
-                    <button id="clearInvoiceFilters" class="btn btn-secondary btn-small">
+                    <button id="clearInvoiceFilters" class="btn btn-secondary btn-small btn-icon-only" title="Clear Filters">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            <path d="M22 3H2l7 8v7l6-3v-4z"/>
+                            <line x1="8" y1="8" x2="16" y2="16"/>
+                            <line x1="16" y1="8" x2="8" y2="16"/>
                         </svg>
-                        <span data-translate="sales.clearFilters">Clear Filters</span>
                     </button>
                 </div>
 
@@ -644,19 +670,17 @@
                 <div class="tab-header">
                     <h2 data-translate="inventory.management">Inventory Management</h2>
                     <div style="display: flex; gap: 1rem; align-items: center;">
-                        <button id="addStockBtn" class="btn btn-primary">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <button id="addStockBtn" class="btn btn-primary btn-icon-only" title="Stock Movement">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M12 5v14M5 12h14"/>
                             </svg>
-                            <span data-translate="inventory.addMovement">Stock Movement</span>
                         </button>
-                        <button id="exportInventoryPdfBtn" class="btn btn-primary">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <button id="exportInventoryPdfBtn" class="btn btn-primary btn-icon-only" title="Export to PDF">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                                 <polyline points="7 10 12 15 17 10"/>
                                 <line x1="12" y1="15" x2="12" y2="3"/>
                             </svg>
-                            <span data-translate="inventory.exportPdf">Export to PDF</span>
                         </button>
                     </div>
                 </div>
@@ -741,13 +765,12 @@
                                 <option value="all" data-translate="analytics.allTime">All Time</option>
                             </select>
                         </div>
-                        <button id="exportAnalyticsPdfBtn" class="btn btn-primary">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <button id="exportAnalyticsPdfBtn" class="btn btn-primary btn-icon-only" title="Export to PDF">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                                 <polyline points="7 10 12 15 17 10"/>
                                 <line x1="12" y1="15" x2="12" y2="3"/>
                             </svg>
-                            <span data-translate="analytics.exportPdf">Export to PDF</span>
                         </button>
                     </div>
                 </div>
@@ -895,11 +918,10 @@
             <div id="reportsTab" class="tab-content">
                 <div class="tab-header">
                     <h2 data-translate="reports.title">Reports & Analytics</h2>
-                    <button id="exportReportBtn" class="btn btn-secondary">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <button id="exportReportBtn" class="btn btn-secondary btn-icon-only" title="Export Report">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
                         </svg>
-                        <span data-translate="reports.exportReport">Export</span>
                     </button>
                 </div>
 
@@ -914,7 +936,11 @@
                     </div>
                     <div class="form-group">
                         <label style="visibility: hidden;">Filter</label>
-                        <button id="filterReportBtn" class="btn btn-primary"><span data-translate="reports.applyFilter">Apply Filter</span></button>
+                        <button id="filterReportBtn" class="btn btn-primary btn-icon-only" title="Apply Filter">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 3H2l7 8v7l6-3v-4z"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
 
@@ -959,14 +985,13 @@
             <div id="usersTab" class="tab-content">
                 <div class="tab-header">
                     <h2 data-translate="users.title">User Management</h2>
-                    <button id="addUserBtn" class="btn btn-primary">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <button id="addUserBtn" class="btn btn-primary btn-icon-only" title="Add User">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                             <circle cx="8.5" cy="7" r="4"/>
                             <line x1="20" y1="8" x2="20" y2="14"/>
                             <line x1="23" y1="11" x2="17" y2="11"/>
                         </svg>
-                        <span data-translate="users.addUser">Add User</span>
                     </button>
                 </div>
 
@@ -1151,13 +1176,12 @@
                                 <select id="gdprExportCustomerSelect" class="form-control" style="flex: 1;">
                                     <option value="" data-translate="gdpr.selectCustomerPlaceholder">Choose a customer...</option>
                                 </select>
-                                <button id="gdprExportBtn" class="btn btn-primary">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <button id="gdprExportBtn" class="btn btn-primary btn-icon-only" title="Export Data">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                                         <polyline points="7 10 12 15 17 10"/>
                                         <line x1="12" y1="15" x2="12" y2="3"/>
                                     </svg>
-                                    <span data-translate="gdpr.exportButton">Export Data</span>
                                 </button>
                             </div>
                         </div>
@@ -1238,11 +1262,21 @@
                             <label data-translate="audit.exportLogs">Export Audit Logs</label>
                             <p class="form-hint" data-translate="audit.exportLogsDesc">Export logs in JSON or CSV format</p>
                             <div style="display: flex; gap: 10px; margin-top: 10px;">
-                                <button id="auditExportJSONBtn" class="btn btn-secondary">
-                                    <span data-translate="audit.exportJSON">Export as JSON</span>
+                                <button id="auditExportJSONBtn" class="btn btn-secondary btn-icon-only" title="Export as JSON">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14 2 14 8 20 8"/>
+                                        <line x1="16" y1="13" x2="8" y2="13"/>
+                                        <line x1="16" y1="17" x2="8" y2="17"/>
+                                        <polyline points="10 9 9 9 8 9"/>
+                                    </svg>
                                 </button>
-                                <button id="auditExportCSVBtn" class="btn btn-secondary">
-                                    <span data-translate="audit.exportCSV">Export as CSV</span>
+                                <button id="auditExportCSVBtn" class="btn btn-secondary btn-icon-only" title="Export as CSV">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="7 10 12 15 17 10"/>
+                                        <line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
                                 </button>
                             </div>
                         </div>
@@ -1408,7 +1442,11 @@
                         </div>
                         <div class="form-group">
                             <label>&nbsp;</label>
-                            <button type="button" id="addItemBtn" class="btn btn-primary" data-translate="sales.addItem">Add Item</button>
+                            <button type="button" id="addItemBtn" class="btn btn-primary btn-icon-only" title="Add Item">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 5v14M5 12h14"/>
+                                </svg>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1583,23 +1621,18 @@
             <div class="modal-header">
                 <h2 id="customerHistoryTitle" data-translate="customers.customerHistory">Customer History</h2>
                 <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <button class="btn btn-secondary" onclick="exportCustomerHistoryPDF()" style="display: flex; align-items: center; gap: 0.5rem;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <button class="btn btn-secondary btn-icon-only" onclick="exportCustomerHistoryPDF()" title="Export PDF">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                             <polyline points="14 2 14 8 20 8"/>
-                            <line x1="16" y1="13" x2="8" y2="13"/>
-                            <line x1="16" y1="17" x2="8" y2="17"/>
-                            <polyline points="10 9 9 9 8 9"/>
                         </svg>
-                        <span data-translate="customers.exportPDF">Export PDF</span>
                     </button>
-                    <button class="btn btn-primary" onclick="exportCustomerHistoryExcel()" style="display: flex; align-items: center; gap: 0.5rem;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <button class="btn btn-primary btn-icon-only" onclick="exportCustomerHistoryExcel()" title="Export Excel">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                             <polyline points="14 2 14 8 20 8"/>
                             <line x1="9" y1="15" x2="15" y2="15"/>
                         </svg>
-                        <span data-translate="customers.exportExcel">Export Excel</span>
                     </button>
                     <button class="modal-close">&times;</button>
                 </div>
