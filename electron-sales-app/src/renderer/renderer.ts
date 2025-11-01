@@ -1378,6 +1378,14 @@ function renderProducts() {
         <td>${formatCurrency(product.salePrice)}</td>
         <td>${profitMargin}%</td>
         <td>
+          <button class="btn-icon" onclick="viewProductAnalysis('${escapeHtml(product.name)}')" title="${t('products.viewAnalysis', 'View Analysis')}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 3v18h18"/>
+              <path d="M18 17V9"/>
+              <path d="M13 17V5"/>
+              <path d="M8 17v-3"/>
+            </svg>
+          </button>
           <button class="btn-icon" onclick="editProduct('${escapeHtml(product.name)}')" title="${t('common.edit')}">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -1426,6 +1434,14 @@ function filterProducts() {
         <td>${formatCurrency(product.salePrice)}</td>
         <td>${profitMargin}%</td>
         <td>
+          <button class="btn-icon" onclick="viewProductAnalysis('${escapeHtml(product.name)}')" title="${t('products.viewAnalysis', 'View Analysis')}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 3v18h18"/>
+              <path d="M18 17V9"/>
+              <path d="M13 17V5"/>
+              <path d="M8 17v-3"/>
+            </svg>
+          </button>
           <button class="btn-icon" onclick="editProduct('${escapeHtml(product.name)}')" title="${t('common.edit')}">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -4166,3 +4182,233 @@ async function handleCreateManualBackup() {
     showToast(error.message || 'Error deleting backup', 'error');
   }
 };
+
+// Product Analysis Modal
+let productAnalysisChart: any = null;
+
+(window as any).viewProductAnalysis = function(productName: string) {
+  const modal = document.getElementById('productAnalysisModal');
+  const title = document.getElementById('productAnalysisModalTitle');
+  
+  if (!modal || !title) return;
+
+  // Find the product
+  const product = workbookData.products.find(p => p.name === productName);
+  if (!product) {
+    showToast(t('products.productNotFound', 'Product not found'), 'error');
+    return;
+  }
+
+  // Update modal title
+  title.textContent = `${t('products.productAnalysis', 'Product Analysis')}: ${productName}`;
+
+  // Get all cancelled invoice IDs to exclude them
+  const cancelledInvoiceIds = new Set(
+    workbookData.invoices
+      .filter(inv => inv.status === 'Cancelled')
+      .map(inv => inv.invoiceId)
+  );
+
+  // Get sales data for this product, excluding cancelled invoices
+  let productSales = workbookData.sales.filter(s => 
+    s.productName === productName && !cancelledInvoiceIds.has(s.invoiceId)
+  );
+
+  // Also check invoice items (as per sales data aggregation strategy)
+  const invoiceItemsSales = workbookData.invoices
+    .filter(inv => inv.status !== 'Cancelled')
+    .flatMap(inv => inv.items)
+    .filter(item => item.productName === productName);
+
+  // Combine and deduplicate sales data
+  const salesMap = new Map<string, Sale>();
+  [...productSales, ...invoiceItemsSales].forEach(sale => {
+    const key = `${sale.invoiceId}-${sale.productName}-${sale.date}`;
+    if (!salesMap.has(key)) {
+      salesMap.set(key, sale);
+    }
+  });
+  productSales = Array.from(salesMap.values());
+  
+  // Calculate metrics
+  const currentStock = product.quantity;
+  const totalRevenue = productSales.reduce((sum, sale) => sum + sale.total, 0);
+  const totalProfit = productSales.reduce((sum, sale) => sum + sale.profit, 0);
+  const unitsSold = productSales.reduce((sum, sale) => sum + sale.quantity, 0);
+  const profitMargin = product.buyPrice > 0 ? ((product.salePrice - product.buyPrice) / product.buyPrice * 100) : 0;
+  const avgSalePrice = unitsSold > 0 ? totalRevenue / unitsSold : product.salePrice;
+
+  // Update metrics with formatted numbers
+  const stockEl = document.getElementById('productCurrentStock');
+  const revenueEl = document.getElementById('productTotalRevenue');
+  const profitEl = document.getElementById('productTotalProfit');
+  const soldEl = document.getElementById('productUnitsSold');
+  const marginEl = document.getElementById('productProfitMargin');
+  const avgPriceEl = document.getElementById('productAvgSalePrice');
+
+  if (stockEl) stockEl.textContent = currentStock.toLocaleString();
+  if (revenueEl) revenueEl.textContent = formatCurrency(totalRevenue);
+  if (profitEl) profitEl.textContent = formatCurrency(totalProfit);
+  if (soldEl) soldEl.textContent = unitsSold.toLocaleString();
+  if (marginEl) marginEl.textContent = profitMargin.toFixed(1) + '%';
+  if (avgPriceEl) avgPriceEl.textContent = formatCurrency(avgSalePrice);
+
+  // Render sales trend chart
+  renderProductSalesTrendChart(productSales);
+
+  // Render inventory movements
+  renderProductInventoryMovements(productName);
+
+  // Show modal
+  modal.classList.add('active');
+};
+
+function renderProductSalesTrendChart(productSales: Sale[]) {
+  const canvas = document.getElementById('productSalesTrendChart') as HTMLCanvasElement;
+  if (!canvas) return;
+
+  // Destroy previous chart if exists
+  if (productAnalysisChart) {
+    productAnalysisChart.destroy();
+    productAnalysisChart = null;
+  }
+
+  // Group sales by date
+  const salesByDate = new Map<string, { quantity: number; revenue: number }>();
+  
+  productSales.forEach(sale => {
+    const date = sale.date;
+    const existing = salesByDate.get(date) || { quantity: 0, revenue: 0 };
+    existing.quantity += sale.quantity;
+    existing.revenue += sale.total;
+    salesByDate.set(date, existing);
+  });
+
+  // Sort by date
+  const sortedDates = Array.from(salesByDate.keys()).sort();
+  const quantities = sortedDates.map(date => salesByDate.get(date)?.quantity || 0);
+  const revenues = sortedDates.map(date => salesByDate.get(date)?.revenue || 0);
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  productAnalysisChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: sortedDates.map(date => formatDate(date)),
+      datasets: [
+        {
+          label: t('products.quantity', 'Quantity Sold'),
+          data: quantities,
+          borderColor: 'rgb(99, 102, 241)',
+          backgroundColor: 'rgba(99, 102, 241, 0.1)',
+          tension: 0.4,
+          yAxisID: 'y',
+          fill: true
+        },
+        {
+          label: t('products.revenue', 'Revenue'),
+          data: revenues,
+          borderColor: 'rgb(34, 197, 94)',
+          backgroundColor: 'rgba(34, 197, 94, 0.1)',
+          tension: 0.4,
+          yAxisID: 'y1',
+          fill: true
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top'
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context: any) {
+              let label = context.dataset.label || '';
+              if (label) {
+                label += ': ';
+              }
+              if (context.parsed.y !== null) {
+                if (context.datasetIndex === 1) {
+                  label += formatCurrency(context.parsed.y);
+                } else {
+                  label += context.parsed.y;
+                }
+              }
+              return label;
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          type: 'linear',
+          display: true,
+          position: 'left',
+          title: {
+            display: true,
+            text: t('products.quantity', 'Quantity')
+          },
+          beginAtZero: true
+        },
+        y1: {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          title: {
+            display: true,
+            text: t('products.revenue', 'Revenue')
+          },
+          beginAtZero: true,
+          grid: {
+            drawOnChartArea: false,
+          },
+        },
+      }
+    }
+  });
+}
+
+function renderProductInventoryMovements(productName: string) {
+  const tbody = document.getElementById('productInventoryMovementsBody');
+  if (!tbody) return;
+
+  // Get inventory movements for this product
+  const movements = workbookData.inventory.filter(m => m.productName === productName);
+
+  if (movements.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">' + t('inventory.noMovements', 'No inventory movements') + '</td></tr>';
+    return;
+  }
+
+  // Sort by date descending
+  const sortedMovements = [...movements].sort((a, b) => 
+    new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+
+  tbody.innerHTML = sortedMovements.map(movement => {
+    const typeClass = movement.type === 'IN' ? 'badge-success' : movement.type === 'OUT' ? 'badge-danger' : 'badge-warning';
+    const typeLabel = movement.type === 'IN' ? t('inventory.in', 'IN') : 
+                      movement.type === 'OUT' ? t('inventory.out', 'OUT') : 
+                      t('inventory.adjustment', 'ADJUSTMENT');
+    
+    return `
+      <tr>
+        <td>${formatDate(movement.date)}</td>
+        <td><span class="badge ${typeClass}">${typeLabel}</span></td>
+        <td>${movement.quantity}</td>
+        <td>${movement.reference || '-'}</td>
+        <td><strong>${movement.balanceAfter}</strong></td>
+        <td>${movement.notes || '-'}</td>
+      </tr>
+    `;
+  }).join('');
+}

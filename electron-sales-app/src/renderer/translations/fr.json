@@ -136,7 +136,18 @@
     "productDeleted": "Produit supprimé avec succès",
     "productRestored": "Produit restauré avec succès",
     "searchPlaceholder": "Rechercher des produits...",
-    "required": "*"
+    "required": "*",
+    "productAnalysis": "Analyse du produit",
+    "viewAnalysis": "Voir l'analyse",
+    "productNotFound": "Produit non trouvé",
+    "currentStock": "Stock actuel",
+    "totalRevenue": "Revenu total",
+    "totalProfit": "Profit total",
+    "unitsSold": "Unités vendues",
+    "avgSalePrice": "Prix de vente moyen",
+    "salesTrend": "Tendance des ventes",
+    "inventoryMovements": "Historique des mouvements d'inventaire",
+    "revenue": "Revenu"
   },
   "customers": {
     "title": "Clients",

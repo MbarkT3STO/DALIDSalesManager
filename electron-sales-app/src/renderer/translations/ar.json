@@ -136,7 +136,18 @@
     "productDeleted": "تم حذف المنتج بنجاح",
     "productRestored": "تم استعادة المنتج بنجاح",
     "searchPlaceholder": "البحث عن المنتجات...",
-    "required": "*"
+    "required": "*",
+    "productAnalysis": "تحليل المنتج",
+    "viewAnalysis": "عرض التحليل",
+    "productNotFound": "المنتج غير موجود",
+    "currentStock": "المخزون الحالي",
+    "totalRevenue": "إجمالي الإيرادات",
+    "totalProfit": "إجمالي الأرباح",
+    "unitsSold": "الوحدات المباعة",
+    "avgSalePrice": "متوسط سعر البيع",
+    "salesTrend": "اتجاه المبيعات",
+    "inventoryMovements": "سجل حركات المخزون",
+    "revenue": "الإيرادات"
   },
   "customers": {
     "title": "العملاء",

@@ -136,7 +136,18 @@
     "productDeleted": "Product deleted successfully",
     "productRestored": "Product restored successfully",
     "searchPlaceholder": "Search products...",
-    "required": "*"
+    "required": "*",
+    "productAnalysis": "Product Analysis",
+    "viewAnalysis": "View Analysis",
+    "productNotFound": "Product not found",
+    "currentStock": "Current Stock",
+    "totalRevenue": "Total Revenue",
+    "totalProfit": "Total Profit",
+    "unitsSold": "Units Sold",
+    "avgSalePrice": "Avg Sale Price",
+    "salesTrend": "Sales Trend",
+    "inventoryMovements": "Inventory Movement History",
+    "revenue": "Revenue"
   },
   "customers": {
     "title": "Customers",
