@@ -799,6 +799,11 @@ function setupEventListeners() {
   document.getElementById('auditExportJSONBtn')?.addEventListener('click', handleAuditExportJSON);
   document.getElementById('auditExportCSVBtn')?.addEventListener('click', handleAuditExportCSV);
 
+  // Backup Management
+  document.getElementById('viewBackupsBtn')?.addEventListener('click', openBackupManagerModal);
+  document.getElementById('createBackupBtn')?.addEventListener('click', handleCreateManualBackup);
+  document.getElementById('refreshBackupsBtn')?.addEventListener('click', loadBackupsList);
+
   // Set default date for invoice
   const today = new Date().toISOString().split('T')[0];
   const invoiceDateInput = document.getElementById('invoiceDate') as HTMLInputElement;
@@ -4025,3 +4030,139 @@ async function exportAnalyticsToPDF() {
 // Add event listener for export analytics button
 const exportAnalyticsPdfBtn = document.getElementById('exportAnalyticsPdfBtn');
 exportAnalyticsPdfBtn?.addEventListener('click', exportAnalyticsToPDF);
+
+// ============= Backup Management =============
+
+function openBackupManagerModal() {
+  const modal = document.getElementById('backupManagerModal');
+  if (modal) {
+    modal.classList.add('active');
+    loadBackupsList();
+  }
+}
+
+async function loadBackupsList() {
+  const tbody = document.getElementById('backupsTableBody');
+  if (!tbody) return;
+
+  try {
+    tbody.innerHTML = '<tr><td colspan="4" class="empty-state">' + t('settings.loadingBackups', 'Loading backups...') + '</td></tr>';
+    
+    const result = await api.listBackups();
+    
+    if (!result.success) {
+      showToast(result.message || 'Failed to load backups', 'error');
+      tbody.innerHTML = '<tr><td colspan="4" class="empty-state">' + t('settings.noBackups', 'No backups found') + '</td></tr>';
+      return;
+    }
+
+    const backups = result.backups || [];
+    
+    if (backups.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty-state">' + t('settings.noBackups', 'No backups found') + '</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = '';
+    backups.forEach((backup: any) => {
+      const row = document.createElement('tr');
+      const date = new Date(backup.date);
+      const formattedDate = date.toLocaleString();
+      const sizeKB = (backup.size / 1024).toFixed(2);
+      const sizeMB = (backup.size / 1024 / 1024).toFixed(2);
+      const sizeDisplay = backup.size > 1024 * 1024 ? `${sizeMB} MB` : `${sizeKB} KB`;
+      
+      row.innerHTML = `
+        <td>${backup.name}</td>
+        <td>${formattedDate}</td>
+        <td>${sizeDisplay}</td>
+        <td>
+          <button class="btn btn-primary btn-small btn-icon-only" onclick="restoreBackupFile('${backup.path.replace(/\\/g, '\\\\')}')" title="${t('settings.restoreBackup', 'Restore')}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+              <path d="M21 3v5h-5"/>
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+              <path d="M3 21v-5h5"/>
+            </svg>
+          </button>
+          <button class="btn btn-danger btn-small btn-icon-only" onclick="deleteBackupFile('${backup.path.replace(/\\/g, '\\\\')}')" title="${t('settings.deleteBackup', 'Delete')}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+  } catch (error: any) {
+    showToast(error.message || 'Error loading backups', 'error');
+    tbody.innerHTML = '<tr><td colspan="4" class="empty-state">' + t('settings.noBackups', 'No backups found') + '</td></tr>';
+  }
+}
+
+async function handleCreateManualBackup() {
+  try {
+    const result = await api.createManualBackup();
+    
+    if (result.success) {
+      showToast(t('settings.backupCreated', 'Manual backup created successfully'), 'success');
+      // Refresh the backups list if modal is open
+      const modal = document.getElementById('backupManagerModal');
+      if (modal && modal.classList.contains('active')) {
+        loadBackupsList();
+      }
+    } else {
+      showToast(result.message || t('settings.backupFailed', 'Failed to create backup'), 'error');
+    }
+  } catch (error: any) {
+    showToast(error.message || t('settings.backupFailed', 'Failed to create backup'), 'error');
+  }
+}
+
+// Global functions for backup actions (called from onclick)
+(window as any).restoreBackupFile = async function(backupPath: string) {
+  const confirmed = await api.showConfirm({
+    title: t('settings.confirmRestore', 'Restore Backup'),
+    message: t('settings.confirmRestoreMsg', 'Are you sure you want to restore this backup? Your current data will be backed up first.')
+  });
+
+  if (!confirmed.response) return;
+
+  try {
+    const result = await api.restoreBackup(backupPath);
+    
+    if (result.success) {
+      showToast(t('settings.backupRestored', 'Backup restored successfully. Please reload your data.'), 'success');
+      // Close modal and reload data
+      closeModal('backupManagerModal');
+      await loadWorkbookData();
+    } else {
+      showToast(result.message || 'Failed to restore backup', 'error');
+    }
+  } catch (error: any) {
+    showToast(error.message || 'Error restoring backup', 'error');
+  }
+};
+
+(window as any).deleteBackupFile = async function(backupPath: string) {
+  const confirmed = await api.showConfirm({
+    title: t('settings.confirmDeleteBackup', 'Delete Backup'),
+    message: t('settings.confirmDeleteBackupMsg', 'Are you sure you want to delete this backup file? This action cannot be undone.')
+  });
+
+  if (!confirmed.response) return;
+
+  try {
+    const result = await api.deleteBackup(backupPath);
+    
+    if (result.success) {
+      showToast(t('settings.backupDeleted', 'Backup deleted successfully'), 'success');
+      loadBackupsList();
+    } else {
+      showToast(result.message || 'Failed to delete backup', 'error');
+    }
+  } catch (error: any) {
+    showToast(error.message || 'Error deleting backup', 'error');
+  }
+};

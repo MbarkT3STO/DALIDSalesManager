@@ -1159,6 +1159,65 @@ export class ExcelHandler {
     this.workbookPath = newPath;
   }
 
+  // Backup Management Methods
+  async listBackups(): Promise<Array<{ name: string; path: string; date: Date; size: number }>> {
+    if (!fs.existsSync(this.workbookPath)) return [];
+
+    const dir = path.dirname(this.workbookPath);
+    const basename = path.basename(this.workbookPath, '.xlsx');
+    const files = fs.readdirSync(dir);
+    
+    const backups = files
+      .filter(f => f.startsWith(basename) && f.endsWith('.bak.xlsx'))
+      .map(f => {
+        const fullPath = path.join(dir, f);
+        const stats = fs.statSync(fullPath);
+        return {
+          name: f,
+          path: fullPath,
+          date: stats.mtime,
+          size: stats.size
+        };
+      })
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
+
+    return backups;
+  }
+
+  async restoreBackup(backupPath: string): Promise<void> {
+    if (!fs.existsSync(backupPath)) {
+      throw new Error('Backup file not found');
+    }
+
+    // Create a backup of current file before restoring
+    await this.createBackup();
+
+    // Copy backup file to main workbook path
+    fs.copyFileSync(backupPath, this.workbookPath);
+  }
+
+  async deleteBackup(backupPath: string): Promise<void> {
+    if (!fs.existsSync(backupPath)) {
+      throw new Error('Backup file not found');
+    }
+
+    fs.unlinkSync(backupPath);
+  }
+
+  async createManualBackup(): Promise<string> {
+    if (!fs.existsSync(this.workbookPath)) {
+      throw new Error('Workbook file not found');
+    }
+
+    const dir = path.dirname(this.workbookPath);
+    const basename = path.basename(this.workbookPath, '.xlsx');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const backupPath = path.join(dir, `${basename}.manual.${timestamp}.bak.xlsx`);
+
+    fs.copyFileSync(this.workbookPath, backupPath);
+    return backupPath;
+  }
+
   async addPayment(payment: Payment): Promise<void> {
     const workbook = await this.loadWorkbook();
     const paymentsSheet = workbook.getWorksheet('Payments');

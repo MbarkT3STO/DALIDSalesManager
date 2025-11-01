@@ -948,6 +948,59 @@ ipcMain.handle('print-invoice-pdf', async (event, invoice: Invoice) => {
   }
 });
 
+// Backup Management Handlers
+ipcMain.handle('list-backups', async () => {
+  try {
+    if (!excelHandler) {
+      return { success: false, message: 'No workbook loaded' };
+    }
+
+    const backups = await excelHandler.listBackups();
+    return { success: true, backups };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+ipcMain.handle('restore-backup', async (event, backupPath: string) => {
+  try {
+    if (!excelHandler) {
+      return { success: false, message: 'No workbook loaded' };
+    }
+
+    await excelHandler.restoreBackup(backupPath);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+ipcMain.handle('delete-backup', async (event, backupPath: string) => {
+  try {
+    if (!excelHandler) {
+      return { success: false, message: 'No workbook loaded' };
+    }
+
+    await excelHandler.deleteBackup(backupPath);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+ipcMain.handle('create-manual-backup', async () => {
+  try {
+    if (!excelHandler) {
+      return { success: false, message: 'No workbook loaded' };
+    }
+
+    const backupPath = await excelHandler.createManualBackup();
+    return { success: true, path: backupPath };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
 // Currency conversion handler
 ipcMain.handle('convert-currency', async (event, amount: number, fromCurrency: string, toCurrency: string) => {
   try {

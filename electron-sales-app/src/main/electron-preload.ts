@@ -51,6 +51,13 @@ export interface ElectronAPI {
   auditGetLogs: (filters: any) => Promise<any>;
   auditGenerateReport: (startDate: string, endDate: string) => Promise<any>;
   auditExportLogs: (startDate: string, endDate: string, format: 'json' | 'csv') => Promise<any>;
+  exportCustomerHistoryPDF: (data: any) => Promise<any>;
+  exportCustomerHistoryExcel: (data: any) => Promise<any>;
+  // Backup Management
+  listBackups: () => Promise<any>;
+  restoreBackup: (backupPath: string) => Promise<any>;
+  deleteBackup: (backupPath: string) => Promise<any>;
+  createManualBackup: () => Promise<any>;
   // Accounting
   accListAccounts: () => Promise<any>;
   accAddAccount: (account: any) => Promise<any>;
@@ -123,7 +130,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Customer History Export
   exportCustomerHistoryPDF: (data: any) => ipcRenderer.invoke('export-customer-history-pdf', data),
   exportCustomerHistoryExcel: (data: any) => ipcRenderer.invoke('export-customer-history-excel', data),
-  auditExportLogs: (startDate: string, endDate: string, format: 'json' | 'csv') => ipcRenderer.invoke('audit-export-logs', startDate, endDate, format)
+  auditExportLogs: (startDate: string, endDate: string, format: 'json' | 'csv') => ipcRenderer.invoke('audit-export-logs', startDate, endDate, format),
+  // Backup Management
+  listBackups: () => ipcRenderer.invoke('list-backups'),
+  restoreBackup: (backupPath: string) => ipcRenderer.invoke('restore-backup', backupPath),
+  deleteBackup: (backupPath: string) => ipcRenderer.invoke('delete-backup', backupPath),
+  createManualBackup: () => ipcRenderer.invoke('create-manual-backup')
   ,
   // Accounting
   accListAccounts: () => ipcRenderer.invoke('acc-list-accounts'),
