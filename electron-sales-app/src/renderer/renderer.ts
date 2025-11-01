@@ -121,6 +121,64 @@ let selectedProductForItem: Product | null = null;
 // Access the API
 const api = (window as any).electronAPI;
 
+// ============= PERFORMANCE OPTIMIZATIONS =============
+// Debounce helper for input handlers
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout | null = null;
+  return function(...args: Parameters<T>) {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+}
+
+// Throttle helper for scroll/resize handlers
+function throttle<T extends (...args: any[]) => any>(
+  func: T,
+  limit: number
+): (...args: Parameters<T>) => void {
+  let inThrottle: boolean = false;
+  return function(...args: Parameters<T>) {
+    if (!inThrottle) {
+      func(...args);
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, limit);
+    }
+  };
+}
+
+// RequestAnimationFrame batching for DOM updates
+let scheduledUpdates: Map<string, () => void> = new Map();
+let isUpdateScheduled = false;
+
+function batchDOMUpdate(key: string, updateFn: () => void) {
+  scheduledUpdates.set(key, updateFn);
+  if (!isUpdateScheduled) {
+    isUpdateScheduled = true;
+    requestAnimationFrame(() => {
+      scheduledUpdates.forEach(fn => fn());
+      scheduledUpdates.clear();
+      isUpdateScheduled = false;
+    });
+  }
+}
+
+// Cache DOM queries
+const domCache = new Map<string, HTMLElement | null>();
+function getCachedElement(id: string): HTMLElement | null {
+  if (!domCache.has(id)) {
+    domCache.set(id, document.getElementById(id));
+  }
+  return domCache.get(id) || null;
+}
+
+// Clear DOM cache when needed
+function clearDOMCache() {
+  domCache.clear();
+}
+
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
   initializeApp();
@@ -890,6 +948,31 @@ function toggleTheme() {
   }
 
   localStorage.setItem('theme', newTheme);
+  
+  // Re-render reports charts if on reports tab
+  const reportsTab = document.getElementById('reportsTab');
+  if (reportsTab && reportsTab.classList.contains('active')) {
+    // Re-render all charts with new theme colors
+    setTimeout(() => {
+      filterReports();
+    }, 100);
+  }
+  
+  // Re-render analytics charts if on analytics tab
+  const analyticsTab = document.getElementById('analyticsTab');
+  if (analyticsTab && analyticsTab.classList.contains('active')) {
+    setTimeout(() => {
+      renderAnalytics();
+    }, 100);
+  }
+  
+  // Re-render dashboard chart if on dashboard tab
+  const dashboardTab = document.getElementById('dashboardTab');
+  if (dashboardTab && dashboardTab.classList.contains('active')) {
+    setTimeout(() => {
+      renderDashboardOverviewChart();
+    }, 100);
+  }
 }
 
 // ============= Accounting (Renderer) =============
@@ -1256,8 +1339,29 @@ function translateStatus(status: string): string {
   return statusMap[status] || status;
 }
 
-// Helper function to format currency
-function formatCurrency(amount: number): string {
+// Memoization cache for expensive operations
+const memoCache = new Map<string, any>();
+function memoize<T extends (...args: any[]) => any>(fn: T, keyFn?: (...args: Parameters<T>) => string): T {
+  return ((...args: Parameters<T>) => {
+    const key = keyFn ? keyFn(...args) : JSON.stringify(args);
+    if (memoCache.has(key)) {
+      return memoCache.get(key);
+    }
+    const result = fn(...args);
+    memoCache.set(key, result);
+    // Limit cache size
+    if (memoCache.size > 1000) {
+      const firstKey = memoCache.keys().next().value;
+      if (firstKey !== undefined) {
+        memoCache.delete(firstKey);
+      }
+    }
+    return result;
+  }) as T;
+}
+
+// Helper function to format currency (memoized)
+const formatCurrencyMemoized = memoize(function formatCurrency(amount: number): string {
   const currencySymbols: { [key: string]: string } = {
     'USD': '$',
     'EUR': '€',
@@ -1279,6 +1383,11 @@ function formatCurrency(amount: number): string {
   }
   
   return `${symbol}${formattedAmount}`;
+}, (amount: number) => `${amount}_${appSettings.currency}`);
+
+// Wrapper for backward compatibility
+function formatCurrency(amount: number): string {
+  return formatCurrencyMemoized(amount);
 }
 
 function renderRecentInvoices() {
@@ -1322,7 +1431,8 @@ function renderLowStockAlert() {
 
   container.innerHTML = lowStockProducts.map(p => `
     <div class="alert-item">
-      <strong>${p.name}</strong> - ${t('dashboard.only')} ${p.quantity} ${t('dashboard.unitsRemaining')}
+      <strong>${p.name}</strong> - ${t('dashboard.only')} 
+      <span class="quantity">${p.quantity}</span>
     </div>
   `).join('');
 }
@@ -1404,11 +1514,12 @@ function renderProducts() {
   }).join('');
 }
 
-function filterProducts() {
-  const searchInput = document.getElementById('productSearch') as HTMLInputElement;
+// Debounced filter function for better performance
+const filterProductsDebounced = debounce(function() {
+  const searchInput = getCachedElement('productSearch') as HTMLInputElement;
   const searchTerm = searchInput?.value.toLowerCase() || '';
 
-  const tbody = document.getElementById('productsTableBody');
+  const tbody = getCachedElement('productsTableBody');
   if (!tbody) return;
 
   // Filter to show only active products
@@ -1458,6 +1569,11 @@ function filterProducts() {
       </tr>
     `;
   }).join('');
+}, 150);
+
+// Wrapper for event listener
+function filterProducts() {
+  filterProductsDebounced();
 }
 
 // Product modal
@@ -1640,11 +1756,12 @@ function renderCustomers() {
   `).join('');
 }
 
-function filterCustomers() {
-  const searchInput = document.getElementById('customerSearch') as HTMLInputElement;
+// Debounced filter function for better performance
+const filterCustomersDebounced = debounce(function() {
+  const searchInput = getCachedElement('customerSearch') as HTMLInputElement;
   const searchTerm = searchInput?.value.toLowerCase() || '';
 
-  const tbody = document.getElementById('customersTableBody');
+  const tbody = getCachedElement('customersTableBody');
   if (!tbody) return;
 
   const filteredCustomers = workbookData.customers.filter(c =>
@@ -1686,6 +1803,11 @@ function filterCustomers() {
       </td>
     </tr>
   `).join('');
+}, 150);
+
+// Wrapper for event listener
+function filterCustomers() {
+  filterCustomersDebounced();
 }
 
 // Customer modal
@@ -1806,7 +1928,6 @@ let currentCustomerInvoices: Invoice[] = [];
   updateElement('customerTotalSpent', formatCurrency(totalSpent));
   updateElement('customerTotalInvoices', totalInvoices.toString());
   updateElement('customerLastPurchase', lastPurchase);
-  updateElement('customerAvgOrder', formatCurrency(avgOrder));
   
   // Render purchase trend chart
   renderCustomerPurchaseTrendChart(customerInvoices);
@@ -1836,15 +1957,23 @@ function renderCustomerPurchaseTrendChart(invoices: Invoice[]) {
   const dates = Object.keys(salesByDate).sort();
   const values = dates.map(date => salesByDate[date]);
   
+  // Get theme colors
+  const colors = getChartThemeColors();
+  
   customerHistoryChart = new Chart(canvas, {
     type: 'line',
     data: {
       labels: dates.map(d => formatDate(d)),
       datasets: [{
-        label: 'Purchase Amount',
+        label: t('customers.totalSpent', 'Total Spent'),
         data: values,
-        borderColor: 'rgb(99, 102, 241)',
-        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+        borderColor: colors.primary,
+        backgroundColor: colors.primaryLight,
+        borderWidth: 3,
+        pointRadius: 4,
+        pointBackgroundColor: colors.primary,
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
         tension: 0.4,
         fill: true
       }]
@@ -1855,15 +1984,44 @@ function renderCustomerPurchaseTrendChart(invoices: Invoice[]) {
       plugins: {
         legend: {
           display: false
+        },
+        tooltip: {
+          backgroundColor: colors.tooltipBackground,
+          titleColor: colors.textPrimary,
+          bodyColor: colors.textSecondary,
+          borderColor: colors.tooltipBorder,
+          borderWidth: 1,
+          cornerRadius: 8,
+          callbacks: {
+            label: function(context: any) {
+              return formatCurrency(context.parsed.y);
+            }
+          }
         }
       },
       scales: {
         y: {
           beginAtZero: true,
+          grid: {
+            color: colors.gridLine,
+            drawBorder: false
+          },
           ticks: {
+            color: colors.textSecondary,
             callback: function(value: any) {
-              return '$' + value.toFixed(0);
+              return '$' + (value / 1000).toFixed(0) + 'K';
             }
+          }
+        },
+        x: {
+          grid: {
+            display: false,
+            drawBorder: false
+          },
+          ticks: {
+            color: colors.textSecondary,
+            maxRotation: 45,
+            minRotation: 45
           }
         }
       }
@@ -1932,7 +2090,6 @@ function renderCustomerInvoicesTable(invoices: Invoice[]) {
       customerName: currentCustomerName,
       totalSpent: formatCurrency(totalSpent),
       totalInvoices: currentCustomerInvoices.length,
-      avgOrder: formatCurrency(avgOrder),
       totalProfit: formatCurrency(totalProfit),
       lastPurchase: formatDate(lastPurchase),
       currency: appSettings.currency,
@@ -1976,7 +2133,6 @@ function renderCustomerInvoicesTable(invoices: Invoice[]) {
       customerName: currentCustomerName,
       totalSpent,
       totalInvoices: currentCustomerInvoices.length,
-      avgOrder,
       totalProfit,
       lastPurchase,
       currency: appSettings.currency,
@@ -2571,7 +2727,10 @@ function generateInvoiceHTML(invoice: Invoice): string {
 
 // Reports rendering
 function renderReports() {
-  filterReports();
+  // Wait a bit for Chart.js to be fully loaded
+  setTimeout(() => {
+    filterReports();
+  }, 100);
 }
 
 // Users rendering
@@ -2779,7 +2938,23 @@ if (userModal) {
   }
 });
 
+// Chart instances for cleanup
+let reportCharts: { [key: string]: any } = {};
+
+// Initialize all report charts
+function initReportCharts() {
+  // Cleanup existing charts
+  Object.values(reportCharts).forEach(chart => {
+    if (chart) chart.destroy();
+  });
+  reportCharts = {};
+}
+
 function filterReports() {
+  console.log('============================================');
+  console.log('[REPORTS] filterReports() called');
+  console.log('============================================');
+  
   const fromDateInput = document.getElementById('reportFromDate') as HTMLInputElement;
   const toDateInput = document.getElementById('reportToDate') as HTMLInputElement;
 
@@ -2794,6 +2969,9 @@ function filterReports() {
     if (toDate && invDate > toDate) return false;
     return true;
   });
+  
+  console.log('[REPORTS] Filtered invoices:', filteredInvoices.length);
+  console.log('[REPORTS] Chart.js loaded:', typeof (window as any).Chart !== 'undefined');
 
   // Calculate totals
   const totalSales = filteredInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
@@ -2805,8 +2983,511 @@ function filterReports() {
   updateElement('reportTotalProfit', formatCurrency(totalProfit));
   updateElement('reportInvoiceCount', invoiceCount.toString());
 
-  // Render sales by product
+  // Render all visualizations
   renderSalesByProduct(filteredInvoices);
+  
+  // Render charts with data
+  console.log('[REPORTS] Starting chart rendering in 200ms...');
+  setTimeout(() => {
+    try {
+      console.log('[REPORTS] Initializing charts...');
+      initReportCharts();
+      console.log('[REPORTS] Calling chart functions...');
+      createBusinessOverviewChart(filteredInvoices);
+      createRevenueVsProfitChart(filteredInvoices);
+      renderTopProductsTable(filteredInvoices);
+      renderTopCustomersTable(filteredInvoices);
+      createProductPerformanceChart(filteredInvoices);
+      console.log('[REPORTS] All chart functions called');
+    } catch (error) {
+      console.error('[Charts] Error rendering charts:', error);
+    }
+  }, 200);
+}
+
+// Simplified chart creation functions
+function createRevenueVsProfitChart(invoices: Invoice[]) {
+  const ctx = (document.getElementById('revenueVsProfitChart') as HTMLCanvasElement)?.getContext('2d');
+  if (!ctx || typeof (window as any).Chart === 'undefined') return;
+
+  const totalRevenue = invoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+  const totalProfit = invoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
+  
+  // Get theme colors
+  const colors = getChartThemeColors();
+
+  reportCharts.revenueProfit = new (window as any).Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: [t('reports.cost', 'Cost'), t('reports.profit', 'Profit')],
+      datasets: [{
+        data: [totalRevenue - totalProfit, totalProfit],
+        backgroundColor: [colors.dangerLight, colors.successLight],
+        borderColor: [colors.danger, colors.success],
+        borderWidth: 2,
+        hoverOffset: 10
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { 
+          position: 'bottom', 
+          labels: { 
+            color: colors.textSecondary,
+            font: { size: 12 },
+            padding: 15
+          } 
+        },
+        tooltip: {
+          backgroundColor: colors.tooltipBackground,
+          titleColor: colors.textPrimary,
+          bodyColor: colors.textSecondary,
+          borderColor: colors.tooltipBorder,
+          borderWidth: 1,
+          cornerRadius: 8,
+          callbacks: {
+            label: function(context: any) {
+              return formatCurrency(context.parsed);
+            }
+          }
+        }
+      },
+      cutout: '60%'
+    }
+  });
+}
+
+// Render Top Products as Table
+function renderTopProductsTable(invoices: Invoice[]) {
+  console.log('[TopProducts] Rendering table...');
+  
+  const tbody = document.getElementById('topProductsBody');
+  if (!tbody) {
+    console.error('[TopProducts] Table body not found');
+    return;
+  }
+  
+  // Aggregate sales by product
+  const productSales: { [key: string]: number } = {};
+  let itemCount = 0;
+  
+  invoices.forEach(inv => {
+    inv.items.forEach(item => {
+      productSales[item.productName] = (productSales[item.productName] || 0) + item.total;
+      itemCount++;
+    });
+  });
+  
+  console.log('[TopProducts] Processed', itemCount, 'items,', Object.keys(productSales).length, 'unique products');
+  
+  const sorted = Object.entries(productSales)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10);
+  
+  if (sorted.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" class="empty-state">No product data available</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = sorted.map(([name, sales], index) => `
+    <tr>
+      <td style="text-align: center; font-weight: 700; color: var(--primary);">${index + 1}</td>
+      <td style="font-weight: 600;">${name}</td>
+      <td style="text-align: right; font-weight: 700; background: linear-gradient(135deg, #7c3aed, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">${formatCurrency(sales)}</td>
+    </tr>
+  `).join('');
+  
+  console.log('[TopProducts] ✓ Table rendered with', sorted.length, 'products');
+}
+
+// Render Top Customers as Table
+function renderTopCustomersTable(invoices: Invoice[]) {
+  console.log('[TopCustomers] Rendering table...');
+  
+  const tbody = document.getElementById('topCustomersBody');
+  if (!tbody) {
+    console.error('[TopCustomers] Table body not found');
+    return;
+  }
+  
+  // Aggregate sales by customer
+  const customerSales: { [key: string]: number } = {};
+  
+  invoices.forEach(inv => {
+    const customer = inv.customerName || 'Unknown';
+    customerSales[customer] = (customerSales[customer] || 0) + inv.totalAmount;
+  });
+  
+  console.log('[TopCustomers] Processed', invoices.length, 'invoices,', Object.keys(customerSales).length, 'unique customers');
+  
+  const sorted = Object.entries(customerSales)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10);
+  
+  if (sorted.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" class="empty-state">No customer data available</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = sorted.map(([name, total], index) => `
+    <tr>
+      <td style="text-align: center; font-weight: 700; color: var(--primary);">${index + 1}</td>
+      <td style="font-weight: 600;">${name}</td>
+      <td style="text-align: right; font-weight: 700; background: linear-gradient(135deg, #ec4899, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">${formatCurrency(total)}</td>
+    </tr>
+  `).join('');
+  
+  console.log('[TopCustomers] ✓ Table rendered with', sorted.length, 'customers');
+}
+
+function createProductPerformanceChart(invoices: Invoice[]) {
+  const ctx = (document.getElementById('productPerformanceChart') as HTMLCanvasElement)?.getContext('2d');
+  if (!ctx || typeof (window as any).Chart === 'undefined') return;
+
+  const productData: { [key: string]: { qty: number; rev: number } } = {};
+  invoices.forEach(inv => {
+    inv.items.forEach(item => {
+      if (!productData[item.productName]) productData[item.productName] = { qty: 0, rev: 0 };
+      productData[item.productName].qty += item.quantity;
+      productData[item.productName].rev += item.total;
+    });
+  });
+
+  const sorted = Object.entries(productData).sort((a, b) => b[1].rev - a[1].rev).slice(0, 10);
+  
+  // Get theme colors
+  const colors = getChartThemeColors();
+
+  reportCharts.productPerf = new (window as any).Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: sorted.map(([name]) => name.length > 12 ? name.substring(0, 12) + '...' : name),
+      datasets: [
+        {
+          label: t('reports.revenue', 'Revenue'),
+          data: sorted.map(([, d]) => d.rev),
+          backgroundColor: colors.primaryLight,
+          borderColor: colors.primary,
+          borderWidth: 2,
+          borderRadius: 6,
+          borderSkipped: false,
+          yAxisID: 'y'
+        },
+        {
+          label: t('reports.quantitySold', 'Quantity'),
+          data: sorted.map(([, d]) => d.qty),
+          backgroundColor: colors.successLight,
+          borderColor: colors.success,
+          borderWidth: 2,
+          borderRadius: 6,
+          borderSkipped: false,
+          yAxisID: 'y1'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { 
+          labels: { 
+            color: colors.textSecondary,
+            font: { size: 12, weight: '600' },
+            usePointStyle: true,
+            padding: 15
+          }
+        },
+        tooltip: {
+          backgroundColor: colors.tooltipBackground,
+          titleColor: colors.textPrimary,
+          bodyColor: colors.textSecondary,
+          borderColor: colors.tooltipBorder,
+          borderWidth: 1,
+          cornerRadius: 8,
+          callbacks: {
+            label: function(context: any) {
+              if (context.datasetIndex === 0) {
+                return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+              } else {
+                return context.dataset.label + ': ' + context.parsed.y;
+              }
+            }
+          }
+        }
+      },
+      scales: {
+        y: { 
+          type: 'linear', 
+          position: 'left', 
+          beginAtZero: true, 
+          grid: { 
+            color: colors.gridLine,
+            drawBorder: false
+          },
+          ticks: { 
+            color: colors.textSecondary,
+            callback: function(value: any) {
+              return '$' + (value / 1000).toFixed(0) + 'K';
+            }
+          },
+          title: {
+            display: true,
+            text: t('reports.revenue', 'Revenue'),
+            color: colors.textSecondary
+          }
+        },
+        y1: { 
+          type: 'linear', 
+          position: 'right', 
+          beginAtZero: true, 
+          ticks: { 
+            color: colors.textSecondary 
+          }, 
+          grid: { 
+            display: false 
+          },
+          title: {
+            display: true,
+            text: t('reports.quantitySold', 'Quantity'),
+            color: colors.textSecondary
+          }
+        },
+        x: { 
+          ticks: { 
+            color: colors.textSecondary,
+            autoSkip: false,
+            maxRotation: 45,
+            minRotation: 45
+          },
+          grid: { 
+            display: false,
+            drawBorder: false
+          }
+        }
+      }
+    }
+  });
+}
+
+function createBusinessOverviewChart(invoices: Invoice[]) {
+  const canvas = document.getElementById('businessOverviewChart') as HTMLCanvasElement;
+  const ctx = canvas?.getContext('2d');
+  if (!ctx || typeof (window as any).Chart === 'undefined') return;
+
+  // Group by month for detailed overview
+  const monthlyData: { [key: string]: { revenue: number; profit: number; cost: number; invoices: number; customers: Set<string> } } = {};
+  
+  invoices.forEach(inv => {
+    const date = new Date(inv.date);
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    
+    if (!monthlyData[monthKey]) {
+      monthlyData[monthKey] = { revenue: 0, profit: 0, cost: 0, invoices: 0, customers: new Set() };
+    }
+    
+    monthlyData[monthKey].revenue += inv.totalAmount;
+    monthlyData[monthKey].profit += inv.totalProfit;
+    monthlyData[monthKey].cost += (inv.totalAmount - inv.totalProfit);
+    monthlyData[monthKey].invoices += 1;
+    monthlyData[monthKey].customers.add(inv.customerName);
+  });
+
+  const months = Object.keys(monthlyData).sort();
+  
+  // Get theme colors
+  const colors = getChartThemeColors();
+
+  reportCharts.businessOverview = new (window as any).Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: months.map(m => {
+        const [year, month] = m.split('-');
+        const date = new Date(parseInt(year), parseInt(month) - 1);
+        return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      }),
+      datasets: [
+        {
+          label: t('reports.revenue', 'Revenue'),
+          data: months.map(m => monthlyData[m].revenue),
+          backgroundColor: colors.primaryLight,
+          borderColor: colors.primary,
+          borderWidth: 2,
+          borderRadius: 6,
+          borderSkipped: false,
+          yAxisID: 'y'
+        },
+        {
+          label: t('reports.cost', 'Cost'),
+          data: months.map(m => monthlyData[m].cost),
+          backgroundColor: colors.dangerLight,
+          borderColor: colors.danger,
+          borderWidth: 2,
+          borderRadius: 6,
+          borderSkipped: false,
+          yAxisID: 'y'
+        },
+        {
+          label: t('reports.profit', 'Profit'),
+          data: months.map(m => monthlyData[m].profit),
+          backgroundColor: colors.successLight,
+          borderColor: colors.success,
+          borderWidth: 2,
+          borderRadius: 6,
+          borderSkipped: false,
+          yAxisID: 'y'
+        },
+        {
+          label: t('reports.invoiceCount', 'Invoice Count'),
+          type: 'line',
+          data: months.map(m => monthlyData[m].invoices),
+          borderColor: colors.secondary,
+          backgroundColor: colors.secondaryLight,
+          borderWidth: 3,
+          tension: 0.4,
+          fill: true,
+          yAxisID: 'y1',
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointBackgroundColor: colors.secondary,
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2
+        },
+        {
+          label: t('reports.customerCount', 'Customer Count'),
+          type: 'line',
+          data: months.map(m => monthlyData[m].customers.size),
+          borderColor: colors.warning,
+          backgroundColor: colors.warningLight,
+          borderWidth: 3,
+          tension: 0.4,
+          fill: true,
+          yAxisID: 'y1',
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointBackgroundColor: colors.warning,
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: {
+            color: colors.textSecondary,
+            font: { size: 12, weight: '600' },
+            usePointStyle: true,
+            padding: 15,
+            boxWidth: 10,
+            boxHeight: 10
+          }
+        },
+        tooltip: {
+          backgroundColor: colors.tooltipBackground,
+          titleColor: colors.textPrimary,
+          bodyColor: colors.textSecondary,
+          borderColor: colors.primary,
+          borderWidth: 1,
+          padding: 12,
+          cornerRadius: 8,
+          titleFont: { size: 13, weight: '600' },
+          bodyFont: { size: 12 },
+          callbacks: {
+            label: function(context: any) {
+              const label = context.dataset.label || '';
+              if (label === t('reports.invoiceCount', 'Invoice Count') || label === t('reports.customerCount', 'Customer Count')) {
+                return label + ': ' + context.parsed.y.toFixed(0);
+              }
+              return label + ': ' + formatCurrency(context.parsed.y);
+            },
+            footer: function(items: any[]) {
+              if (items.length > 0) {
+                const monthIndex = items[0].dataIndex;
+                const monthKey = months[monthIndex];
+                const data = monthlyData[monthKey];
+                const avgOrderValue = data.revenue / data.invoices;
+                return '\n' + t('reports.avgOrderValue', 'Avg Order Value') + ': ' + formatCurrency(avgOrderValue);
+              }
+              return '';
+            }
+          }
+        },
+        title: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          type: 'linear',
+          position: 'left',
+          beginAtZero: true,
+          grid: { 
+            color: colors.gridLine,
+            drawBorder: false
+          },
+          ticks: {
+            color: colors.textSecondary,
+            font: { size: 11, weight: '500' },
+            callback: function(value: any) {
+              return '$' + (value / 1000).toFixed(0) + 'K';
+            }
+          },
+          title: {
+            display: true,
+            text: t('reports.amount', 'Amount ($)'),
+            color: colors.textSecondary,
+            font: { size: 12, weight: '600' }
+          }
+        },
+        y1: {
+          type: 'linear',
+          position: 'right',
+          beginAtZero: true,
+          grid: { display: false },
+          ticks: {
+            color: colors.textSecondary,
+            font: { size: 11, weight: '500' },
+            callback: function(value: any) {
+              return value.toFixed(0);
+            }
+          },
+          title: {
+            display: true,
+            text: t('reports.count', 'Count'),
+            color: colors.textSecondary,
+            font: { size: 12, weight: '600' }
+          }
+        },
+        x: {
+          grid: { display: false, drawBorder: false },
+          ticks: { 
+            color: colors.textSecondary,
+            font: { size: 11, weight: '500' },
+            maxRotation: 45,
+            minRotation: 45
+          }
+        }
+      }
+    }
+  });
+
+  // Add resize handler to ensure chart properly adapts to container
+  if (reportCharts.businessOverview) {
+    const resizeObserver = new ResizeObserver(() => {
+      reportCharts.businessOverview.resize();
+    });
+    resizeObserver.observe(canvas);
+  }
 }
 
 function renderSalesByProduct(invoices: Invoice[]) {
@@ -2846,14 +3527,488 @@ function renderSalesByProduct(invoices: Invoice[]) {
 
 async function exportReport() {
   try {
-    const result = await api.exportSheet('Sales');
+    const exportBtn = document.getElementById('exportReportBtn') as HTMLButtonElement | null;
+    if (exportBtn) {
+      exportBtn.disabled = true;
+      exportBtn.innerHTML = `
+        <svg class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+        </svg>
+      `;
+    }
+
+    // Get filtered data
+    const fromDateInput = document.getElementById('reportFromDate') as HTMLInputElement;
+    const toDateInput = document.getElementById('reportToDate') as HTMLInputElement;
+    const fromDate = fromDateInput?.value || '';
+    const toDate = toDateInput?.value || '';
+
+    const filteredInvoices = workbookData.invoices.filter(inv => {
+      if (inv.status === 'Cancelled') return false;
+      const invDate = new Date(inv.date);
+      if (fromDate && invDate < new Date(fromDate)) return false;
+      if (toDate && invDate > new Date(toDate)) return false;
+      return true;
+    });
+
+    // Calculate totals
+    const totalSales = filteredInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+    const totalProfit = filteredInvoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
+    const totalCost = totalSales - totalProfit;
+    const invoiceCount = filteredInvoices.length;
+    const profitMargin = totalSales > 0 ? ((totalProfit / totalSales) * 100).toFixed(1) : '0.0';
+
+    // Capture chart images
+    let businessOverviewImg = '';
+    let revenueProfitImg = '';
+    let productPerfImg = '';
+    
+    if (reportCharts.businessOverview) {
+      const canvas = document.getElementById('businessOverviewChart') as HTMLCanvasElement;
+      if (canvas) businessOverviewImg = canvas.toDataURL('image/png');
+    }
+    if (reportCharts.revenueProfit) {
+      const canvas = document.getElementById('revenueVsProfitChart') as HTMLCanvasElement;
+      if (canvas) revenueProfitImg = canvas.toDataURL('image/png');
+    }
+    if (reportCharts.productPerf) {
+      const canvas = document.getElementById('productPerformanceChart') as HTMLCanvasElement;
+      if (canvas) productPerfImg = canvas.toDataURL('image/png');
+    }
+
+    // Top 10 Products
+    const productSales: { [key: string]: number } = {};
+    filteredInvoices.forEach(inv => {
+      inv.items.forEach(item => {
+        productSales[item.productName] = (productSales[item.productName] || 0) + item.total;
+      });
+    });
+    const topProducts = Object.entries(productSales)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10);
+
+    // Top 10 Customers
+    const customerSales: { [key: string]: number } = {};
+    filteredInvoices.forEach(inv => {
+      customerSales[inv.customerName] = (customerSales[inv.customerName] || 0) + inv.totalAmount;
+    });
+    const topCustomers = Object.entries(customerSales)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10);
+
+    // Monthly performance
+    const monthlyData: { [key: string]: { revenue: number; profit: number; invoices: number } } = {};
+    filteredInvoices.forEach(inv => {
+      const date = new Date(inv.date);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      if (!monthlyData[monthKey]) {
+        monthlyData[monthKey] = { revenue: 0, profit: 0, invoices: 0 };
+      }
+      monthlyData[monthKey].revenue += inv.totalAmount;
+      monthlyData[monthKey].profit += inv.totalProfit;
+      monthlyData[monthKey].invoices += 1;
+    });
+    const months = Object.keys(monthlyData).sort();
+
+    const dateRange = fromDate && toDate ? `${formatDate(fromDate)} - ${formatDate(toDate)}` : t('reports.allTime', 'All Time');
+    const generatedDate = new Date().toLocaleDateString(currentLanguage === 'ar' ? 'ar-EG' : currentLanguage === 'fr' ? 'fr-FR' : 'en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    const html = `
+    <!DOCTYPE html>
+    <html dir="${currentLanguage === 'ar' ? 'rtl' : 'ltr'}">
+    <head>
+      <meta charset="utf-8">
+      <title>${t('reports.title', 'Sales Report')} - ${dateRange}</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          font-family: '${currentLanguage === 'ar' ? 'Tah oma, Arial' : 'Segoe UI, Tahoma, Geneva, Verdana'}', sans-serif;
+          padding: 40px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: #1a202c;
+          direction: ${currentLanguage === 'ar' ? 'rtl' : 'ltr'};
+        }
+        .container {
+          max-width: 1200px;
+          margin: 0 auto;
+          background: white;
+          border-radius: 20px;
+          padding: 50px;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .header {
+          text-align: center;
+          margin-bottom: 50px;
+          padding-bottom: 30px;
+          border-bottom: 3px solid #7c3aed;
+        }
+        .header h1 {
+          font-size: 42px;
+          font-weight: 900;
+          background: linear-gradient(135deg, #7c3aed, #ec4899);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          margin-bottom: 10px;
+          letter-spacing: -1px;
+        }
+        .header .subtitle {
+          font-size: 18px;
+          color: #64748b;
+          font-weight: 600;
+        }
+        .header .date-range {
+          font-size: 16px;
+          color: #94a3b8;
+          margin-top: 8px;
+        }
+        .summary-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 20px;
+          margin-bottom: 50px;
+        }
+        .summary-card {
+          background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+          padding: 25px;
+          border-radius: 15px;
+          border: 2px solid #e2e8f0;
+          text-align: center;
+        }
+        .summary-card.highlight-1 {
+          background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+          border-color: #7c3aed;
+        }
+        .summary-card.highlight-2 {
+          background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+          border-color: #ec4899;
+        }
+        .summary-card .label {
+          font-size: 13px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          color: #64748b;
+          margin-bottom: 10px;
+        }
+        .summary-card .value {
+          font-size: 32px;
+          font-weight: 900;
+          color: #7c3aed !important;
+        }
+        .summary-card .value span {
+          color: #7c3aed !important;
+        }
+        .section {
+          margin-bottom: 50px;
+          page-break-inside: avoid;
+        }
+        .section-title {
+          font-size: 28px;
+          font-weight: 800;
+          margin-bottom: 25px;
+          color: #1e293b;
+          padding-bottom: 12px;
+          border-bottom: 2px solid #e2e8f0;
+        }
+        .chart-image {
+          width: 100%;
+          max-width: 1100px;
+          height: auto;
+          margin: 20px auto;
+          display: block;
+          border-radius: 12px;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+          background: white;
+          padding: 20px;
+        }
+        .two-chart-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 30px;
+          margin: 30px 0;
+        }
+        .chart-box {
+          background: white;
+          padding: 20px;
+          border-radius: 12px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .chart-box h3 {
+          font-size: 18px;
+          font-weight: 700;
+          margin-bottom: 15px;
+          color: #1e293b;
+        }
+        .chart-box img {
+          width: 100%;
+          height: auto;
+          display: block;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 20px;
+          background: white;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        thead {
+          background: linear-gradient(135deg, #7c3aed, #6d28d9);
+        }
+        th {
+          padding: 16px;
+          text-align: ${currentLanguage === 'ar' ? 'right' : 'left'};
+          font-weight: 700;
+          font-size: 13px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          color: white;
+        }
+        th.center { text-align: center; }
+        th.right { text-align: ${currentLanguage === 'ar' ? 'left' : 'right'}; }
+        td {
+          padding: 14px 16px;
+          border-bottom: 1px solid #f1f5f9;
+          font-size: 14px;
+          text-align: ${currentLanguage === 'ar' ? 'right' : 'left'};
+        }
+        td.center { text-align: center; }
+        td.right { text-align: ${currentLanguage === 'ar' ? 'left' : 'right'}; }
+        tbody tr:hover {
+          background: #f8fafc;
+        }
+        tbody tr:last-child td {
+          border-bottom: none;
+        }
+        .rank {
+          display: inline-block;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #7c3aed, #ec4899);
+          color: white;
+          font-weight: 800;
+          line-height: 32px;
+          text-align: center;
+          font-size: 14px;
+        }
+        .amount {
+          font-weight: 700;
+          color: #7c3aed;
+        }
+        .two-column {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 30px;
+        }
+        .footer {
+          margin-top: 60px;
+          padding-top: 30px;
+          border-top: 2px solid #e2e8f0;
+          text-align: center;
+          color: #94a3b8;
+          font-size: 13px;
+        }
+        .footer strong {
+          color: #64748b;
+          font-weight: 700;
+        }
+        @media print {
+          body { background: white; padding: 0; }
+          .container { box-shadow: none; padding: 30px; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <!-- Header -->
+        <div class="header">
+          <h1>${t('reports.title', 'Sales Report')}</h1>
+          <div class="subtitle">${dateRange}</div>
+          <div class="date-range">${t('reports.generatedOn', 'Generated on')} ${generatedDate}</div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-grid">
+          <div class="summary-card highlight-1">
+            <div class="label">${t('reports.totalSales', 'Total Revenue')}</div>
+            <div class="value">${formatCurrency(totalSales)}</div>
+          </div>
+          <div class="summary-card highlight-2">
+            <div class="label">${t('reports.totalProfit', 'Total Profit')}</div>
+            <div class="value">${formatCurrency(totalProfit)}</div>
+          </div>
+          <div class="summary-card">
+            <div class="label">${t('reports.cost', 'Total Cost')}</div>
+            <div class="value">${formatCurrency(totalCost)}</div>
+          </div>
+          <div class="summary-card">
+            <div class="label">${t('reports.invoiceCount', 'Invoices')}</div>
+            <div class="value">${invoiceCount}</div>
+            <div style="font-size: 14px; margin-top: 8px; color: #64748b;">${profitMargin}% ${t('reports.margin', 'Margin')}</div>
+          </div>
+        </div>
+
+        <!-- Business Overview Chart -->
+        ${businessOverviewImg ? `
+        <div class="section">
+          <h2 class="section-title">${t('reports.businessOverview', 'Business Performance Overview')}</h2>
+          <img src="${businessOverviewImg}" class="chart-image" alt="Business Overview Chart">
+        </div>
+        ` : ''}
+
+        <!-- Revenue & Product Performance Charts -->
+        ${revenueProfitImg || productPerfImg ? `
+        <div class="section">
+          <h2 class="section-title">${t('reports.detailedAnalysis', 'Detailed Analysis')}</h2>
+          <div class="two-chart-grid">
+            ${revenueProfitImg ? `
+            <div class="chart-box">
+              <h3>${t('reports.revenueVsProfit', 'Revenue Breakdown')}</h3>
+              <img src="${revenueProfitImg}" alt="Revenue vs Profit Chart">
+            </div>
+            ` : ''}
+            ${productPerfImg ? `
+            <div class="chart-box">
+              <h3>${t('reports.salesByProduct', 'Product Performance')}</h3>
+              <img src="${productPerfImg}" alt="Product Performance Chart">
+            </div>
+            ` : ''}
+          </div>
+        </div>
+        ` : ''}
+
+        <!-- Monthly Performance -->
+        <div class="section">
+          <h2 class="section-title">${t('reports.monthlyPerformance', 'Monthly Performance')}</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>${t('common.month', 'Month')}</th>
+                <th class="right">${t('reports.revenue', 'Revenue')}</th>
+                <th class="right">${t('reports.profit', 'Profit')}</th>
+                <th class="center">${t('reports.invoiceCount', 'Invoices')}</th>
+                <th class="right">${t('reports.margin', 'Profit Margin')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${months.map(month => {
+                const data = monthlyData[month];
+                const [year, mon] = month.split('-');
+                const date = new Date(parseInt(year), parseInt(mon) - 1);
+                const monthName = date.toLocaleDateString(currentLanguage === 'ar' ? 'ar-EG' : currentLanguage === 'fr' ? 'fr-FR' : 'en-US', { month: 'short', year: 'numeric' });
+                const margin = ((data.profit / data.revenue) * 100).toFixed(1);
+                return `
+                  <tr>
+                    <td><strong>${monthName}</strong></td>
+                    <td class="right amount">${formatCurrency(data.revenue)}</td>
+                    <td class="right amount">${formatCurrency(data.profit)}</td>
+                    <td class="center"><strong>${data.invoices}</strong></td>
+                    <td class="right"><strong>${margin}%</strong></td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Top Products and Customers -->
+        <div class="two-column">
+          <!-- Top Products -->
+          <div class="section">
+            <h2 class="section-title">${t('reports.topProducts', 'Top 10 Products')}</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th class="center">#</th>
+                  <th>${t('common.product', 'Product Name')}</th>
+                  <th class="right">${t('reports.sales', 'Sales')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${topProducts.map(([name, sales], index) => `
+                  <tr>
+                    <td class="center"><span class="rank">${index + 1}</span></td>
+                    <td><strong>${name}</strong></td>
+                    <td class="right amount">${formatCurrency(sales)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Top Customers -->
+          <div class="section">
+            <h2 class="section-title">${t('reports.topCustomers', 'Top 10 Customers')}</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th class="center">#</th>
+                  <th>${t('common.customer', 'Customer Name')}</th>
+                  <th class="right">${t('reports.totalSpent', 'Total Spent')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${topCustomers.map(([name, total], index) => `
+                  <tr>
+                    <td class="center"><span class="rank">${index + 1}</span></td>
+                    <td><strong>${name}</strong></td>
+                    <td class="right amount">${formatCurrency(total)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+          <strong>DALID Sales Manager</strong> | ${t('reports.comprehensiveReport', 'Comprehensive Sales Report')}<br>
+          ${t('reports.autoGenerated', 'This report was automatically generated by the system.')}
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+
+    const result = await api.exportHtmlToPDF(html, `sales-report-${dateRange.replace(/\//g, '-').replace(/ /g, '-')}.pdf`);
+    
+    if (exportBtn) {
+      exportBtn.disabled = false;
+      exportBtn.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      `;
+    }
+
     if (result.success) {
-      showToast('Report exported successfully', 'success');
+      showToast(t('reports.pdfExportSuccess', 'PDF report exported successfully'), 'success');
     } else {
-      showToast(result.message || 'Failed to export report', 'error');
+      showToast(result.message || t('reports.pdfExportFailed', 'Failed to export PDF report'), 'error');
     }
   } catch (error: any) {
-    showToast(error.message || 'Error exporting report', 'error');
+    const exportBtn = document.getElementById('exportReportBtn') as HTMLButtonElement | null;
+    if (exportBtn) {
+      exportBtn.disabled = false;
+      exportBtn.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      `;
+    }
+    showToast(error.message || t('reports.error', 'Error exporting PDF report'), 'error');
   }
 }
 
@@ -3019,7 +4174,12 @@ async function exportInventoryToPDF() {
     const exportBtn = document.getElementById('exportInventoryPdfBtn') as HTMLButtonElement | null;
     if (exportBtn) {
       exportBtn.disabled = true;
-      exportBtn.innerHTML = '<span>Generating PDF...</span>';
+      // Show loading spinner icon instead of text
+      exportBtn.innerHTML = `
+        <svg class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+        </svg>
+      `;
     }
 
     // Compute summary
@@ -3115,13 +4275,13 @@ async function exportInventoryToPDF() {
     const exportBtn = document.getElementById('exportInventoryPdfBtn') as HTMLButtonElement | null;
     if (exportBtn) {
       exportBtn.disabled = false;
+      // Restore the original icon
       exportBtn.innerHTML = `
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
           <polyline points="7 10 12 15 17 10"/>
           <line x1="12" y1="15" x2="12" y2="3"/>
         </svg>
-        <span data-translate="inventory.exportPdf">Export to PDF</span>
       `;
     }
   }
@@ -3241,13 +4401,55 @@ function renderAnalytics() {
   });
   analyticsCharts = {};
 
+  // Get filtered invoices for analytics (exclude cancelled)
+  const filteredInvoices = workbookData.invoices.filter(inv => inv.status !== 'Cancelled');
+
   // Render charts
   renderSalesTrendChart();
-  renderProfitTrendChart();
   renderTopProductsChart();
-  renderProductCategoriesChart();
   renderTopCustomersChart();
+  renderProfitTrendChart();
+  renderProductCategoriesChart();
   renderInventoryStatusChart();
+}
+
+// Chart theme utility
+function getChartThemeColors() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  
+  return {
+    // Text colors
+    textPrimary: isDark ? '#f8fafc' : '#1e293b',
+    textSecondary: isDark ? '#cbd5e1' : '#64748b',
+    textMuted: isDark ? '#94a3b8' : '#94a3b8',
+    
+    // Background colors
+    background: isDark ? '#0f172a' : '#ffffff',
+    cardBackground: isDark ? 'rgba(15, 23, 42, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+    
+    // Grid colors
+    gridLine: isDark ? 'rgba(148, 163, 184, 0.1)' : 'rgba(100, 116, 139, 0.1)',
+    gridBorder: isDark ? 'rgba(148, 163, 184, 0.2)' : 'rgba(100, 116, 139, 0.2)',
+    
+    // Chart colors (purple-pink theme)
+    primary: '#7c3aed',
+    primaryLight: isDark ? 'rgba(124, 58, 237, 0.2)' : 'rgba(124, 58, 237, 0.1)',
+    secondary: '#ec4899',
+    secondaryLight: isDark ? 'rgba(236, 72, 153, 0.2)' : 'rgba(236, 72, 153, 0.1)',
+    success: '#10b981',
+    successLight: isDark ? 'rgba(16, 185, 129, 0.2)' : 'rgba(16, 185, 129, 0.1)',
+    warning: '#f59e0b',
+    warningLight: isDark ? 'rgba(245, 158, 11, 0.2)' : 'rgba(245, 158, 11, 0.1)',
+    danger: '#ef4444',
+    dangerLight: isDark ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.1)',
+    
+    // Tooltip
+    tooltipBackground: isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+    tooltipBorder: isDark ? '#7c3aed' : '#e2e8f0',
+    
+    // Chart-specific
+    barBackground: isDark ? 'rgba(15, 23, 42, 0.7)' : 'rgba(255, 255, 255, 0.7)'
+  };
 }
 
 // Dashboard charts
@@ -3261,10 +4463,7 @@ function renderDashboardOverviewChart() {
     dashboardChart = null;
   }
 
-  const css = getComputedStyle(document.documentElement);
-  const primary = css.getPropertyValue('--primary-color').trim() || '#6366f1';
-  const success = css.getPropertyValue('--success-color').trim() || '#10b981';
-  const textSecondary = css.getPropertyValue('--text-secondary').trim() || '#64748b';
+  const colors = getChartThemeColors();
 
   // Last 30 days sales and profit
   const last30 = new Date();
@@ -3297,28 +4496,102 @@ function renderDashboardOverviewChart() {
         {
           label: t('dashboard.totalSales', 'Total Sales'),
           data: sales,
-          borderColor: primary,
-          backgroundColor: primary + '26',
+          borderColor: colors.primary,
+          backgroundColor: colors.primaryLight,
           fill: true,
-          tension: 0.35
+          tension: 0.4,
+          borderWidth: 3,
+          pointRadius: 4,
+          pointBackgroundColor: colors.primary,
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointHoverRadius: 6,
+          pointHoverBorderColor: colors.primary,
+          pointHoverBorderWidth: 3
         },
         {
           label: t('dashboard.profit', 'Profit'),
           data: profit,
-          borderColor: success,
-          backgroundColor: success + '26',
+          borderColor: colors.success,
+          backgroundColor: colors.successLight,
           fill: true,
-          tension: 0.35
+          tension: 0.4,
+          borderWidth: 3,
+          pointRadius: 4,
+          pointBackgroundColor: colors.success,
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointHoverRadius: 6,
+          pointHoverBorderColor: colors.success,
+          pointHoverBorderWidth: 3
         }
       ]
     },
     options: {
-      plugins: { legend: { labels: { color: textSecondary } } },
-      scales: {
-        x: { ticks: { color: textSecondary }, grid: { display: false } },
-        y: { ticks: { color: textSecondary }, grid: { color: '#E5E7EB22' } }
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
       },
-      maintainAspectRatio: false
+      plugins: { 
+        legend: { 
+          display: true,
+          position: 'top',
+          labels: { 
+            color: colors.textSecondary,
+            font: { size: 12, weight: '600' },
+            usePointStyle: true,
+            padding: 15,
+            boxWidth: 10,
+            boxHeight: 10
+          } 
+        },
+        tooltip: {
+          backgroundColor: colors.tooltipBackground,
+          titleColor: colors.textPrimary,
+          bodyColor: colors.textSecondary,
+          borderColor: colors.tooltipBorder,
+          borderWidth: 1,
+          padding: 12,
+          cornerRadius: 8,
+          titleFont: { size: 13, weight: '600' },
+          bodyFont: { size: 12 },
+          displayColors: true,
+          callbacks: {
+            label: function(context: any) {
+              return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+            }
+          }
+        }
+      },
+      scales: {
+        x: { 
+          ticks: { 
+            color: colors.textSecondary,
+            font: { size: 11, weight: '500' },
+            maxRotation: 45,
+            minRotation: 45
+          }, 
+          grid: { 
+            display: false,
+            drawBorder: false
+          } 
+        },
+        y: { 
+          ticks: { 
+            color: colors.textSecondary,
+            font: { size: 11, weight: '500' },
+            callback: function(value: any) {
+              return '$' + (value / 1000).toFixed(0) + 'K';
+            }
+          }, 
+          grid: { 
+            color: colors.gridLine,
+            drawBorder: false
+          } 
+        }
+      }
     }
   });
 }
@@ -3337,15 +4610,23 @@ function renderSalesTrendChart() {
   const dates = Object.keys(salesByDate).sort();
   const values = dates.map(date => salesByDate[date]);
 
+  // Get theme colors
+  const colors = getChartThemeColors();
+  
   analyticsCharts.salesTrend = new Chart(canvas, {
     type: 'line',
     data: {
       labels: dates,
       datasets: [{
-        label: 'Sales',
+        label: t('analytics.sales', 'Sales'),
         data: values,
-        borderColor: 'rgb(99, 102, 241)',
-        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+        borderColor: colors.primary,
+        backgroundColor: colors.primaryLight,
+        borderWidth: 3,
+        pointRadius: 4,
+        pointBackgroundColor: colors.primary,
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
         tension: 0.4,
         fill: true
       }]
@@ -3356,15 +4637,220 @@ function renderSalesTrendChart() {
       plugins: {
         legend: {
           display: false
+        },
+        tooltip: {
+          backgroundColor: colors.tooltipBackground,
+          titleColor: colors.textPrimary,
+          bodyColor: colors.textSecondary,
+          borderColor: colors.tooltipBorder,
+          borderWidth: 1,
+          cornerRadius: 8,
+          displayColors: false,
+          callbacks: {
+            label: function(context: any) {
+              return formatCurrency(context.parsed.y);
+            }
+          }
         }
       },
       scales: {
         y: {
           beginAtZero: true,
+          grid: {
+            color: colors.gridLine,
+            drawBorder: false
+          },
           ticks: {
+            color: colors.textSecondary,
             callback: function(value: any) {
-              return '$' + value.toFixed(0);
+              return '$' + (value / 1000).toFixed(0) + 'K';
             }
+          }
+        },
+        x: {
+          grid: {
+            display: false,
+            drawBorder: false
+          },
+          ticks: {
+            color: colors.textSecondary,
+            maxRotation: 45,
+            minRotation: 45
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderTopProductsChart() {
+  const canvas = (document as any).getElementById('topProductsChart');
+  if (!canvas) return;
+
+  // Calculate revenue by product
+  const productRevenue: any = {};
+  workbookData.sales.forEach(sale => {
+    productRevenue[sale.productName] = (productRevenue[sale.productName] || 0) + sale.total;
+  });
+
+  // Get top 10 products
+  const sortedProducts = Object.entries(productRevenue)
+    .sort((a: any, b: any) => b[1] - a[1])
+    .slice(0, 10);
+
+  const labels = sortedProducts.map((p: any) => p[0]);
+  const values = sortedProducts.map((p: any) => p[1]);
+
+  // Get theme colors
+  const colors = getChartThemeColors();
+  
+  analyticsCharts.topProducts = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: t('analytics.revenue', 'Revenue'),
+        data: values,
+        backgroundColor: colors.primaryLight,
+        borderColor: colors.primary,
+        borderWidth: 2,
+        borderRadius: 6,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          backgroundColor: colors.tooltipBackground,
+          titleColor: colors.textPrimary,
+          bodyColor: colors.textSecondary,
+          borderColor: colors.tooltipBorder,
+          borderWidth: 1,
+          cornerRadius: 8,
+          callbacks: {
+            label: function(context: any) {
+              return formatCurrency(context.parsed.y);
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: {
+            color: colors.gridLine,
+            drawBorder: false
+          },
+          ticks: {
+            color: colors.textSecondary,
+            callback: function(value: any) {
+              return '$' + (value / 1000).toFixed(0) + 'K';
+            }
+          }
+        },
+        x: {
+          grid: {
+            display: false,
+            drawBorder: false
+          },
+          ticks: {
+            color: colors.textSecondary,
+            autoSkip: false,
+            maxRotation: 45,
+            minRotation: 45
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderTopCustomersChart() {
+  const canvas = (document as any).getElementById('topCustomersChart');
+  if (!canvas) return;
+
+  // Calculate total spending by customer
+  const customerSpending: any = {};
+  workbookData.invoices.filter(inv => inv.status !== 'Cancelled').forEach(inv => {
+    const customer = inv.customerName || 'Unknown';
+    customerSpending[customer] = (customerSpending[customer] || 0) + inv.totalAmount;
+  });
+
+  // Get top 10 customers
+  const sortedCustomers = Object.entries(customerSpending)
+    .sort((a: any, b: any) => b[1] - a[1])
+    .slice(0, 10);
+
+  const labels = sortedCustomers.map((c: any) => c[0]);
+  const values = sortedCustomers.map((c: any) => c[1]);
+
+  // Get theme colors
+  const colors = getChartThemeColors();
+  
+  analyticsCharts.topCustomers = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: t('analytics.totalSpent', 'Total Spent'),
+        data: values,
+        backgroundColor: colors.secondaryLight,
+        borderColor: colors.secondary,
+        borderWidth: 2,
+        borderRadius: 6,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          backgroundColor: colors.tooltipBackground,
+          titleColor: colors.textPrimary,
+          bodyColor: colors.textSecondary,
+          borderColor: colors.tooltipBorder,
+          borderWidth: 1,
+          cornerRadius: 8,
+          callbacks: {
+            label: function(context: any) {
+              return formatCurrency(context.parsed.y);
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: {
+            color: colors.gridLine,
+            drawBorder: false
+          },
+          ticks: {
+            color: colors.textSecondary,
+            callback: function(value: any) {
+              return '$' + (value / 1000).toFixed(0) + 'K';
+            }
+          }
+        },
+        x: {
+          grid: {
+            display: false,
+            drawBorder: false
+          },
+          ticks: {
+            color: colors.textSecondary,
+            autoSkip: false,
+            maxRotation: 45,
+            minRotation: 45
           }
         }
       }
@@ -3386,15 +4872,23 @@ function renderProfitTrendChart() {
   const dates = Object.keys(profitByDate).sort();
   const values = dates.map(date => profitByDate[date]);
 
+  // Get theme colors
+  const colors = getChartThemeColors();
+  
   analyticsCharts.profitTrend = new Chart(canvas, {
     type: 'line',
     data: {
       labels: dates,
       datasets: [{
-        label: 'Profit',
+        label: t('analytics.profit', 'Profit'),
         data: values,
-        borderColor: 'rgb(34, 197, 94)',
-        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+        borderColor: colors.success,
+        backgroundColor: colors.successLight,
+        borderWidth: 3,
+        pointRadius: 4,
+        pointBackgroundColor: colors.success,
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
         tension: 0.4,
         fill: true
       }]
@@ -3405,61 +4899,46 @@ function renderProfitTrendChart() {
       plugins: {
         legend: {
           display: false
+        },
+        tooltip: {
+          backgroundColor: colors.tooltipBackground,
+          titleColor: colors.textPrimary,
+          bodyColor: colors.textSecondary,
+          borderColor: colors.tooltipBorder,
+          borderWidth: 1,
+          cornerRadius: 8,
+          displayColors: false,
+          callbacks: {
+            label: function(context: any) {
+              return formatCurrency(context.parsed.y);
+            }
+          }
         }
       },
       scales: {
         y: {
           beginAtZero: true,
+          grid: {
+            color: colors.gridLine,
+            drawBorder: false
+          },
           ticks: {
+            color: colors.textSecondary,
             callback: function(value: any) {
-              return '$' + value.toFixed(0);
+              return '$' + (value / 1000).toFixed(0) + 'K';
             }
           }
-        }
-      }
-    }
-  });
-}
-
-function renderTopProductsChart() {
-  const canvas = (document as any).getElementById('topProductsChart');
-  if (!canvas) return;
-
-  // Calculate sales by product
-  const productSales: any = {};
-  workbookData.sales.forEach(sale => {
-    productSales[sale.productName] = (productSales[sale.productName] || 0) + sale.quantity;
-  });
-
-  // Get top 10 products
-  const sortedProducts = Object.entries(productSales)
-    .sort((a: any, b: any) => b[1] - a[1])
-    .slice(0, 10);
-
-  analyticsCharts.topProducts = new Chart(canvas, {
-    type: 'bar',
-    data: {
-      labels: sortedProducts.map((p: any) => p[0]),
-      datasets: [{
-        label: 'Units Sold',
-        data: sortedProducts.map((p: any) => p[1]),
-        backgroundColor: 'rgba(99, 102, 241, 0.8)',
-        borderColor: 'rgb(99, 102, 241)',
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      indexAxis: 'y',
-      plugins: {
-        legend: {
-          display: false
-        }
-      },
-      scales: {
+        },
         x: {
-          beginAtZero: true
+          grid: {
+            display: false,
+            drawBorder: false
+          },
+          ticks: {
+            color: colors.textSecondary,
+            maxRotation: 45,
+            minRotation: 45
+          }
         }
       }
     }
@@ -3481,16 +4960,28 @@ function renderProductCategoriesChart() {
     .sort((a: any, b: any) => b[1] - a[1])
     .slice(0, 8);
 
-  const colors = [
-    'rgba(99, 102, 241, 0.8)',
-    'rgba(139, 92, 246, 0.8)',
-    'rgba(236, 72, 153, 0.8)',
-    'rgba(239, 68, 68, 0.8)',
-    'rgba(249, 115, 22, 0.8)',
-    'rgba(234, 179, 8, 0.8)',
-    'rgba(34, 197, 94, 0.8)',
-    'rgba(20, 184, 166, 0.8)'
+  // Get theme colors
+  const colors = getChartThemeColors();
+  
+  // Color palette with theme support
+  const chartColors = [
+    colors.primary,
+    '#8b5cf6',
+    colors.secondary,
+    colors.danger,
+    colors.warning,
+    '#eab308',
+    colors.success,
+    '#14b8a6'
   ];
+  
+  const backgroundColors = chartColors.map(color => 
+    colors.textPrimary === '#f8fafc' ? 
+    color.replace(')', ', 0.8)').replace('rgb', 'rgba') : 
+    color.replace(')', ', 0.7)').replace('rgb', 'rgba')
+  );
+  
+  const borderColors = chartColors;
 
   analyticsCharts.productCategories = new Chart(canvas, {
     type: 'doughnut',
@@ -3498,9 +4989,10 @@ function renderProductCategoriesChart() {
       labels: sortedProducts.map((p: any) => p[0]),
       datasets: [{
         data: sortedProducts.map((p: any) => p[1]),
-        backgroundColor: colors,
+        backgroundColor: backgroundColors,
+        borderColor: borderColors,
         borderWidth: 2,
-        borderColor: '#fff'
+        hoverOffset: 10
       }]
     },
     options: {
@@ -3508,58 +5000,30 @@ function renderProductCategoriesChart() {
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: 'bottom'
-        }
-      }
-    }
-  });
-}
-
-function renderTopCustomersChart() {
-  const canvas = (document as any).getElementById('topCustomersChart');
-  if (!canvas) return;
-
-  // Calculate purchases by customer (exclude cancelled invoices)
-  const customerPurchases: any = {};
-  workbookData.invoices.filter(inv => inv.status !== 'Cancelled').forEach(inv => {
-    customerPurchases[inv.customerName] = (customerPurchases[inv.customerName] || 0) + inv.totalAmount;
-  });
-
-  // Get top 10 customers
-  const sortedCustomers = Object.entries(customerPurchases)
-    .sort((a: any, b: any) => b[1] - a[1])
-    .slice(0, 10);
-
-  analyticsCharts.topCustomers = new Chart(canvas, {
-    type: 'bar',
-    data: {
-      labels: sortedCustomers.map((c: any) => c[0]),
-      datasets: [{
-        label: 'Total Purchases',
-        data: sortedCustomers.map((c: any) => c[1]),
-        backgroundColor: 'rgba(34, 197, 94, 0.8)',
-        borderColor: 'rgb(34, 197, 94)',
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            callback: function(value: any) {
-              return '$' + value.toFixed(0);
+          position: 'bottom',
+          labels: {
+            color: colors.textSecondary,
+            font: {
+              size: 12
+            },
+            padding: 15
+          }
+        },
+        tooltip: {
+          backgroundColor: colors.tooltipBackground,
+          titleColor: colors.textPrimary,
+          bodyColor: colors.textSecondary,
+          borderColor: colors.tooltipBorder,
+          borderWidth: 1,
+          cornerRadius: 8,
+          callbacks: {
+            label: function(context: any) {
+              return formatCurrency(context.parsed);
             }
           }
         }
-      }
+      },
+      cutout: '60%'
     }
   });
 }
@@ -3574,19 +5038,36 @@ function renderInventoryStatusChart() {
   const mediumStock = activeProducts.filter(p => p.quantity >= 10 && p.quantity < 50).length;
   const highStock = activeProducts.filter(p => p.quantity >= 50).length;
 
+  // Get theme colors
+  const colors = getChartThemeColors();
+  
+  // Color palette with theme support
+  const backgroundColors = [
+    colors.dangerLight,
+    colors.warningLight,
+    colors.successLight
+  ];
+  
+  const borderColors = [
+    colors.danger,
+    colors.warning,
+    colors.success
+  ];
+
   analyticsCharts.inventoryStatus = new Chart(canvas, {
     type: 'pie',
     data: {
-      labels: ['Low Stock (<10)', 'Medium Stock (10-49)', 'High Stock (50+)'],
+      labels: [
+        t('inventory.lowStock', 'Low Stock (<10)'), 
+        t('inventory.mediumStock', 'Medium Stock (10-49)'), 
+        t('inventory.highStock', 'High Stock (50+)')
+      ],
       datasets: [{
         data: [lowStock, mediumStock, highStock],
-        backgroundColor: [
-          'rgba(239, 68, 68, 0.8)',
-          'rgba(234, 179, 8, 0.8)',
-          'rgba(34, 197, 94, 0.8)'
-        ],
+        backgroundColor: backgroundColors,
+        borderColor: borderColors,
         borderWidth: 2,
-        borderColor: '#fff'
+        hoverOffset: 10
       }]
     },
     options: {
@@ -3594,7 +5075,22 @@ function renderInventoryStatusChart() {
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: 'bottom'
+          position: 'bottom',
+          labels: {
+            color: colors.textSecondary,
+            font: {
+              size: 12
+            },
+            padding: 15
+          }
+        },
+        tooltip: {
+          backgroundColor: colors.tooltipBackground,
+          titleColor: colors.textPrimary,
+          bodyColor: colors.textSecondary,
+          borderColor: colors.tooltipBorder,
+          borderWidth: 1,
+          cornerRadius: 8
         }
       }
     }
@@ -3947,11 +5443,15 @@ function handleFontSizeChange() {
 
 async function exportAnalyticsToPDF() {
   try {
-    // Show loading state
+    // Show loading spinner icon instead of text
     const exportBtn = document.getElementById('exportAnalyticsPdfBtn') as HTMLButtonElement;
     if (exportBtn) {
       exportBtn.disabled = true;
-      exportBtn.innerHTML = '<span>Generating PDF...</span>';
+      exportBtn.innerHTML = `
+        <svg class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+        </svg>
+      `;
     }
 
     // Get period label
@@ -4027,17 +5527,16 @@ async function exportAnalyticsToPDF() {
     // swallow
     showToast(error.message || 'An error occurred while exporting', 'error');
   } finally {
-    // Restore button state
+    // Restore button state with original icon
     const exportBtn = document.getElementById('exportAnalyticsPdfBtn') as HTMLButtonElement;
     if (exportBtn) {
       exportBtn.disabled = false;
       exportBtn.innerHTML = `
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
           <polyline points="7 10 12 15 17 10"/>
           <line x1="12" y1="15" x2="12" y2="3"/>
         </svg>
-        <span data-translate="analytics.exportPdf">Export to PDF</span>
       `;
     }
   }
@@ -4292,6 +5791,9 @@ function renderProductSalesTrendChart(productSales: Sale[]) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
+  // Get theme colors
+  const colors = getChartThemeColors();
+
   productAnalysisChart = new Chart(ctx, {
     type: 'line',
     data: {
@@ -4300,8 +5802,13 @@ function renderProductSalesTrendChart(productSales: Sale[]) {
         {
           label: t('products.quantity', 'Quantity Sold'),
           data: quantities,
-          borderColor: 'rgb(99, 102, 241)',
-          backgroundColor: 'rgba(99, 102, 241, 0.1)',
+          borderColor: colors.primary,
+          backgroundColor: colors.primaryLight,
+          borderWidth: 3,
+          pointRadius: 4,
+          pointBackgroundColor: colors.primary,
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
           tension: 0.4,
           yAxisID: 'y',
           fill: true
@@ -4309,8 +5816,13 @@ function renderProductSalesTrendChart(productSales: Sale[]) {
         {
           label: t('products.revenue', 'Revenue'),
           data: revenues,
-          borderColor: 'rgb(34, 197, 94)',
-          backgroundColor: 'rgba(34, 197, 94, 0.1)',
+          borderColor: colors.success,
+          backgroundColor: colors.successLight,
+          borderWidth: 3,
+          pointRadius: 4,
+          pointBackgroundColor: colors.success,
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
           tension: 0.4,
           yAxisID: 'y1',
           fill: true
@@ -4327,9 +5839,21 @@ function renderProductSalesTrendChart(productSales: Sale[]) {
       plugins: {
         legend: {
           display: true,
-          position: 'top'
+          position: 'top',
+          labels: {
+            color: colors.textSecondary,
+            font: { size: 12 },
+            usePointStyle: true,
+            padding: 15
+          }
         },
         tooltip: {
+          backgroundColor: colors.tooltipBackground,
+          titleColor: colors.textPrimary,
+          bodyColor: colors.textSecondary,
+          borderColor: colors.tooltipBorder,
+          borderWidth: 1,
+          cornerRadius: 8,
           callbacks: {
             label: function(context: any) {
               let label = context.dataset.label || '';
@@ -4355,9 +5879,17 @@ function renderProductSalesTrendChart(productSales: Sale[]) {
           position: 'left',
           title: {
             display: true,
-            text: t('products.quantity', 'Quantity')
+            text: t('products.quantity', 'Quantity'),
+            color: colors.textSecondary
           },
-          beginAtZero: true
+          beginAtZero: true,
+          grid: {
+            color: colors.gridLine,
+            drawBorder: false
+          },
+          ticks: {
+            color: colors.textSecondary
+          }
         },
         y1: {
           type: 'linear',
@@ -4365,13 +5897,31 @@ function renderProductSalesTrendChart(productSales: Sale[]) {
           position: 'right',
           title: {
             display: true,
-            text: t('products.revenue', 'Revenue')
+            text: t('products.revenue', 'Revenue'),
+            color: colors.textSecondary
           },
           beginAtZero: true,
           grid: {
             drawOnChartArea: false,
           },
+          ticks: {
+            color: colors.textSecondary,
+            callback: function(value: any) {
+              return '$' + (value / 1000).toFixed(0) + 'K';
+            }
+          }
         },
+        x: {
+          grid: {
+            display: false,
+            drawBorder: false
+          },
+          ticks: {
+            color: colors.textSecondary,
+            maxRotation: 45,
+            minRotation: 45
+          }
+        }
       }
     }
   });

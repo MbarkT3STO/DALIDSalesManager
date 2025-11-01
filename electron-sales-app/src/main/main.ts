@@ -11,6 +11,63 @@ let mainWindow: BrowserWindow | null = null;
 let excelHandler: ExcelHandler | null = null;
 let gdprHandler: GDPRHandler | null = null;
 
+// Performance optimization: Cache for expensive operations
+const operationCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL = 30000; // 30 seconds
+
+function getCached<T>(key: string): T | null {
+  const cached = operationCache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data as T;
+  }
+  operationCache.delete(key);
+  return null;
+}
+
+function setCache(key: string, data: any) {
+  operationCache.set(key, { data, timestamp: Date.now() });
+  // Limit cache size
+  if (operationCache.size > 100) {
+    const firstKey = operationCache.keys().next().value;
+    if (firstKey) {
+      operationCache.delete(firstKey);
+    }
+  }
+}
+
+function invalidateCache(pattern?: string) {
+  if (!pattern) {
+    operationCache.clear();
+  } else {
+    for (const key of operationCache.keys()) {
+      if (key.includes(pattern)) {
+        operationCache.delete(key);
+      }
+    }
+  }
+}
+
+// Debounce helper for file operations
+const pendingOperations = new Map<string, NodeJS.Timeout>();
+function debounceOperation(key: string, operation: () => Promise<any>, delay: number = 100): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const existing = pendingOperations.get(key);
+    if (existing) {
+      clearTimeout(existing);
+    }
+    const timeout = setTimeout(async () => {
+      pendingOperations.delete(key);
+      try {
+        const result = await operation();
+        resolve(result);
+      } catch (error) {
+        reject(error);
+      }
+    }, delay);
+    pendingOperations.set(key, timeout);
+  });
+}
+
 // ================= Activation Manager =================
 const ACTIVATION_FILE = '.activation.json';
 const ACTIVATION_SECRET = 'DALID_SALES_MANAGER_PROD_SECRET_v1';
@@ -288,7 +345,15 @@ ipcMain.handle('read-workbook', async () => {
       return { success: false, message: 'No workbook loaded' };
     }
 
+    // Check cache first
+    const cacheKey = 'workbook-data';
+    const cached = getCached(cacheKey);
+    if (cached) {
+      return { success: true, data: cached };
+    }
+
     const data = await excelHandler.readWorkbook();
+    setCache(cacheKey, data);
     return { success: true, data };
   } catch (error: any) {
     return { success: false, message: error.message };
@@ -302,6 +367,7 @@ ipcMain.handle('add-product', async (event, product: Product) => {
     }
 
     await excelHandler.addProduct(product);
+    invalidateCache('workbook'); // Invalidate workbook cache
     return { success: true };
   } catch (error: any) {
     return { success: false, message: error.message };
@@ -315,6 +381,7 @@ ipcMain.handle('update-product', async (event, oldName: string, product: Product
     }
 
     await excelHandler.updateProduct(oldName, product);
+    invalidateCache('workbook');
     return { success: true };
   } catch (error: any) {
     return { success: false, message: error.message };
@@ -393,6 +460,7 @@ ipcMain.handle('save-invoice', async (event, invoice: Invoice) => {
     }
 
     await excelHandler.saveInvoice(invoice);
+    invalidateCache('workbook');
     return { success: true };
   } catch (error: any) {
     return { success: false, message: error.message };
