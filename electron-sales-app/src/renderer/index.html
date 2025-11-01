@@ -1404,6 +1404,38 @@
                         </div>
                     </div>
 
+                    <!-- Print Settings -->
+                    <div class="settings-section">
+                        <h3 data-translate="settings.printSettings">Print Settings</h3>
+                        <div class="settings-group">
+                            <label for="printPaperSizeSelect" data-translate="settings.printPaperSize">Paper Size</label>
+                            <select id="printPaperSizeSelect" class="form-control">
+                                <option value="A4">A4</option>
+                                <option value="Letter">Letter</option>
+                                <option value="Legal">Legal</option>
+                                <option value="Tabloid">Tabloid</option>
+                            </select>
+                            <p class="form-hint" data-translate="settings.printPaperSizeHint">Select the default paper size for printing.</p>
+                        </div>
+                        <div class="settings-group">
+                            <label for="printOrientationSelect" data-translate="settings.printOrientation">Print Orientation</label>
+                            <select id="printOrientationSelect" class="form-control">
+                                <option value="portrait" data-translate="settings.portrait">Portrait</option>
+                                <option value="landscape" data-translate="settings.landscape">Landscape</option>
+                            </select>
+                            <p class="form-hint" data-translate="settings.printOrientationHint">Select the default orientation for printing.</p>
+                        </div>
+                        <div class="settings-group">
+                            <label for="printQualitySelect" data-translate="settings.printQuality">Print Quality</label>
+                            <select id="printQualitySelect" class="form-control">
+                                <option value="draft" data-translate="settings.draft">Draft</option>
+                                <option value="standard" selected data-translate="settings.standard">Standard</option>
+                                <option value="high" data-translate="settings.highQuality">High Quality</option>
+                            </select>
+                            <p class="form-hint" data-translate="settings.printQualityHint">Select the default print quality setting.</p>
+                        </div>
+                    </div>
+
                     <!-- Data Settings -->
                     <div class="settings-section">
                         <h3 data-translate="settings.dataManagement">Data Management</h3>
