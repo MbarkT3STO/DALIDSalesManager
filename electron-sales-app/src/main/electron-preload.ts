@@ -10,6 +10,7 @@ export interface ElectronAPI {
   addProduct: (product: any) => Promise<any>;
   updateProduct: (oldName: string, product: any) => Promise<any>;
   deleteProduct: (productName: string) => Promise<any>;
+  restoreProduct: (productName: string) => Promise<any>;
   addCustomer: (customer: any) => Promise<any>;
   updateCustomer: (oldName: string, customer: any) => Promise<any>;
   deleteCustomer: (customerName: string) => Promise<any>;
@@ -79,6 +80,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   addProduct: (product: any) => ipcRenderer.invoke('add-product', product),
   updateProduct: (oldName: string, product: any) => ipcRenderer.invoke('update-product', oldName, product),
   deleteProduct: (productName: string) => ipcRenderer.invoke('delete-product', productName),
+  restoreProduct: (productName: string) => ipcRenderer.invoke('restore-product', productName),
   addCustomer: (customer: any) => ipcRenderer.invoke('add-customer', customer),
   updateCustomer: (oldName: string, customer: any) => ipcRenderer.invoke('update-customer', oldName, customer),
   deleteCustomer: (customerName: string) => ipcRenderer.invoke('delete-customer', customerName),

@@ -334,6 +334,19 @@ ipcMain.handle('delete-product', async (event, productName: string) => {
   }
 });
 
+ipcMain.handle('restore-product', async (event, productName: string) => {
+  try {
+    if (!excelHandler) {
+      return { success: false, message: 'No workbook loaded' };
+    }
+
+    await excelHandler.restoreProduct(productName);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
 ipcMain.handle('add-customer', async (event, customer: Customer) => {
   try {
     if (!excelHandler) {

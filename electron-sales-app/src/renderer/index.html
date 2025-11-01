@@ -546,6 +546,13 @@
                 <div class="tab-header">
                     <h2 data-translate="products.management">Products Management</h2>
                     <div style="display: flex; gap: 0.75rem; align-items: center;">
+                        <button id="showDeletedProductsBtn" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                            <span data-translate="products.viewDeleted">View Deleted</span>
+                        </button>
                         <button id="showLowStockBtn" class="btn btn-secondary" style="display: flex; align-items: center; gap: 0.5rem;">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
@@ -609,9 +616,42 @@
                                 </tbody>
                             </table>
                         </div>
+                        <div class="modal-actions">
+                            <button type="button" class="btn btn-secondary modal-cancel" data-translate="common.close">Close</button>
+                        </div>
                     </div>
-                    <div class="modal-actions">
-                        <button type="button" class="btn btn-secondary modal-cancel" data-translate="common.close">Close</button>
+                </div>
+            </div>
+
+            <!-- Deleted Products Modal -->
+            <div id="deletedProductsModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 data-translate="products.deletedProductsTitle">Deleted Products</h2>
+                        <button class="modal-close">&times;</button>
+                    </div>
+                    <div class="modal-form">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th data-translate="products.productName">Product Name</th>
+                                        <th data-translate="products.quantity">Quantity</th>
+                                        <th data-translate="products.buyPrice">Buy Price</th>
+                                        <th data-translate="products.salePrice">Sale Price</th>
+                                        <th data-translate="common.actions">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="deletedProductsTableBody">
+                                    <tr>
+                                        <td colspan="5" class="empty-state" data-translate="products.noDeletedProducts">No deleted products</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="btn btn-secondary modal-cancel" data-translate="common.close">Close</button>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -11,6 +11,7 @@ export interface Product {
   category?: string;
   sku?: string;
   currency?: string;
+  isActive?: boolean;
 }
 
 export interface Payment {
@@ -174,7 +175,8 @@ export class ExcelHandler {
       { header: 'BuyPrice', key: 'buyPrice', width: 12 },
       { header: 'SalePrice', key: 'salePrice', width: 12 },
       { header: 'ReorderLevel', key: 'reorderLevel', width: 15 },
-      { header: 'Currency', key: 'currency', width: 10 }
+      { header: 'Currency', key: 'currency', width: 10 },
+      { header: 'IsActive', key: 'isActive', width: 10 }
     ];
     productsSheet.getRow(1).font = { bold: true };
 
@@ -604,12 +606,17 @@ export class ExcelHandler {
       const name = this.getCellValue(row, 1);
       if (!name) return;
 
+      // Check if IsActive column exists (column 7), default to true for backward compatibility
+      const isActiveValue = this.getCellValue(row, 7);
+      const isActive = isActiveValue === undefined || isActiveValue === null ? true : Boolean(isActiveValue);
+
       products.push({
         name: String(name),
         quantity: this.getNumericValue(row, 2),
         buyPrice: this.getNumericValue(row, 3),
         salePrice: this.getNumericValue(row, 4),
-        reorderLevel: this.getNumericValue(row, 5) || 10 // Default reorder level
+        reorderLevel: this.getNumericValue(row, 5) || 10, // Default reorder level
+        isActive: isActive
       });
     });
 
@@ -762,7 +769,10 @@ export class ExcelHandler {
       throw new Error('Products sheet not found');
     }
 
-    sheet.addRow([product.name, product.quantity, product.buyPrice, product.salePrice, product.reorderLevel || 10]);
+    // Ensure IsActive column exists
+    await this.ensureProductsIsActiveColumn(workbook);
+
+    sheet.addRow([product.name, product.quantity, product.buyPrice, product.salePrice, product.reorderLevel || 10, '', true]);
     await this.saveWorkbook(workbook);
   }
 
@@ -774,6 +784,9 @@ export class ExcelHandler {
       throw new Error('Products sheet not found');
     }
 
+    // Ensure IsActive column exists
+    await this.ensureProductsIsActiveColumn(workbook);
+
     let found = false;
     sheet.eachRow((row, rowNumber) => {
       if (rowNumber === 1) return;
@@ -783,6 +796,9 @@ export class ExcelHandler {
         row.getCell(3).value = product.buyPrice;
         row.getCell(4).value = product.salePrice;
         row.getCell(5).value = product.reorderLevel || 10;
+        // Keep existing isActive status or set to true if not specified
+        const currentIsActive = row.getCell(7).value;
+        row.getCell(7).value = product.isActive !== undefined ? product.isActive : (currentIsActive !== undefined ? currentIsActive : true);
         found = true;
       }
     });
@@ -802,20 +818,76 @@ export class ExcelHandler {
       throw new Error('Products sheet not found');
     }
 
-    let rowToDelete: number | null = null;
+    // Ensure IsActive column exists
+    await this.ensureProductsIsActiveColumn(workbook);
+
+    let found = false;
     sheet.eachRow((row, rowNumber) => {
       if (rowNumber === 1) return;
       if (String(row.getCell(1).value) === productName) {
-        rowToDelete = rowNumber;
+        // Soft delete: Set IsActive to false instead of removing the row
+        row.getCell(7).value = false;
+        found = true;
       }
     });
 
-    if (rowToDelete === null) {
+    if (!found) {
       throw new Error(`Product "${productName}" not found`);
     }
 
-    sheet.spliceRows(rowToDelete, 1);
     await this.saveWorkbook(workbook);
+  }
+
+  async restoreProduct(productName: string): Promise<void> {
+    const workbook = await this.loadWorkbook();
+    const sheet = workbook.getWorksheet('Products');
+    
+    if (!sheet) {
+      throw new Error('Products sheet not found');
+    }
+
+    // Ensure IsActive column exists
+    await this.ensureProductsIsActiveColumn(workbook);
+
+    let found = false;
+    sheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return;
+      if (String(row.getCell(1).value) === productName) {
+        // Restore: Set IsActive to true
+        row.getCell(7).value = true;
+        found = true;
+      }
+    });
+
+    if (!found) {
+      throw new Error(`Product "${productName}" not found`);
+    }
+
+    await this.saveWorkbook(workbook);
+  }
+
+  private async ensureProductsIsActiveColumn(workbook: ExcelJS.Workbook): Promise<void> {
+    const sheet = workbook.getWorksheet('Products');
+    if (!sheet) return;
+
+    // Check if IsActive column (column 7) already has a header
+    const headerRow = sheet.getRow(1);
+    const col7Header = headerRow.getCell(7).value;
+    
+    if (!col7Header || col7Header !== 'IsActive') {
+      // Add IsActive header
+      headerRow.getCell(7).value = 'IsActive';
+      headerRow.getCell(7).font = { bold: true };
+      
+      // Set all existing products to active (true) if the column is new
+      sheet.eachRow((row, rowNumber) => {
+        if (rowNumber === 1) return; // Skip header
+        const currentValue = row.getCell(7).value;
+        if (currentValue === undefined || currentValue === null || currentValue === '') {
+          row.getCell(7).value = true;
+        }
+      });
+    }
   }
 
   async addCustomer(customer: Customer): Promise<void> {

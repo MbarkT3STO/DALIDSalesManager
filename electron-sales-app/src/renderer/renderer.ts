@@ -8,6 +8,7 @@ interface Product {
   buyPrice: number;
   salePrice: number;
   reorderLevel?: number;
+  isActive?: boolean;
 }
 
 interface Payment {
@@ -750,6 +751,7 @@ function setupEventListeners() {
   document.getElementById('productForm')?.addEventListener('submit', handleProductSubmit);
   document.getElementById('productSearch')?.addEventListener('input', filterProducts);
   document.getElementById('showLowStockBtn')?.addEventListener('click', openLowStockModal);
+  document.getElementById('showDeletedProductsBtn')?.addEventListener('click', openDeletedProductsModal);
 
   // Customer management
   document.getElementById('addCustomerBtn')?.addEventListener('click', () => openCustomerModal());
@@ -1218,7 +1220,9 @@ function renderDashboard() {
   const activeInvoices = workbookData.invoices.filter(inv => inv.status !== 'Cancelled');
   const totalSales = activeInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
   const totalProfit = activeInvoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
-  const totalProducts = workbookData.products.length;
+  // Count only active products for statistics
+  const activeProducts = workbookData.products.filter(p => p.isActive !== false);
+  const totalProducts = activeProducts.length;
   const totalCustomers = workbookData.customers.length;
 
   // Update stat cards
@@ -1302,7 +1306,9 @@ function renderLowStockAlert() {
   if (!container) return;
 
   const threshold = appSettings.lowStockThreshold ?? 5;
-  const lowStockProducts = workbookData.products.filter(p => p.quantity <= threshold);
+  // Only consider active products for low stock alerts
+  const activeProducts = workbookData.products.filter(p => p.isActive !== false);
+  const lowStockProducts = activeProducts.filter(p => p.quantity <= threshold);
 
   if (lowStockProducts.length === 0) {
     container.innerHTML = `<p class="empty-state">${t('dashboard.allProductsStocked')}</p>`;
@@ -1322,7 +1328,9 @@ function openLowStockModal() {
   if (!modal || !tbody) return;
 
   const threshold = appSettings.lowStockThreshold ?? 5;
-  const lowStockProducts = workbookData.products
+  // Only show active products in low stock modal
+  const activeProducts = workbookData.products.filter(p => p.isActive !== false);
+  const lowStockProducts = activeProducts
     .filter(p => p.quantity <= threshold)
     .sort((a, b) => a.quantity - b.quantity || a.name.localeCompare(b.name));
 
@@ -1345,13 +1353,16 @@ function renderProducts() {
   const tbody = document.getElementById('productsTableBody');
   if (!tbody) return;
 
-  if (workbookData.products.length === 0) {
+  // Filter to show only active products
+  const activeProducts = workbookData.products.filter(p => p.isActive !== false);
+
+  if (activeProducts.length === 0) {
     tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No products found</td></tr>';
     return;
   }
 
   const threshold = appSettings.lowStockThreshold ?? 5;
-  tbody.innerHTML = workbookData.products.map(product => {
+  tbody.innerHTML = activeProducts.map(product => {
     const profitMargin = ((product.salePrice - product.buyPrice) / product.buyPrice * 100).toFixed(1);
     const isLow = product.quantity <= threshold;
     return `
@@ -1387,7 +1398,9 @@ function filterProducts() {
   const tbody = document.getElementById('productsTableBody');
   if (!tbody) return;
 
-  const filteredProducts = workbookData.products.filter(p =>
+  // Filter to show only active products
+  const activeProducts = workbookData.products.filter(p => p.isActive !== false);
+  const filteredProducts = activeProducts.filter(p =>
     p.name.toLowerCase().includes(searchTerm)
   );
 
@@ -1506,6 +1519,63 @@ async function handleProductSubmit(e: Event) {
     }
   } catch (error: any) {
     showToast(error.message || 'Error deleting product', 'error');
+  }
+};
+
+function openDeletedProductsModal() {
+  const modal = document.getElementById('deletedProductsModal');
+  const tbody = document.getElementById('deletedProductsTableBody');
+  if (!modal || !tbody) return;
+
+  // Filter to show only deleted products
+  const deletedProducts = workbookData.products.filter(p => p.isActive === false);
+
+  if (deletedProducts.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">${t('products.noDeletedProducts', 'No deleted products')}</td></tr>`;
+  } else {
+    tbody.innerHTML = deletedProducts.map(p => `
+      <tr>
+        <td><strong>${p.name}</strong></td>
+        <td>${p.quantity}</td>
+        <td>${formatCurrency(p.buyPrice)}</td>
+        <td>${formatCurrency(p.salePrice)}</td>
+        <td>
+          <button class="btn btn-primary btn-small" onclick="restoreProduct('${escapeHtml(p.name)}')"
+            title="${t('products.restoreProduct', 'Restore Product')}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="23 4 23 10 17 10"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+            ${t('products.restore', 'Restore')}
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  modal.classList.add('active');
+}
+
+(window as any).restoreProduct = async function(productName: string) {
+  const confirmed = await api.showConfirm({
+    title: 'Restore Product',
+    message: `Are you sure you want to restore "${productName}"?`
+  });
+
+  if (!confirmed.confirmed) return;
+
+  try {
+    const result = await api.restoreProduct(productName);
+    if (result.success) {
+      showToast('Product restored successfully', 'success');
+      await loadWorkbookData();
+      // Refresh the deleted products modal if it's still open
+      openDeletedProductsModal();
+    } else {
+      showToast(result.message || 'Failed to restore product', 'error');
+    }
+  } catch (error: any) {
+    showToast(error.message || 'Error restoring product', 'error');
   }
 };
 
@@ -2106,7 +2176,9 @@ function handleProductAutocomplete(e: Event) {
     return;
   }
 
-  const matches = workbookData.products.filter(p =>
+  // Only show active products in autocomplete
+  const activeProducts = workbookData.products.filter(p => p.isActive !== false);
+  const matches = activeProducts.filter(p =>
     p.name.toLowerCase().includes(searchTerm)
   );
 
@@ -2882,11 +2954,12 @@ document.addEventListener('keydown', (e) => {
 
 // Inventory Management
 function renderInventory() {
-  // Render inventory statistics
-  const totalStockItems = workbookData.products.reduce((sum, p) => sum + p.quantity, 0);
-  const totalStockValue = workbookData.products.reduce((sum, p) => sum + (p.quantity * p.buyPrice), 0);
+  // Render inventory statistics - only count active products
+  const activeProducts = workbookData.products.filter(p => p.isActive !== false);
+  const totalStockItems = activeProducts.reduce((sum, p) => sum + p.quantity, 0);
+  const totalStockValue = activeProducts.reduce((sum, p) => sum + (p.quantity * p.buyPrice), 0);
   const threshold = appSettings.lowStockThreshold ?? 5;
-  const lowStockCount = workbookData.products.filter(p => p.quantity <= threshold).length;
+  const lowStockCount = activeProducts.filter(p => p.quantity <= threshold).length;
 
   (document as any).getElementById('totalStockItems').textContent = totalStockItems;
   (document as any).getElementById('totalStockValue').textContent = formatCurrency(totalStockValue);
@@ -3046,9 +3119,10 @@ const movementTypeSelect = (document as any).getElementById('movementType');
 const currentStockSpan = (document as any).getElementById('currentStock');
 
 addStockBtn?.addEventListener('click', () => {
-  // Populate product dropdown
+  // Populate product dropdown - only show active products
+  const activeProducts = workbookData.products.filter(p => p.isActive !== false);
   movementProductSelect.innerHTML = '<option value="">Select Product</option>' +
-    workbookData.products.map(p => `<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)} (Stock: ${p.quantity})</option>`).join('');
+    activeProducts.map(p => `<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)} (Stock: ${p.quantity})</option>`).join('');
   
   // Set default date to today
   const today = new Date().toISOString().split('T')[0];
@@ -3105,6 +3179,7 @@ inventoryForm?.addEventListener('submit', async (e: any) => {
 
 // Analytics & Charts
 let analyticsCharts: any = {};
+let dashboardChart: any = null;
 
 function renderAnalytics() {
   // Calculate key metrics (exclude cancelled invoices)
@@ -3159,6 +3234,12 @@ function renderDashboardOverviewChart() {
   const canvas = document.getElementById('dashboardOverviewChart') as any;
   if (!canvas) return;
 
+  // Destroy existing chart if it exists
+  if (dashboardChart) {
+    dashboardChart.destroy();
+    dashboardChart = null;
+  }
+
   const css = getComputedStyle(document.documentElement);
   const primary = css.getPropertyValue('--primary-color').trim() || '#6366f1';
   const success = css.getPropertyValue('--success-color').trim() || '#10b981';
@@ -3187,7 +3268,7 @@ function renderDashboardOverviewChart() {
   const sales = labels.map(k => byDate[k].sales);
   const profit = labels.map(k => byDate[k].profit);
 
-  new Chart(canvas, {
+  dashboardChart = new Chart(canvas, {
     type: 'line',
     data: {
       labels,
@@ -3466,10 +3547,11 @@ function renderInventoryStatusChart() {
   const canvas = (document as any).getElementById('inventoryStatusChart');
   if (!canvas) return;
 
-  // Categorize products by stock level
-  const lowStock = workbookData.products.filter(p => p.quantity < 10).length;
-  const mediumStock = workbookData.products.filter(p => p.quantity >= 10 && p.quantity < 50).length;
-  const highStock = workbookData.products.filter(p => p.quantity >= 50).length;
+  // Categorize products by stock level - only active products
+  const activeProducts = workbookData.products.filter(p => p.isActive !== false);
+  const lowStock = activeProducts.filter(p => p.quantity < 10).length;
+  const mediumStock = activeProducts.filter(p => p.quantity >= 10 && p.quantity < 50).length;
+  const highStock = activeProducts.filter(p => p.quantity >= 50).length;
 
   analyticsCharts.inventoryStatus = new Chart(canvas, {
     type: 'pie',
