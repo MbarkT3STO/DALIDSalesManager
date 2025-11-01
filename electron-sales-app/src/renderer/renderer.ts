@@ -95,6 +95,10 @@ interface AppSettings {
   autoRefresh: boolean;
   accountingEnabled?: boolean;
   customWorkbookPath?: string | null;
+  // New settings
+  interfaceScale: number;
+  reduceAnimations: boolean;
+  uiDensity: 'compact' | 'normal' | 'spacious';
 }
 
 let appSettings: AppSettings = {
@@ -110,7 +114,11 @@ let appSettings: AppSettings = {
   startupBehavior: 'lastWorkbook',
   autoRefresh: false,
   accountingEnabled: false,
-  customWorkbookPath: null
+  customWorkbookPath: null,
+  // New settings defaults
+  interfaceScale: 100,
+  reduceAnimations: false,
+  uiDensity: 'normal'
 };
 
 let currentEditingProduct: string | null = null;
@@ -213,18 +221,18 @@ function t(key: string, fallback?: string): string {
 
 function applyTranslations() {
   // Update navigation tabs
-  document.querySelectorAll('.nav-tab').forEach(tab => {
+  document.querySelectorAll('.nav-tab').forEach((tab) => {
     const tabName = tab.getAttribute('data-tab');
     if (tabName) {
       const textElement = tab.querySelector('span[data-translate]');
       if (textElement) {
-        textElement.textContent = t(`navigation.${tabName}`, textElement.textContent);
+        textElement.textContent = t(`navigation.${tabName}`, textElement.textContent ?? undefined);
       }
     }
   });
 
   // Update all elements with data-translate attribute
-  document.querySelectorAll('[data-translate]').forEach(element => {
+  document.querySelectorAll('[data-translate]').forEach((element) => {
     const key = element.getAttribute('data-translate');
     if (key) {
       element.textContent = t(key);
@@ -232,7 +240,7 @@ function applyTranslations() {
   });
 
   // Update placeholders
-  document.querySelectorAll('[data-translate-placeholder]').forEach(element => {
+  document.querySelectorAll('[data-translate-placeholder]').forEach((element) => {
     const key = element.getAttribute('data-translate-placeholder');
     if (key && element instanceof HTMLInputElement) {
       element.placeholder = t(key);
@@ -240,7 +248,7 @@ function applyTranslations() {
   });
 
   // Update titles
-  document.querySelectorAll('[data-translate-title]').forEach(element => {
+  document.querySelectorAll('[data-translate-title]').forEach((element) => {
     const key = element.getAttribute('data-translate-title');
     if (key && element instanceof HTMLElement) {
       element.title = t(key);
@@ -263,7 +271,7 @@ function applyTranslations() {
   }
 
   // Update button texts
-  document.querySelectorAll('button').forEach(button => {
+  document.querySelectorAll('button').forEach((button) => {
     const textContent = button.textContent?.trim();
     if (textContent) {
       // Common button translations
@@ -292,7 +300,7 @@ function applyTranslations() {
   });
 
   // Update table headers
-  document.querySelectorAll('th').forEach(th => {
+  document.querySelectorAll('th').forEach((th) => {
     const textContent = th.textContent?.trim();
     if (textContent) {
       if (textContent === 'Product Name' || textContent === 'اسم المنتج' || textContent === 'Nom du produit') {
@@ -322,7 +330,7 @@ function applyTranslations() {
   });
 
   // Update form labels
-  document.querySelectorAll('label').forEach(label => {
+  document.querySelectorAll('label').forEach((label) => {
     const textContent = label.textContent?.trim();
     if (textContent) {
       if (textContent === 'Product Name:' || textContent === 'اسم المنتج:' || textContent === 'Nom du produit:') {
@@ -346,7 +354,7 @@ function applyTranslations() {
   });
 
   // Update headings
-  document.querySelectorAll('h1, h2, h3').forEach(heading => {
+  document.querySelectorAll('h1, h2, h3').forEach((heading) => {
     const textContent = heading.textContent?.trim();
     if (textContent) {
       if (textContent === 'Dashboard' || textContent === 'لوحة التحكم' || textContent === 'Tableau de bord') {
@@ -409,6 +417,19 @@ function applySettings() {
   // Apply font size
   document.documentElement.setAttribute('data-font-size', appSettings.fontSize);
 
+  // Apply interface scale
+  document.documentElement.style.fontSize = `${appSettings.interfaceScale / 100 * 16}px`;
+
+  // Apply animation preferences
+  if (appSettings.reduceAnimations) {
+    document.documentElement.setAttribute('data-reduce-animations', 'true');
+  } else {
+    document.documentElement.removeAttribute('data-reduce-animations');
+  }
+
+  // Apply UI density
+  document.documentElement.setAttribute('data-ui-density', appSettings.uiDensity);
+
   // Apply language
   loadTranslations(appSettings.language);
 
@@ -431,6 +452,9 @@ function renderSettings() {
   (document.getElementById('currencySelect') as HTMLSelectElement).value = appSettings.currency;
   (document.getElementById('themeSelect') as HTMLSelectElement).value = appSettings.theme;
   (document.getElementById('fontSizeSelect') as HTMLSelectElement).value = appSettings.fontSize;
+  (document.getElementById('interfaceScaleSelect') as HTMLSelectElement).value = appSettings.interfaceScale.toString();
+  (document.getElementById('reduceAnimationsToggle') as HTMLInputElement).checked = appSettings.reduceAnimations;
+  (document.getElementById('uiDensitySelect') as HTMLSelectElement).value = appSettings.uiDensity;
   (document.getElementById('autoBackupToggle') as HTMLInputElement).checked = appSettings.autoBackup;
   (document.getElementById('backupRetentionSelect') as HTMLSelectElement).value = appSettings.backupRetention.toString();
   (document.getElementById('lowStockNotificationsToggle') as HTMLInputElement).checked = appSettings.lowStockNotifications;
@@ -439,8 +463,7 @@ function renderSettings() {
   (document.getElementById('soundNotificationsToggle') as HTMLInputElement).checked = appSettings.soundNotifications;
   (document.getElementById('startupBehaviorSelect') as HTMLSelectElement).value = appSettings.startupBehavior;
   (document.getElementById('autoRefreshToggle') as HTMLInputElement).checked = appSettings.autoRefresh;
-  const accToggle = document.getElementById('accountingEnabledToggle') as HTMLInputElement | null;
-  if (accToggle) accToggle.checked = !!appSettings.accountingEnabled;
+  (document.getElementById('accountingEnabledToggle') as HTMLInputElement).checked = !!appSettings.accountingEnabled;
   const customPathInput = document.getElementById('customWorkbookPathInput') as HTMLInputElement | null;
   if (customPathInput) {
     customPathInput.value = appSettings.customWorkbookPath || '';
@@ -456,6 +479,27 @@ function renderSettings() {
   
   (document.getElementById('auditStartDate') as HTMLInputElement).value = thirtyDaysAgo.toISOString().split('T')[0];
   (document.getElementById('auditEndDate') as HTMLInputElement).value = today.toISOString().split('T')[0];
+}
+
+function handleInterfaceScaleChange() {
+  const newScale = parseInt((document.getElementById('interfaceScaleSelect') as HTMLSelectElement).value);
+  appSettings.interfaceScale = newScale;
+  saveSettings();
+  applySettings();
+}
+
+function handleReduceAnimationsChange() {
+  const reduceAnimations = (document.getElementById('reduceAnimationsToggle') as HTMLInputElement).checked;
+  appSettings.reduceAnimations = reduceAnimations;
+  saveSettings();
+  applySettings();
+}
+
+function handleUiDensityChange() {
+  const uiDensity = (document.getElementById('uiDensitySelect') as HTMLSelectElement).value as 'compact' | 'normal' | 'spacious';
+  appSettings.uiDensity = uiDensity;
+  saveSettings();
+  applySettings();
 }
 
 // Populate GDPR customer dropdowns
@@ -848,6 +892,9 @@ function setupEventListeners() {
   document.getElementById('languageSelect')?.addEventListener('change', handleLanguageChange);
   document.getElementById('themeSelect')?.addEventListener('change', handleThemeChange);
   document.getElementById('fontSizeSelect')?.addEventListener('change', handleFontSizeChange);
+  document.getElementById('interfaceScaleSelect')?.addEventListener('change', handleInterfaceScaleChange);
+  document.getElementById('reduceAnimationsToggle')?.addEventListener('change', handleReduceAnimationsChange);
+  document.getElementById('uiDensitySelect')?.addEventListener('change', handleUiDensityChange);
   
   // GDPR & Audit
   document.getElementById('gdprExportBtn')?.addEventListener('click', handleGDPRExport);
@@ -5369,6 +5416,9 @@ function handleSaveSettings() {
   appSettings.currency = (document.getElementById('currencySelect') as HTMLSelectElement).value;
   appSettings.theme = (document.getElementById('themeSelect') as HTMLSelectElement).value;
   appSettings.fontSize = (document.getElementById('fontSizeSelect') as HTMLSelectElement).value;
+  appSettings.interfaceScale = parseInt((document.getElementById('interfaceScaleSelect') as HTMLSelectElement).value);
+  appSettings.reduceAnimations = (document.getElementById('reduceAnimationsToggle') as HTMLInputElement).checked;
+  appSettings.uiDensity = (document.getElementById('uiDensitySelect') as HTMLSelectElement).value as 'compact' | 'normal' | 'spacious';
   appSettings.autoBackup = (document.getElementById('autoBackupToggle') as HTMLInputElement).checked;
   appSettings.backupRetention = parseInt((document.getElementById('backupRetentionSelect') as HTMLSelectElement).value);
   appSettings.lowStockNotifications = (document.getElementById('lowStockNotificationsToggle') as HTMLInputElement).checked;
@@ -5401,7 +5451,12 @@ function handleResetSettings() {
     soundNotifications: true,
     startupBehavior: 'lastWorkbook',
     autoRefresh: false,
-    accountingEnabled: false
+    accountingEnabled: false,
+    customWorkbookPath: null,
+    // New settings defaults
+    interfaceScale: 100,
+    reduceAnimations: false,
+    uiDensity: 'normal'
   };
 
   // Save and apply settings
@@ -5411,6 +5466,8 @@ function handleResetSettings() {
   
   showToast(t('settings.settingsReset', 'Settings reset to defaults'), 'success');
 }
+
+
 
 function handleLanguageChange() {
   const newLanguage = (document.getElementById('languageSelect') as HTMLSelectElement).value;
@@ -5435,12 +5492,12 @@ function handleFontSizeChange() {
   appSettings.fontSize = newFontSize;
   saveSettings();
   applySettings();
+  
+  // Add debugging to verify the function is called
+  console.log('Font size changed to:', newFontSize);
 }
 
-// ============================================
-// ANALYTICS PDF EXPORT FEATURE
-// ============================================
-
+// Export Analytics to PDF
 async function exportAnalyticsToPDF() {
   try {
     // Show loading spinner icon instead of text
@@ -5542,7 +5599,6 @@ async function exportAnalyticsToPDF() {
   }
 }
 
-// Add event listener for export analytics button
 const exportAnalyticsPdfBtn = document.getElementById('exportAnalyticsPdfBtn');
 exportAnalyticsPdfBtn?.addEventListener('click', exportAnalyticsToPDF);
 

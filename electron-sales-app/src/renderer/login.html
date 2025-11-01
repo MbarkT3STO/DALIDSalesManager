@@ -16,112 +16,135 @@
 </head>
 <body>
     <div class="login-container">
-        <!-- Background Animation -->
-        <div class="background-animation">
-            <div class="circle circle-1"></div>
-            <div class="circle circle-2"></div>
-            <div class="circle circle-3"></div>
-        </div>
-
-        <!-- Login Card -->
-        <div class="login-card">
-            <!-- Logo Section -->
-            <div class="logo-section">
-                <div class="logo-icon">
-                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <!-- Left Panel - Branding -->
+        <div class="login-left">
+            <div class="brand-content">
+                <div class="brand-logo">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M3 3v18h18"/>
                         <path d="m19 9-5 5-4-4-3 3"/>
                         <circle cx="18" cy="8" r="2"/>
                     </svg>
                 </div>
-                <h1 class="app-title">DALID Sales Manager</h1>
-                <p class="app-subtitle" data-translate="login.subtitle">Welcome back! Please login to continue</p>
-            </div>
-
-            <!-- Login Form -->
-            <form id="loginForm" class="login-form">
-                <div class="form-group">
-                    <label for="username" class="form-label">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
-                            <circle cx="12" cy="7" r="4"/>
-                        </svg>
-                        <span data-translate="login.username">Username</span>
-                    </label>
-                    <input 
-                        type="text" 
-                        id="username" 
-                        name="username" 
-                        class="form-input" 
-                        placeholder="Enter your username"
-                        data-translate-placeholder="login.usernamePlaceholder"
-                        autocomplete="username"
-                        required
-                    >
-                </div>
-
-                <div class="form-group">
-                    <label for="password" class="form-label">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                        </svg>
-                        <span data-translate="login.password">Password</span>
-                    </label>
-                    <div class="password-input-wrapper">
-                        <input 
-                            type="password" 
-                            id="password" 
-                            name="password" 
-                            class="form-input" 
-                            placeholder="Enter your password"
-                        data-translate-placeholder="login.passwordPlaceholder"
-                            autocomplete="current-password"
-                            required
-                        >
-                        <button type="button" class="toggle-password" id="togglePassword">
-                            <svg id="eyeIcon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
-                                <circle cx="12" cy="12" r="3"/>
+                <h1 class="brand-title" data-translate="login.title">DALID Sales Manager</h1>
+                <p class="brand-subtitle" data-translate="app.subtitle">Professional sales management solution for modern businesses</p>
+                
+                <div class="brand-features">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
                             </svg>
-                        </button>
+                        </div>
+                        <div class="feature-text" data-translate="common.customer">Customer Management</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect width="20" height="14" x="2" y="5" rx="2"/>
+                                <line x1="2" y1="9" x2="22" y2="9"/>
+                                <line x1="2" y1="13" x2="22" y2="13"/>
+                            </svg>
+                        </div>
+                        <div class="feature-text" data-translate="sales.title">Invoice Generation</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 20v-6"/>
+                                <path d="M12 14a2 2 0 0 1 2 2v6"/>
+                                <path d="M12 14a2 2 0 0 0-2 2v6"/>
+                                <path d="M12 4v2"/>
+                                <path d="M12 6a2 2 0 0 1 2 2v6"/>
+                                <path d="M12 6a2 2 0 0 0-2 2v6"/>
+                            </svg>
+                        </div>
+                        <div class="feature-text" data-translate="analytics.title">Analytics & Reports</div>
                     </div>
                 </div>
-
-                <div class="form-options">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="rememberMe" name="rememberMe">
-                        <span class="checkbox-custom"></span>
-                        <span class="checkbox-text" data-translate="login.rememberMe">Remember me</span>
-                    </label>
-                </div>
-
-                <button type="submit" class="btn-login" id="loginBtn">
-                    <span class="btn-text" data-translate="login.signIn">Sign In</span>
-                    <span class="btn-loader" style="display: none;">
-                        <svg class="spinner" width="20" height="20" viewBox="0 0 24 24">
-                            <circle class="spinner-circle" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
-                        </svg>
-                    </span>
-                </button>
-
-                <div class="error-message" id="errorMessage" style="display: none;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="12" y1="8" x2="12" y2="12"/>
-                        <line x1="12" y1="16" x2="12.01" y2="16"/>
-                    </svg>
-                    <span id="errorText" data-translate="login.invalidCredentials">Invalid username or password</span>
-                </div>
-            </form>
-
-            <!-- Footer -->
-            <div class="login-footer">
-                <p class="version-text">Version 1.1.0</p>
-                <p class="footer-note">My eyes on you DALID rich mf</p>
             </div>
         </div>
 
+        <!-- Right Panel - Login Form -->
+        <div class="login-right">
+            <div class="login-form-container">
+                <div class="welcome-section">
+                    <h2 class="welcome-title" data-translate="login.subtitle">Welcome Back</h2>
+                    <p class="welcome-subtitle" data-translate="login.subtitle2">Sign in to your account</p>
+                </div>
+
+                <!-- Login Form -->
+                <form id="loginForm" class="login-form">
+                    <div class="form-group">
+                        <label for="username" class="form-label" data-translate="login.username">Username</label>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            class="form-input" 
+                            placeholder="Enter your username"
+                            data-translate-placeholder="login.usernamePlaceholder"
+                            autocomplete="username"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password" class="form-label" data-translate="login.password">Password</label>
+                        <div class="password-input-wrapper">
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                class="form-input" 
+                                placeholder="Enter your password"
+                                data-translate-placeholder="login.passwordPlaceholder"
+                                autocomplete="current-password"
+                                required
+                            >
+                            <button type="button" class="toggle-password" id="togglePassword">
+                                <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="rememberMe" name="rememberMe">
+                            <span class="checkbox-custom"></span>
+                            <span class="checkbox-text" data-translate="login.rememberMe">Remember me</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-login" id="loginBtn">
+                        <span class="btn-text" data-translate="login.signIn">Sign In</span>
+                        <span class="btn-loader" style="display: none;">
+                            <svg class="spinner" width="20" height="20" viewBox="0 0 24 24">
+                                <circle class="spinner-circle" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
+                            </svg>
+                        </span>
+                    </button>
+
+                    <div class="error-message" id="errorMessage" style="display: none;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        <span id="errorText" data-translate="login.invalidCredentials">Invalid username or password</span>
+                    </div>
+                </form>
+
+                <div class="login-footer">
+                    <p class="version-text">Version 1.1.0</p>
+                    <p class="footer-note">My eyes on you DALID rich mf</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="login.js"></script>

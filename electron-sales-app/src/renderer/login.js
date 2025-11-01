@@ -24,8 +24,11 @@ async function loadTranslations(lang) {
         const response = await fetch(`./translations/${lang}.json`);
         translations = await response.json();
         currentLanguage = lang;
-        applyTranslations();
-        applyRTL();
+        // Apply translations after a short delay to ensure all elements are rendered
+        setTimeout(() => {
+            applyTranslations();
+            applyRTL();
+        }, 10);
     } catch (error) {
         console.error('Failed to load translations:', error);
     }
@@ -44,7 +47,11 @@ function applyTranslations() {
     // Translate elements with data-translate attribute
     document.querySelectorAll('[data-translate]').forEach(element => {
         const key = element.getAttribute('data-translate');
-        element.textContent = t(key);
+        if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+            element.placeholder = t(key);
+        } else {
+            element.textContent = t(key);
+        }
     });
 
     // Translate placeholders
@@ -76,8 +83,20 @@ const togglePasswordBtn = document.getElementById('togglePassword');
 const eyeIcon = document.getElementById('eyeIcon');
 
 // Load translations based on app settings
-currentLanguage = getAppLanguage();
-loadTranslations(currentLanguage);
+window.addEventListener('DOMContentLoaded', () => {
+    currentLanguage = getAppLanguage();
+    loadTranslations(currentLanguage);
+    
+    // Check for remembered user
+    const rememberedUser = localStorage.getItem('rememberedUser');
+    if (rememberedUser) {
+        usernameInput.value = rememberedUser;
+        rememberMeCheckbox.checked = true;
+        passwordInput.focus();
+    } else {
+        usernameInput.focus();
+    }
+});
 
 // Toggle password visibility
 togglePasswordBtn.addEventListener('click', () => {
@@ -94,18 +113,6 @@ togglePasswordBtn.addEventListener('click', () => {
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
             <circle cx="12" cy="12" r="3"/>
         `;
-    }
-});
-
-// Check for remembered user
-window.addEventListener('DOMContentLoaded', () => {
-    const rememberedUser = localStorage.getItem('rememberedUser');
-    if (rememberedUser) {
-        usernameInput.value = rememberedUser;
-        rememberMeCheckbox.checked = true;
-        passwordInput.focus();
-    } else {
-        usernameInput.focus();
     }
 });
 

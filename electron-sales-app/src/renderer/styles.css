@@ -918,6 +918,41 @@ body {
     }
 }
 
+/* Reduced animations mode */
+[data-reduce-animations="true"] * {
+  transition: none !important;
+  animation: none !important;
+  transform: none !important;
+}
+
+[data-reduce-animations="true"] .btn::before {
+  display: none;
+}
+
+[data-reduce-animations="true"] .btn:hover svg {
+  transform: none;
+}
+
+[data-reduce-animations="true"] .btn:active {
+  transform: none;
+}
+
+[data-reduce-animations="true"] .toast {
+  animation: none;
+  transition: none;
+}
+
+[data-reduce-animations="true"] .modal {
+  animation: none;
+}
+
+/* Ensure normal animations when the attribute is not present */
+:not([data-reduce-animations="true"]) * {
+  transition: initial;
+  animation: initial;
+  transform: initial;
+}
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
     * {
@@ -1740,14 +1775,14 @@ select.form-control {
 }
 
 .metric-value {
-    font-size: 1.875rem;
+    font-size: var(--font-3xl);
     font-weight: 700;
     color: var(--text-primary);
     margin: 0.25rem 0;
 }
 
 .metric-change {
-    font-size: 0.8125rem;
+    font-size: var(--font-sm);
     font-weight: 600;
     padding: 0.25rem 0.5rem;
     border-radius: var(--radius-sm);
@@ -1783,14 +1818,14 @@ select.form-control {
 }
 
 .chart-header h3 {
-    font-size: 1.125rem;
+    font-size: var(--font-lg);
     font-weight: 600;
     color: var(--text-primary);
     margin-bottom: 0.25rem;
 }
 
 .chart-subtitle {
-    font-size: 0.8125rem;
+    font-size: var(--font-xs);
     color: var(--text-muted);
     margin: 0;
 }
@@ -2570,6 +2605,102 @@ html[dir="rtl"] .metric-card {
 body[dir="rtl"] .metric-info,
 html[dir="rtl"] .metric-info {
     text-align: center;
+}
+
+/* ============================================
+   UI DENSITY STYLES
+   ============================================ */
+
+/* Compact UI Density */
+[data-ui-density="compact"] {
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 0.75rem;
+    --spacing-lg: 1rem;
+    --spacing-xl: 1.25rem;
+    --spacing-2xl: 1.5rem;
+    --form-element-height: 32px;
+}
+
+[data-ui-density="compact"] .btn:not(.btn-icon):not(.data-table .btn-icon) {
+    padding: var(--spacing-xs) var(--spacing-md);
+    min-height: var(--form-element-height);
+}
+
+[data-ui-density="compact"] .form-control {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    min-height: var(--form-element-height);
+}
+
+[data-ui-density="compact"] .settings-section {
+    padding: var(--spacing-lg);
+}
+
+[data-ui-density="compact"] .settings-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+[data-ui-density="compact"] .data-table th,
+[data-ui-density="compact"] .data-table td {
+    padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+/* Normal UI Density (Default) */
+[data-ui-density="normal"] {
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 0.75rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.25rem;
+    --spacing-xl: 1.5rem;
+    --spacing-2xl: 2rem;
+    --form-element-height: 40px;
+}
+
+/* Spacious UI Density */
+[data-ui-density="spacious"] {
+    --spacing-xs: 0.75rem;
+    --spacing-sm: 1rem;
+    --spacing-md: 1.25rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 2.5rem;
+    --form-element-height: 48px;
+}
+
+[data-ui-density="spacious"] .btn:not(.btn-icon):not(.data-table .btn-icon) {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    min-height: var(--form-element-height);
+}
+
+[data-ui-density="spacious"] .form-control {
+    padding: var(--spacing-sm) var(--spacing-md);
+    min-height: var(--form-element-height);
+}
+
+[data-ui-density="spacious"] .settings-section {
+    padding: var(--spacing-xl);
+}
+
+[data-ui-density="spacious"] .settings-group {
+    margin-bottom: var(--spacing-xl);
+}
+
+[data-ui-density="spacious"] .data-table th,
+[data-ui-density="spacious"] .data-table td {
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+/* Ensure data table buttons maintain consistent sizing */
+.data-table .btn-icon {
+    width: 36px !important;
+    height: 36px !important;
+    padding: 6px !important;
+    margin: 0 2px !important;
+}
+
+.data-table .btn-icon svg {
+    width: 18px !important;
+    height: 18px !important;
 }
 
 /* ============================================
