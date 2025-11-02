@@ -418,6 +418,8 @@
     "unlimited": "Illimité",
     "notifications": "Notifications",
     "lowStockAlerts": "Alertes de stock faible",
+    "lowStockThreshold": "Seuil de stock faible",
+    "lowStockThresholdHint": "Les produits à ce niveau ou en dessous seront mis en évidence et affichés dans les alertes.",
     "soundNotifications": "Notifications sonores",
     "application": "Application",
     "startupBehavior": "Comportement au démarrage",

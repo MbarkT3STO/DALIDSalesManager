@@ -418,6 +418,8 @@
     "unlimited": "غير محدود",
     "notifications": "الإشعارات",
     "lowStockAlerts": "تنبيهات المخزون المنخفض",
+    "lowStockThreshold": "عتبة المخزون المنخفض",
+    "lowStockThresholdHint": "سيتم تمييز المنتجات الموجودة على هذا المستوى أو أقل منه وعرضها في التنبيهات.",
     "soundNotifications": "الإشعارات الصوتية",
     "application": "التطبيق",
     "startupBehavior": "سلوك البدء",
