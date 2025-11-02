@@ -169,6 +169,81 @@ function throttle<T extends (...args: any[]) => any>(
   };
 }
 
+// Table sorting functionality
+const tableSortState: { [tableId: string]: { column: number; direction: 'asc' | 'desc' } } = {};
+
+function attachTableSorting(tableId: string) {
+  const table = document.getElementById(tableId) as HTMLTableElement;
+  if (!table) return;
+  
+  const headers = table.querySelectorAll('thead th');
+  headers.forEach((header, index) => {
+    // Skip the last column (actions) for sorting
+    if (index === headers.length - 1) return;
+    
+    header.classList.add('sortable');
+    (header as HTMLElement).style.cursor = 'pointer';
+    
+    header.addEventListener('click', () => {
+      sortTable(tableId, index);
+    });
+  });
+}
+
+function sortTable(tableId: string, columnIndex: number) {
+  const table = document.getElementById(tableId) as HTMLTableElement;
+  if (!table) return;
+  
+  const tbody = table.querySelector('tbody');
+  if (!tbody) return;
+  
+  const rows = Array.from(tbody.querySelectorAll('tr:not(.empty-state)')) as HTMLTableRowElement[];
+  if (rows.length === 0) return;
+  
+  // Determine sort direction
+  if (!tableSortState[tableId]) {
+    tableSortState[tableId] = { column: columnIndex, direction: 'asc' };
+  } else if (tableSortState[tableId].column === columnIndex) {
+    tableSortState[tableId].direction = tableSortState[tableId].direction === 'asc' ? 'desc' : 'asc';
+  } else {
+    tableSortState[tableId].column = columnIndex;
+    tableSortState[tableId].direction = 'asc';
+  }
+  
+  const direction = tableSortState[tableId].direction;
+  
+  // Sort rows
+  rows.sort((a, b) => {
+    const aCell = (a as HTMLTableRowElement).cells[columnIndex]?.textContent?.trim() || '';
+    const bCell = (b as HTMLTableRowElement).cells[columnIndex]?.textContent?.trim() || '';
+    
+    // Try to sort as numbers first
+    const aNum = parseFloat(aCell.replace(/[^0-9.-]/g, ''));
+    const bNum = parseFloat(bCell.replace(/[^0-9.-]/g, ''));
+    
+    let comparison = 0;
+    if (!isNaN(aNum) && !isNaN(bNum)) {
+      comparison = aNum - bNum;
+    } else {
+      comparison = aCell.localeCompare(bCell);
+    }
+    
+    return direction === 'asc' ? comparison : -comparison;
+  });
+  
+  // Update table header indicators
+  const headers = table.querySelectorAll('thead th');
+  headers.forEach((header, index) => {
+    header.classList.remove('sorted-asc', 'sorted-desc');
+    if (index === columnIndex) {
+      header.classList.add(direction === 'asc' ? 'sorted-asc' : 'sorted-desc');
+    }
+  });
+  
+  // Reorder rows in DOM
+  rows.forEach(row => tbody.appendChild(row));
+}
+
 // RequestAnimationFrame batching for DOM updates
 let scheduledUpdates: Map<string, () => void> = new Map();
 let isUpdateScheduled = false;
@@ -1723,6 +1798,9 @@ function renderProducts() {
       </tr>
     `;
   }).join('');
+  
+  // Attach sorting functionality to table headers
+  attachTableSorting('productsTable');
 }
 
 // Debounced filter function for better performance
@@ -1780,6 +1858,9 @@ const filterProductsDebounced = debounce(function() {
       </tr>
     `;
   }).join('');
+  
+  // Attach sorting functionality to table headers
+  attachTableSorting('productsTable');
 }, 150);
 
 // Wrapper for event listener
@@ -2453,6 +2534,9 @@ function renderInvoices() {
       </td>
     </tr>
   `).join('');
+  
+  // Attach sorting functionality to table headers
+  attachTableSorting('invoicesTable');
 }
 
 // Populate customer filter dropdown
@@ -4662,6 +4746,9 @@ function renderInventory() {
       <td>${movement.notes || '-'}</td>
     </tr>
   `).join('');
+  
+  // Attach sorting functionality to table headers
+  attachTableSorting('inventoryTable');
 }
 
 // ============================================
