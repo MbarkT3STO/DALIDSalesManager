@@ -103,6 +103,8 @@ interface AppSettings {
   printPaperSize: string;
   printOrientation: string;
   printQuality: string;
+  // Invoice style settings
+  invoiceStyle: 'classical' | 'modern' | 'blackwhite';
 }
 
 let appSettings: AppSettings = {
@@ -126,7 +128,9 @@ let appSettings: AppSettings = {
   // Print settings defaults
   printPaperSize: 'A4',
   printOrientation: 'portrait',
-  printQuality: 'standard'
+  printQuality: 'standard',
+  // Invoice style default
+  invoiceStyle: 'classical'
 };
 
 let currentEditingProduct: string | null = null;
@@ -466,6 +470,7 @@ function renderSettings() {
   (document.getElementById('printPaperSizeSelect') as HTMLSelectElement).value = appSettings.printPaperSize;
   (document.getElementById('printOrientationSelect') as HTMLSelectElement).value = appSettings.printOrientation;
   (document.getElementById('printQualitySelect') as HTMLSelectElement).value = appSettings.printQuality;
+  (document.getElementById('invoiceStyleSelect') as HTMLSelectElement).value = appSettings.invoiceStyle;
   (document.getElementById('autoBackupToggle') as HTMLInputElement).checked = appSettings.autoBackup;
   (document.getElementById('backupRetentionSelect') as HTMLSelectElement).value = appSettings.backupRetention.toString();
   (document.getElementById('lowStockNotificationsToggle') as HTMLInputElement).checked = appSettings.lowStockNotifications;
@@ -2125,6 +2130,13 @@ function renderCustomerInvoicesTable(invoices: Invoice[]) {
             <rect x="6" y="14" width="12" height="8"/>
           </svg>
         </button>
+        <button class="btn-icon" onclick="exportInvoiceToPDF('${invoice.invoiceId}')" title="${t('common.export')} PDF">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </button>
       </td>
     </tr>
   `).join('');
@@ -2279,6 +2291,13 @@ function renderInvoices() {
             <polyline points="6 9 6 2 18 2 18 9"/>
             <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
             <rect x="6" y="14" width="12" height="8"/>
+          </svg>
+        </button>
+        <button class="btn-icon" onclick="exportInvoiceToPDF('${invoice.invoiceId}')" title="${t('common.export')} PDF">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
         </button>
       </td>
@@ -2594,6 +2613,28 @@ async function saveInvoice() {
   }
 }
 
+// Export invoice to PDF with the selected style
+(window as any).exportInvoiceToPDF = async function(invoiceId: string) {
+  const invoice = workbookData.invoices.find(inv => inv.invoiceId === invoiceId);
+  if (!invoice) {
+    showToast('Invoice not found', 'error');
+    return;
+  }
+
+  const html = generateInvoiceHTML(invoice, appSettings.invoiceStyle);
+  
+  try {
+    const result = await api.exportHtmlToPDF(html, `invoice-${invoiceId}.pdf`);
+    if (result.success) {
+      showToast('Invoice exported to PDF successfully', 'success');
+    } else {
+      showToast(result.message || 'Failed to export invoice to PDF', 'error');
+    }
+  } catch (error: any) {
+    showToast(error.message || 'Error exporting invoice to PDF', 'error');
+  }
+};
+
 function generateInvoiceId(): string {
   const date = new Date();
   const year = date.getFullYear();
@@ -2607,7 +2648,7 @@ function generateInvoiceId(): string {
   const invoice = workbookData.invoices.find(inv => inv.invoiceId === invoiceId);
   if (!invoice) return;
 
-  const html = generateInvoiceHTML(invoice);
+  const html = generateInvoiceHTML(invoice, appSettings.invoiceStyle);
   const printWindow = window.open('', '_blank');
   if (printWindow) {
     printWindow.document.write(html);
@@ -2619,7 +2660,7 @@ function generateInvoiceId(): string {
   const invoice = workbookData.invoices.find(inv => inv.invoiceId === invoiceId);
   if (!invoice) return;
 
-  const html = generateInvoiceHTML(invoice);
+  const html = generateInvoiceHTML(invoice, appSettings.invoiceStyle);
   
   try {
     const result = await api.printInvoice(html);
@@ -2635,18 +2676,246 @@ function generateInvoiceId(): string {
   }
 };
 
-function generateInvoiceHTML(invoice: Invoice): string {
+function generateInvoiceHTML(invoice: Invoice, style: 'classical' | 'modern' | 'blackwhite' = appSettings.invoiceStyle): string {
   const customer = workbookData.customers.find(c => c.name === invoice.customerName);
   const isRTL = currentLanguage === 'ar';
   const dir = isRTL ? 'rtl' : 'ltr';
   
-  return `
-    <!DOCTYPE html>
-    <html dir="${dir}">
-    <head>
-      <meta charset="UTF-8">
-      <title>${t('sales.invoice')} ${invoice.invoiceId}</title>
-      <style>
+  // Get the appropriate CSS based on the selected style
+  const getInvoiceStyle = () => {
+    switch (style) {
+      case 'modern':
+        return `
+        body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          padding: 40px;
+          max-width: 900px;
+          margin: 0 auto;
+          direction: ${dir};
+          background: linear-gradient(135deg, #f5f7fa 0%, #e4edf9 100%);
+          color: #333;
+        }
+        .header {
+          text-align: center;
+          margin-bottom: 40px;
+          padding: 30px;
+          background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+          color: white;
+          border-radius: 15px;
+          box-shadow: 0 10px 30px rgba(124, 58, 237, 0.3);
+        }
+        .header h1 {
+          margin: 0;
+          font-size: 2.5rem;
+          font-weight: 800;
+          letter-spacing: 1px;
+          background: none;
+          display: inline-block;
+          padding: 10px 20px;
+        }
+        .header p {
+          margin: 10px 0;
+          font-size: 1.1rem;
+          opacity: 0.9;
+        }
+        .info-section {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 30px;
+          gap: 30px;
+        }
+        .info-box {
+          flex: 1;
+          padding: 25px;
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+          border: 1px solid #e2e8f0;
+        }
+        .info-box h3 {
+          margin-top: 0;
+          color: #7c3aed;
+          border-bottom: 2px solid #f1f5f9;
+          padding-bottom: 10px;
+          font-weight: 700;
+        }
+        .info-box p {
+          margin: 8px 0;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 30px;
+          background: white;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        th, td {
+          padding: 15px;
+          text-align: ${isRTL ? 'right' : 'left'};
+        }
+        th {
+          background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+          color: white;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        td {
+          border-bottom: 1px solid #e2e8f0;
+        }
+        tr:nth-child(even) {
+          background-color: #f8fafc;
+        }
+        tr:hover {
+          background-color: #f1f5f9;
+        }
+        .total-section {
+          text-align: ${isRTL ? 'left' : 'right'};
+          margin-top: 20px;
+        }
+        .total-row {
+          display: flex;
+          justify-content: ${isRTL ? 'flex-start' : 'flex-end'};
+          padding: 12px 0;
+        }
+        .total-row span:first-child {
+          ${isRTL ? 'margin-left' : 'margin-right'}: 40px;
+          font-weight: 600;
+        }
+        .grand-total {
+          font-size: 1.4rem;
+          background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          font-weight: 800;
+          border-top: 2px solid #e2e8f0;
+          padding-top: 15px;
+          margin-top: 15px;
+        }
+        .footer {
+          text-align: center;
+          margin-top: 50px;
+          padding-top: 25px;
+          border-top: 2px solid #e2e8f0;
+          color: #64748b;
+          font-weight: 500;
+        }
+        @media print {
+          body {
+            padding: 20px;
+            -webkit-print-color-adjust: exact;
+            color-adjust: exact;
+          }
+          .info-box {
+            box-shadow: none;
+          }
+          table {
+            box-shadow: none;
+          }
+        }
+      `;
+      case 'blackwhite':
+        return `
+        body {
+          font-family: 'Times New Roman', Times, serif;
+          padding: 40px;
+        }
+        @media print {
+          body {
+            padding: 20px;
+            -webkit-print-color-adjust: exact;
+            color-adjust: exact;
+          }
+        }
+          max-width: 800px;
+          margin: 0 auto;
+          direction: ${dir};
+          color: #000;
+          background: white;
+        }
+        .header {
+          text-align: center;
+          margin-bottom: 40px;
+          padding-bottom: 20px;
+          border-bottom: 3px solid #000;
+        }
+        .header h1 {
+          margin: 0;
+          font-size: 2rem;
+          font-weight: bold;
+        }
+        .header p {
+          margin: 5px 0;
+        }
+        .info-section {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 30px;
+        }
+        .info-box {
+          flex: 1;
+        }
+        .info-box h3 {
+          margin-top: 0;
+          border-bottom: 1px solid #000;
+          padding-bottom: 5px;
+          font-weight: bold;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 30px;
+        }
+        th, td {
+          padding: 10px;
+          text-align: ${isRTL ? 'right' : 'left'};
+          border: 1px solid #000;
+        }
+        th {
+          background: #000;
+          color: white;
+          font-weight: bold;
+        }
+        .total-section {
+          text-align: ${isRTL ? 'left' : 'right'};
+          margin-top: 20px;
+        }
+        .total-row {
+          display: flex;
+          justify-content: ${isRTL ? 'flex-start' : 'flex-end'};
+          padding: 8px 0;
+        }
+        .total-row span:first-child {
+          ${isRTL ? 'margin-left' : 'margin-right'}: 40px;
+          font-weight: bold;
+        }
+        .grand-total {
+          font-size: 1.3rem;
+          font-weight: bold;
+          border-top: 2px solid #000;
+          padding-top: 10px;
+          margin-top: 10px;
+        }
+        .footer {
+          text-align: center;
+          margin-top: 50px;
+          padding-top: 20px;
+          border-top: 1px solid #000;
+        }
+        @media print {
+          body {
+            padding: 20px;
+            -webkit-print-color-adjust: exact;
+            color-adjust: exact;
+          }
+        }
+      `;
+      case 'classical':
+      default:
+        return `
         body {
           font-family: Arial, sans-serif;
           padding: 40px;
@@ -2722,8 +2991,22 @@ function generateInvoiceHTML(invoice: Invoice): string {
         @media print {
           body {
             padding: 20px;
+            -webkit-print-color-adjust: exact;
+            color-adjust: exact;
           }
         }
+      `;
+    }
+  };
+  
+  return `
+    <!DOCTYPE html>
+    <html dir="${dir}">
+    <head>
+      <meta charset="UTF-8">
+      <title>${t('sales.invoice')} ${invoice.invoiceId}</title>
+      <style>
+        ${getInvoiceStyle()}
       </style>
     </head>
     <body>
@@ -5436,6 +5719,7 @@ function handleSaveSettings() {
   appSettings.printPaperSize = (document.getElementById('printPaperSizeSelect') as HTMLSelectElement).value;
   appSettings.printOrientation = (document.getElementById('printOrientationSelect') as HTMLSelectElement).value;
   appSettings.printQuality = (document.getElementById('printQualitySelect') as HTMLSelectElement).value;
+  appSettings.invoiceStyle = (document.getElementById('invoiceStyleSelect') as HTMLSelectElement).value as 'classical' | 'modern' | 'blackwhite';
   appSettings.autoBackup = (document.getElementById('autoBackupToggle') as HTMLInputElement).checked;
   appSettings.backupRetention = parseInt((document.getElementById('backupRetentionSelect') as HTMLSelectElement).value);
   appSettings.lowStockNotifications = (document.getElementById('lowStockNotificationsToggle') as HTMLInputElement).checked;
@@ -5477,7 +5761,9 @@ function handleResetSettings() {
     // Print settings defaults
     printPaperSize: 'A4',
     printOrientation: 'portrait',
-    printQuality: 'standard'
+    printQuality: 'standard',
+    // Invoice style default
+    invoiceStyle: 'classical'
   };
 
   // Save and apply settings

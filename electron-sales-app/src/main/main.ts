@@ -681,7 +681,7 @@ ipcMain.handle('show-notification', async (event, options: { title: string; body
 });
 
 // Export and Print handlers
-ipcMain.handle('export-invoice-pdf', async (event, invoice: Invoice) => {
+ipcMain.handle('export-invoice-pdf', async (event, invoice: Invoice, style: 'classical' | 'modern' | 'blackwhite' = 'classical') => {
   try {
     const result = await dialog.showSaveDialog({
       title: 'Export Invoice to PDF',
@@ -693,6 +693,10 @@ ipcMain.handle('export-invoice-pdf', async (event, invoice: Invoice) => {
       return { success: false, message: 'Export cancelled' };
     }
 
+    // For complete consistency with view/print, we should generate HTML and convert to PDF
+    // However, since the HTML generation logic is in the renderer process, we'll need to
+    // either duplicate it here or refactor it into a shared module
+    // For now, we'll keep the existing PDF export but note this limitation
     await ExportHandler.exportInvoiceToPDF(invoice, result.filePath);
     return { success: true, path: result.filePath };
   } catch (error: any) {
@@ -790,15 +794,39 @@ ipcMain.handle('acc-export-csv', async (event, defaultFileName: string, csvConte
 // Generic HTML to PDF export
 ipcMain.handle('export-html-to-pdf', async (event, html: string, defaultFileName: string) => {
   try {
-    const win = new BrowserWindow({ show: false, webPreferences: { nodeIntegration: false, contextIsolation: true } });
+    const win = new BrowserWindow({ 
+      show: false, 
+      webPreferences: { 
+        nodeIntegration: false, 
+        contextIsolation: true,
+        offscreen: true
+      } 
+    });
+    
+    // Wait for the page to be fully loaded before generating PDF
+    const loadPromise = new Promise<void>((resolve) => {
+      win.webContents.on('did-finish-load', () => {
+        // Wait for all resources to be loaded
+        setTimeout(() => resolve(), 1000);
+      });
+    });
+    
     await win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+    await loadPromise;
+    
     const result = await dialog.showSaveDialog({
       title: 'Export to PDF',
       defaultPath: defaultFileName,
       filters: [{ name: 'PDF Files', extensions: ['pdf'] }]
     });
     if (result.canceled || !result.filePath) { win.close(); return { success: false, message: 'Export cancelled' }; }
-    const pdfBuffer = await win.webContents.printToPDF({});
+    
+    // Use printToPDF with options to preserve background graphics
+    const pdfBuffer = await win.webContents.printToPDF({
+      printBackground: true,
+      pageSize: 'A4'
+    });
+    
     fs.writeFileSync(result.filePath, pdfBuffer);
     win.close();
     return { success: true, path: result.filePath };
