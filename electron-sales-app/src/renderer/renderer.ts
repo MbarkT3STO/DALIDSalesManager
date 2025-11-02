@@ -727,6 +727,7 @@ async function initializeApp() {
   loadSettings();
   applySettings();
   setupEventListeners();
+  initializeHeaderFeatures();
   // Automatically use default workbook
   await autoLoadDefaultWorkbook();
 }
@@ -749,6 +750,7 @@ async function autoLoadDefaultWorkbook() {
   }
   if (result.success) {
     await loadWorkbookData();
+    addNotification('System Event', 'Application started and workbook loaded');
   } else {
     showToast('Failed to load workbook: ' + result.message, 'error');
   }
@@ -764,6 +766,7 @@ async function loadWorkbookData() {
       renderAllData();
       checkLowStockAndNotify();
       showToast('Data loaded successfully', 'success');
+      addNotification('System Event', 'Workbook data refreshed');
     } else {
       showToast(result.message || 'Failed to load data', 'error');
     }
@@ -999,6 +1002,76 @@ function switchTab(tabName: string | null) {
   if (tabName === 'users') renderUsers();
   if (tabName === 'settings') renderSettings();
   if (tabName === 'accounting') renderAccounting();
+}
+
+// ============= HEADER NOTIFICATIONS =============
+let notifications: Array<{ id: string; title: string; desc: string; time: string; type?: string }> = [];
+
+function initializeHeaderFeatures() {
+  // Notification bell toggle
+  const notificationBtn = document.getElementById('notificationBtn');
+  const notificationDropdown = document.getElementById('notificationDropdown');
+  const clearNotificationsBtn = document.getElementById('clearNotificationsBtn');
+  
+  if (notificationBtn) {
+    notificationBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      notificationDropdown?.classList.toggle('active');
+    });
+  }
+  
+  if (clearNotificationsBtn) {
+    clearNotificationsBtn.addEventListener('click', () => {
+      clearAllNotifications();
+    });
+  }
+  
+  // Close dropdown when clicking outside
+  document.addEventListener('click', () => {
+    if (notificationDropdown) {
+      notificationDropdown.classList.remove('active');
+    }
+  });
+}
+
+function addNotification(title: string, desc: string, type?: string) {
+  const id = 'notif-' + Date.now();
+  const now = new Date();
+  const time = now.toLocaleTimeString();
+  
+  notifications.unshift({ id, title, desc, time, type });
+  if (notifications.length > 15) notifications.pop();
+  
+  updateNotificationDisplay();
+}
+
+function updateNotificationDisplay() {
+  const notificationList = document.getElementById('notificationList');
+  const notificationBadge = document.getElementById('notificationBadge') as HTMLElement;
+  
+  if (!notificationList) return;
+  
+  if (notifications.length === 0) {
+    notificationList.innerHTML = `<p class="notification-empty" data-translate="common.noNotifications">No new notifications</p>`;
+    notificationBadge.style.display = 'none';
+    return;
+  }
+  
+  notificationBadge.style.display = 'flex';
+  notificationBadge.textContent = notifications.length.toString();
+  
+  notificationList.innerHTML = notifications.map(n => `
+    <div class="notification-item">
+      <div class="notification-item-title">${n.title}</div>
+      <div class="notification-item-desc">${n.desc}</div>
+      <div class="notification-item-time">${n.time}</div>
+    </div>
+  `).join('');
+}
+
+function clearAllNotifications() {
+  notifications = [];
+  updateNotificationDisplay();
 }
 
 // Theme toggle
@@ -1690,6 +1763,7 @@ async function handleProductSubmit(e: Event) {
 
     if (result.success) {
       showToast(`Product ${currentEditingProduct ? 'updated' : 'added'} successfully`, 'success');
+      addNotification('Product', currentEditingProduct ? 'Product updated successfully' : 'Product added successfully');
       closeModal('productModal');
       await loadWorkbookData();
     } else {
@@ -1716,6 +1790,7 @@ async function handleProductSubmit(e: Event) {
     const result = await api.deleteProduct(productName);
     if (result.success) {
       showToast('Product deleted successfully', 'success');
+      addNotification('Product Deleted', `Product "${productName}" deleted`);
       await loadWorkbookData();
     } else {
       showToast(result.message || 'Failed to delete product', 'error');
@@ -1771,6 +1846,7 @@ function openDeletedProductsModal() {
     const result = await api.restoreProduct(productName);
     if (result.success) {
       showToast('Product restored successfully', 'success');
+      addNotification('Product Restored', `Product "${productName}" restored`);
       await loadWorkbookData();
       // Refresh the deleted products modal if it's still open
       openDeletedProductsModal();
@@ -1924,6 +2000,7 @@ async function handleCustomerSubmit(e: Event) {
 
     if (result.success) {
       showToast(`Customer ${currentEditingCustomer ? 'updated' : 'added'} successfully`, 'success');
+      addNotification('Customer', currentEditingCustomer ? `Customer "${name}" updated successfully` : `Customer "${name}" added successfully`);
       closeModal('customerModal');
       await loadWorkbookData();
     } else {
@@ -1950,6 +2027,7 @@ async function handleCustomerSubmit(e: Event) {
     const result = await api.deleteCustomer(customerName);
     if (result.success) {
       showToast('Customer deleted successfully', 'success');
+      addNotification('Customer Deleted', `Customer "${customerName}" deleted`);
       await loadWorkbookData();
     } else {
       showToast(result.message || 'Failed to delete customer', 'error');
@@ -2603,6 +2681,7 @@ async function saveInvoice() {
     const result = await api.saveInvoice(invoice);
     if (result.success) {
       showToast('Invoice saved successfully', 'success');
+      addNotification('Invoice Created', `Invoice ${invoiceId} created for ${customerName} (${status})`);
       closeModal('invoiceModal');
       await loadWorkbookData();
     } else {
@@ -3200,6 +3279,7 @@ async function renderUsers() {
     const result = await api.deleteUser(username);
     if (result.success) {
       showToast('User deleted successfully');
+      addNotification('User Actions', `User "${username}" deleted`);
       await loadWorkbookData();
     } else {
       showToast(result.message || 'Failed to delete user', 'error');
@@ -3275,6 +3355,8 @@ if (userModal) {
 
   if (result.success) {
     showToast(`User ${mode === 'edit' ? 'updated' : 'added'} successfully`);
+    const action = mode === 'edit' ? 'updated' : 'added';
+    addNotification('User Actions', `User "${user.username}" ${action} (${user.role})`);
     (document as any).getElementById('userModal').style.display = 'none';
     await loadWorkbookData();
   } else {
@@ -5518,6 +5600,7 @@ editStatusForm?.addEventListener('submit', async (e: any) => {
   
   if (result.success) {
     showToast('Invoice status updated successfully', 'success');
+    addNotification('Invoice Status Updated', `Invoice ${currentEditInvoiceId} status changed to ${newStatus}`);
     editStatusModal.classList.remove('active');
     await loadWorkbookData();
   } else {
@@ -5678,6 +5761,9 @@ async function checkLowStockAndNotify() {
       title: '⚠️ Low Stock Alert',
       body: notificationText
     });
+    
+    // Add to notification list
+    addNotification('Low Stock Alert', `${lowStockProducts.length} product(s) have low stock levels`);
   }
 }
 
@@ -5736,6 +5822,7 @@ function handleSaveSettings() {
   applySettings();
   
   showToast(t('settings.settingsSaved', 'Settings saved successfully'), 'success');
+  addNotification('System Event', 'Application settings saved');
 }
 
 function handleResetSettings() {

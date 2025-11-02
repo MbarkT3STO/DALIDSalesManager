@@ -92,7 +92,9 @@
     "toggleTheme": "تبديل المظهر",
     "refreshData": "تحديث البيانات",
     "saveCopy": "حفظ نسخة",
-    "logout": "تسجيل الخروج"
+    "logout": "تسجيل الخروج",
+    "notifications": "الإخطارات",
+    "noNotifications": "لا توجد إخطارات جديدة"
   },
   "dashboard": {
     "title": "لوحة التحكم",

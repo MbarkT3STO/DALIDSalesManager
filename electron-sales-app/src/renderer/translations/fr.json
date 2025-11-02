@@ -92,7 +92,9 @@
     "toggleTheme": "Changer le thème",
     "refreshData": "Actualiser les données",
     "saveCopy": "Enregistrer une copie",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "notifications": "Notifications",
+    "noNotifications": "Aucune nouvelle notification"
   },
   "dashboard": {
     "title": "Tableau de bord",

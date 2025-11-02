@@ -92,7 +92,9 @@
     "toggleTheme": "Toggle Theme",
     "refreshData": "Refresh Data",
     "saveCopy": "Save a Copy",
-    "logout": "Logout"
+    "logout": "Logout",
+    "notifications": "Notifications",
+    "noNotifications": "No new notifications"
   },
   "dashboard": {
     "title": "Dashboard",
