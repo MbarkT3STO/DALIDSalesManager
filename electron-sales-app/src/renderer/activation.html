@@ -2,95 +2,665 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Activate DALID Sales Manager</title>
-  <link rel="stylesheet" href="styles.css">
+  <script>
+    // Initialize theme on page load
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+    initTheme();
+  </script>
   <style>
-    body { background: radial-gradient(80rem 80rem at 10% -10%, rgba(99,102,241,.12), transparent), radial-gradient(60rem 60rem at 110% 10%, rgba(124,58,237,.12), transparent), var(--bg-secondary); }
-    .activation-wrapper { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
-    .activation-card { max-width: 720px; width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-2xl); box-shadow: var(--shadow-xl); overflow: hidden; transition: transform .2s ease, box-shadow .2s ease; }
-    .activation-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-2xl); }
-    .activation-hero { background: var(--primary-gradient); padding: 28px; color: var(--text-inverse); display: flex; gap: 16px; align-items: center; }
-    .hero-icon { width: 48px; height: 48px; display: inline-flex; align-items: center; justify-content: center; border-radius: 14px; background: rgba(255,255,255,.15); box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); }
-    .activation-hero h1 { margin: 0 0 6px 0; font-size: 1.9rem; letter-spacing: -.02em; }
-    .activation-hero p { margin: 0; opacity: .95; }
-    .activation-body { padding: 28px; display: grid; gap: 18px; }
-    .device-id-box { background: var(--bg-secondary); border: 1px dashed var(--border-color); border-radius: var(--radius-xl); padding: 12px 14px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; display: flex; align-items: center; justify-content: space-between; overflow:auto; }
-    .note { color: var(--text-secondary); font-size: .95rem; line-height: 1.6; }
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none; align-items: center; justify-content: center; z-index: 2000; }
-    .modal-overlay.active { display: flex; }
-    /* Override global .modal from app styles to ensure visibility inside overlay */
-    .modal-overlay .modal { display: block; position: relative; }
-    .modal { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-2xl); box-shadow: var(--shadow-2xl); width: 95%; max-width: 760px; overflow: hidden; animation: pop .18s ease-out; }
-    .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: linear-gradient(180deg, rgba(99,102,241,.08), transparent); }
-    .modal-body { padding: 20px; display: grid; gap: 14px; }
-    @keyframes pop { from { transform: scale(.98); opacity: .8; } to { transform: scale(1); opacity: 1; } }
+    /* ============================================
+       MODERN ACTIVATION PAGE - RESPONSIVE DESIGN
+       ============================================ */
 
-    /* Responsive tweaks */
-    @media (max-width: 640px) {
-      .activation-hero { flex-direction: column; align-items: flex-start; }
-      .activation-body { padding: 20px; }
-      .activation-card { border-radius: var(--radius-xl); }
-      .modal { max-width: 95vw; }
-      .device-id-box code { font-size: .85rem; }
-      .activation-body .btn { width: 100%; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --act-bg: #f8fafc;
+      --act-card-bg: #ffffff;
+      --act-text-primary: #0f172a;
+      --act-text-secondary: #64748b;
+      --act-text-muted: #94a3b8;
+      --act-border: #e2e8f0;
+      --act-input-bg: #f1f5f9;
+      --act-shadow: rgba(0, 0, 0, 0.08);
+      --act-shadow-lg: rgba(0, 0, 0, 0.12);
+      --act-accent: #7c3aed;
+      --act-accent-hover: #6d28d9;
+      --act-success: #10b981;
+      --act-error: #ef4444;
+      --act-warning: #f59e0b;
+      --act-gradient-start: #7c3aed;
+      --act-gradient-end: #ec4899;
+    }
+
+    [data-theme="dark"] {
+      --act-bg: #0f172a;
+      --act-card-bg: #1e293b;
+      --act-text-primary: #f1f5f9;
+      --act-text-secondary: #cbd5e1;
+      --act-text-muted: #94a3b8;
+      --act-border: #334155;
+      --act-input-bg: #334155;
+      --act-shadow: rgba(0, 0, 0, 0.25);
+      --act-shadow-lg: rgba(0, 0, 0, 0.35);
+      --act-accent: #8b5cf6;
+      --act-accent-hover: #7c3aed;
+      --act-success: #34d399;
+      --act-error: #f87171;
+      --act-warning: #fbbf24;
+      --act-gradient-start: #8b5cf6;
+      --act-gradient-end: #ec4899;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: var(--act-bg);
+      color: var(--act-text-primary);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    /* Activation Wrapper */
+    .activation-wrapper {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Main Card */
+    .activation-card {
+      background: var(--act-card-bg);
+      border: 1px solid var(--act-border);
+      border-radius: 24px;
+      box-shadow: 0 20px 50px var(--act-shadow);
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      animation: slideUp 0.5s ease-out;
+    }
+
+    .activation-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 25px 60px var(--act-shadow-lg);
+    }
+
+    /* Hero Section */
+    .activation-hero {
+      background: linear-gradient(135deg, var(--act-gradient-start) 0%, var(--act-gradient-end) 100%);
+      color: white;
+      padding: 48px 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .activation-hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+      transform: rotate(30deg);
+    }
+
+    .hero-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(10px);
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-icon svg {
+      width: 44px;
+      height: 44px;
+      color: white;
+    }
+
+    .activation-hero h1 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .activation-hero p {
+      font-size: 1.125rem;
+      opacity: 0.95;
+      position: relative;
+      z-index: 1;
+      max-width: 500px;
+      margin: 0 auto;
+      line-height: 1.5;
+    }
+
+    /* Body Section */
+    .activation-body {
+      padding: 48px 40px;
+      display: grid;
+      gap: 32px;
+    }
+
+    .activation-section {
+      display: grid;
+      gap: 16px;
+    }
+
+    .section-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--act-text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--act-gradient-start) 0%, var(--act-gradient-end) 100%);
+      border-radius: 8px;
+      color: white;
+    }
+
+    /* Device ID Box */
+    .device-id-box, .key-box {
+      background: var(--act-input-bg);
+      border: 1px solid var(--act-border);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      transition: all 0.2s ease;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      overflow: hidden;
+    }
+
+    .device-id-box:focus-within, .key-box:focus-within {
+      border-color: var(--act-accent);
+      background: var(--act-card-bg);
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+    }
+
+    .device-id-box code, .key-box code {
+      font-size: 0.95rem;
+      color: var(--act-text-primary);
+      word-break: break-all;
+      flex: 1;
+      overflow-x: auto;
+    }
+
+    .copy-btn {
+      padding: 10px 16px;
+      background: var(--act-accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .copy-btn:hover {
+      background: var(--act-accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .copy-btn:active {
+      transform: translateY(0);
+    }
+
+    .copy-btn.copied {
+      background: var(--act-success);
+    }
+
+    /* Note Text */
+    .note {
+      color: var(--act-text-secondary);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    /* Input Field */
+    .form-control {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid var(--act-border);
+      border-radius: 12px;
+      background: var(--act-input-bg);
+      color: var(--act-text-primary);
+      font-size: 1rem;
+      font-family: inherit;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .form-control:focus {
+      border-color: var(--act-accent);
+      background: var(--act-card-bg);
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+    }
+
+    .form-control::placeholder {
+      color: var(--act-text-muted);
+    }
+
+    /* Button Styles */
+    .button-group {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--act-gradient-start) 0%, var(--act-gradient-end) 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+      min-width: 140px;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: var(--act-input-bg);
+      color: var(--act-text-primary);
+      border: 1px solid var(--act-border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--act-border);
+      border-color: var(--act-text-secondary);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 20px;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--act-card-bg);
+      border: 1px solid var(--act-border);
+      border-radius: 20px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 600px;
+      overflow: hidden;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    .modal-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--act-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(180deg, rgba(124, 58, 237, 0.08), transparent);
+    }
+
+    .modal-header strong {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--act-text-primary);
+    }
+
+    .modal-close-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: transparent;
+      color: var(--act-text-secondary);
+      cursor: pointer;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .modal-close-btn:hover {
+      background: var(--act-input-bg);
+      color: var(--act-text-primary);
+    }
+
+    .modal-body {
+      padding: 24px;
+      display: grid;
+      gap: 20px;
+    }
+
+    .form-group {
+      display: grid;
+      gap: 8px;
+    }
+
+    .form-label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--act-text-primary);
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      padding-top: 12px;
+    }
+
+    /* Animations */
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* Status Message */
+    .status-message {
+      padding: 16px 20px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    .status-message.success {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--act-success);
+      border: 1px solid var(--act-success);
+    }
+
+    .status-message.error {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--act-error);
+      border: 1px solid var(--act-error);
+    }
+
+    .status-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      body {
+        padding: 15px;
+      }
+
+      .activation-card {
+        border-radius: 20px;
+      }
+
+      .activation-hero {
+        padding: 36px 24px;
+      }
+
+      .activation-hero h1 {
+        font-size: 1.75rem;
+      }
+
+      .activation-hero p {
+        font-size: 1rem;
+      }
+
+      .activation-body {
+        padding: 32px 24px;
+        gap: 24px;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
+
+      .device-id-box, .key-box {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .copy-btn {
+        width: 100%;
+      }
+
+      .modal {
+        max-width: 95vw;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .activation-hero {
+        padding: 28px 16px;
+      }
+
+      .activation-hero h1 {
+        font-size: 1.5rem;
+      }
+
+      .activation-body {
+        padding: 24px 16px;
+      }
+
+      .button-group {
+        gap: 8px;
+      }
+
+      .hero-icon {
+        width: 64px;
+        height: 64px;
+        margin-bottom: 16px;
+      }
+
+      .hero-icon svg {
+        width: 36px;
+        height: 36px;
+      }
+
+      .device-id-box code, .key-box code {
+        font-size: 0.85rem;
+      }
     }
   </style>
 </head>
 <body>
   <div class="activation-wrapper">
+    <!-- Main Activation Card -->
     <div class="activation-card">
+      <!-- Hero Section -->
       <div class="activation-hero">
         <div class="hero-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 1v6"/>
-            <path d="M5.5 10.5l-4.5 4.5 4.5 4.5"/>
-            <path d="M18.5 10.5l4.5 4.5-4.5 4.5"/>
-            <rect x="3" y="8" width="18" height="8" rx="2"/>
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v6m0 4v6"/>
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6m0 0v6M8 12h8"/>
           </svg>
         </div>
         <h1>Activation Required</h1>
-        <p>DALID Sales Manager needs to be activated to continue.</p>
+        <p>DALID Sales Manager needs to be activated before you can continue</p>
       </div>
+
+      <!-- Body Content -->
       <div class="activation-body">
-        <p class="note">This copy of DALID Sales Manager is not activated. Please activate to continue.</p>
-        <div style="display:flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
-          <button id="quitAppBtn" class="btn btn-secondary">Quit</button>
+        <!-- Intro Section -->
+        <div class="activation-section">
+          <div class="section-title">
+            <div class="section-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/>
+              </svg>
+            </div>
+            Get Started
+          </div>
+          <p class="note">Your copy of DALID Sales Manager requires activation to function. Click the button below to proceed with the activation process.</p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="button-group">
+          <button id="quitAppBtn" class="btn btn-secondary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 6l-12 12M6 6l12 12"/>
+            </svg>
+            Quit
+          </button>
+          <button id="openActivationModalBtn" class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 1v6"/>
+              <path d="M5.5 10.5l-4.5 4.5 4.5 4.5"/>
+              <path d="M18.5 10.5l4.5 4.5-4.5 4.5"/>
+              <rect x="3" y="8" width="18" height="8" rx="2"/>
+            </svg>
+            Activate Now
+          </button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Secret Modal -->
+  <!-- Activation Modal -->
   <div id="activationModal" class="modal-overlay">
     <div class="modal">
+      <!-- Modal Header -->
       <div class="modal-header">
-        <strong>Enter Activation Key</strong>
-        <button id="closeModalBtn" class="btn btn-icon">✕</button>
+        <strong>Activation</strong>
+        <button id="closeModalBtn" class="modal-close-btn" title="Close">✕</button>
       </div>
+
+      <!-- Modal Body -->
       <div class="modal-body">
+        <!-- Device ID Section -->
         <div class="form-group">
-          <label>Your Device ID</label>
+          <label class="form-label">Your Device ID</label>
           <div class="device-id-box">
             <code id="deviceId">Loading…</code>
-            <button id="copyDeviceIdBtn" class="btn btn-secondary btn-small">Copy</button>
+            <button id="copyDeviceIdBtn" class="copy-btn">Copy ID</button>
           </div>
-          <p class="note">Provide this Device ID to receive an activation key.</p>
+          <p class="note">Provide this Device ID to receive an activation key from your administrator.</p>
         </div>
+
+        <!-- Generated Key Section -->
         <div class="form-group">
-          <label>Your Activation Key (generated)</label>
-          <div class="device-id-box">
+          <label class="form-label">Generated Activation Key</label>
+          <div class="key-box">
             <code id="generatedKey">Loading…</code>
-            <button id="copyGeneratedKeyBtn" class="btn btn-secondary btn-small">Copy</button>
+            <button id="copyGeneratedKeyBtn" class="copy-btn">Copy Key</button>
           </div>
-          <p class="note">Copy and paste this key below to activate.</p>
+          <p class="note">This is your generated activation key. Copy it to paste in the field below.</p>
         </div>
+
+        <!-- Activation Key Input -->
         <div class="form-group">
-          <label>Activation Key</label>
-          <input type="text" id="modalActivationKey" class="form-control" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX">
+          <label class="form-label">Enter Activation Key</label>
+          <input type="text" id="modalActivationKey" class="form-control" placeholder="Enter your activation key here" autocomplete="off">
+          <p class="note">Paste the activation key you received and click Activate.</p>
         </div>
-        <div style="display:flex; gap: 10px; justify-content:flex-end; flex-wrap: wrap;">
-          <button id="modalActivateBtn" class="btn btn-primary" style="min-width: 140px;">Activate</button>
+
+        <!-- Status Message (Hidden by default) -->
+        <div id="activationStatus" class="status-message" style="display: none;"></div>
+
+        <!-- Modal Footer -->
+        <div class="modal-footer">
+          <button id="cancelModalBtn" class="btn btn-secondary">Cancel</button>
+          <button id="modalActivateBtn" class="btn btn-primary">Activate</button>
         </div>
       </div>
     </div>
@@ -98,54 +668,171 @@
 
   <script>
     const api = window.electronAPI;
-    document.getElementById('quitAppBtn').addEventListener('click', () => {
-      window.close();
-    });
 
-    // Secret modal controls
-    const overlay = document.getElementById('activationModal');
-    document.getElementById('closeModalBtn').addEventListener('click', () => overlay.classList.remove('active'));
-    document.getElementById('modalActivateBtn').addEventListener('click', async () => {
-      const key = (document.getElementById('modalActivationKey')).value.trim();
-      const res = await api.activateApp(key);
-      if (!res.success) {
-        if (window.showError) window.showError('Invalid Key', res.message || 'Activation failed');
+    // DOM Elements
+    const activationModal = document.getElementById('activationModal');
+    const openActivationModalBtn = document.getElementById('openActivationModalBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const cancelModalBtn = document.getElementById('cancelModalBtn');
+    const quitAppBtn = document.getElementById('quitAppBtn');
+    const modalActivateBtn = document.getElementById('modalActivateBtn');
+    const modalActivationKeyInput = document.getElementById('modalActivationKey');
+    const copyDeviceIdBtn = document.getElementById('copyDeviceIdBtn');
+    const copyGeneratedKeyBtn = document.getElementById('copyGeneratedKeyBtn');
+    const activationStatus = document.getElementById('activationStatus');
+
+    // Utility Functions
+    function showStatus(message, type = 'success') {
+      activationStatus.textContent = '';
+      activationStatus.className = `status-message ${type}`;
+      
+      const icon = document.createElement('svg');
+      icon.className = 'status-icon';
+      icon.setAttribute('viewBox', '0 0 24 24');
+      icon.setAttribute('fill', 'none');
+      icon.setAttribute('stroke', 'currentColor');
+      icon.setAttribute('stroke-width', '2');
+      
+      if (type === 'success') {
+        icon.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
+      } else if (type === 'error') {
+        icon.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>';
+      }
+      
+      activationStatus.appendChild(icon);
+      const textSpan = document.createElement('span');
+      textSpan.textContent = message;
+      activationStatus.appendChild(textSpan);
+      activationStatus.style.display = 'flex';
+      
+      if (type === 'success') {
+        setTimeout(() => {
+          activationStatus.style.display = 'none';
+        }, 3000);
+      }
+    }
+
+    function hideStatus() {
+      activationStatus.style.display = 'none';
+    }
+
+    function copyToClipboard(text, label) {
+      navigator.clipboard.writeText(text).then(() => {
+        showStatus(`${label} copied to clipboard!`, 'success');
+      }).catch(() => {
+        showStatus(`Failed to copy ${label}`, 'error');
+      });
+    }
+
+    function openActivationModal() {
+      activationModal.classList.add('active');
+      hideStatus();
+      modalActivationKeyInput.value = '';
+      modalActivationKeyInput.focus();
+      
+      // Load device ID and generated key
+      api.getActivationStatus().then(res => {
+        if (res.success && res.deviceId) {
+          document.getElementById('deviceId').textContent = res.deviceId;
+        }
+      }).catch(() => {
+        document.getElementById('deviceId').textContent = 'Error loading';
+      });
+      
+      api.getActivationKey().then(res => {
+        if (res.success && res.key) {
+          document.getElementById('generatedKey').textContent = res.key;
+          modalActivationKeyInput.value = res.key;
+        }
+      }).catch(() => {
+        document.getElementById('generatedKey').textContent = 'Error loading';
+      });
+    }
+
+    function closeActivationModal() {
+      activationModal.classList.remove('active');
+      hideStatus();
+    }
+
+    // Event Listeners
+    openActivationModalBtn.addEventListener('click', openActivationModal);
+    closeModalBtn.addEventListener('click', closeActivationModal);
+    cancelModalBtn.addEventListener('click', closeActivationModal);
+    
+    // Close modal when clicking on overlay
+    activationModal.addEventListener('click', (e) => {
+      if (e.target === activationModal) {
+        closeActivationModal();
       }
     });
 
-    api.onOpenActivationModal(() => {
-      overlay.classList.add('active');
-      // Populate device id and generated key when opening
-      api.getActivationStatus().then(res => {
-        if (res.success) {
-          const el = document.getElementById('deviceId');
-          if (el) el.textContent = res.deviceId;
-        }
-      });
-      api.getActivationKey().then(res => {
-        if (res.success) {
-          const keyEl = document.getElementById('generatedKey');
-          if (keyEl) keyEl.textContent = res.key;
-          const input = document.getElementById('modalActivationKey');
-          if (input) input.value = res.key;
-        }
-      });
+    quitAppBtn.addEventListener('click', () => {
+      window.close();
     });
 
-    document.getElementById('copyDeviceIdBtn').addEventListener('click', async () => {
+    // Activation Button Handler
+    modalActivateBtn.addEventListener('click', async () => {
+      const key = modalActivationKeyInput.value.trim();
+      
+      if (!key) {
+        showStatus('Please enter an activation key', 'error');
+        return;
+      }
+
+      modalActivateBtn.disabled = true;
+      
       try {
-        const text = document.getElementById('deviceId').textContent;
-        await navigator.clipboard.writeText(text);
-        if (window.showSuccess) window.showSuccess('Copied', 'Device ID copied');
-      } catch {}
+        const res = await api.activateApp(key);
+        
+        if (res.success) {
+          showStatus('Activation successful! Restarting...', 'success');
+          setTimeout(() => {
+            window.close();
+          }, 2000);
+        } else {
+          showStatus(res.message || 'Activation failed. Please try again.', 'error');
+          modalActivateBtn.disabled = false;
+        }
+      } catch (error) {
+        showStatus('Error during activation. Please try again.', 'error');
+        modalActivateBtn.disabled = false;
+      }
     });
 
-    document.getElementById('copyGeneratedKeyBtn').addEventListener('click', async () => {
-      try {
-        const text = document.getElementById('generatedKey').textContent;
-        await navigator.clipboard.writeText(text);
-        if (window.showSuccess) window.showSuccess('Copied', 'Activation key copied');
-      } catch {}
+    // Copy Button Handlers
+    copyDeviceIdBtn.addEventListener('click', () => {
+      const deviceId = document.getElementById('deviceId').textContent;
+      if (deviceId && deviceId !== 'Loading…' && deviceId !== 'Error loading') {
+        copyToClipboard(deviceId, 'Device ID');
+      }
+    });
+
+    copyGeneratedKeyBtn.addEventListener('click', () => {
+      const key = document.getElementById('generatedKey').textContent;
+      if (key && key !== 'Loading…' && key !== 'Error loading') {
+        copyToClipboard(key, 'Activation Key');
+      }
+    });
+
+    // Support API callback for opening modal from main process
+    if (api && api.onOpenActivationModal) {
+      api.onOpenActivationModal(() => {
+        openActivationModal();
+      });
+    }
+
+    // Allow Enter key to activate
+    modalActivationKeyInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        modalActivateBtn.click();
+      }
+    });
+
+    // Allow Escape key to close modal
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && activationModal.classList.contains('active')) {
+        closeActivationModal();
+      }
     });
   </script>
 </body>

@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "Gestionnaire de Ventes",
-    "subtitle": "Bon retour ! Veuillez vous connecter pour continuer"
+    "subtitle": "Solution professionnelle de gestion des ventes pour les entreprises modernes"
   },
   "navigation": {
     "dashboard": "Tableau de bord",
@@ -468,7 +468,11 @@
     "invalidCredentials": "Nom d'utilisateur ou mot de passe invalide",
     "admin": "Administrateur",
     "manager": "Gestionnaire",
-    "cashier": "Caissier"
+    "cashier": "Caissier",
+    "whyChoose": "Pourquoi choisir DALID?",
+    "featureCustomer": "Organisez et suivez tous vos clients",
+    "featureInvoice": "Créez et gérez des factures professionnelles",
+    "featureAnalytics": "Obtenez des informations avec des analyses détaillées"
   },
   "gdpr": {
     "title": "RGPD & Confidentialité des données",

@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "Sales Manager",
-    "subtitle": "Welcome back! Please login to continue"
+    "subtitle": "Professional sales management solution for modern businesses"
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -473,7 +473,11 @@
     "invalidCredentials": "Invalid username or password",
     "admin": "Admin",
     "manager": "Manager",
-    "cashier": "Cashier"
+    "cashier": "Cashier",
+    "whyChoose": "Why Choose DALID?",
+    "featureCustomer": "Organize and track all your customers",
+    "featureInvoice": "Create and manage professional invoices",
+    "featureAnalytics": "Gain insights with detailed analytics"
   },
   "gdpr": {
     "title": "GDPR & Data Privacy",
