@@ -669,6 +669,57 @@
                 </div>
             </div>
 
+            <!-- Notification Details Modal -->
+            <div id="notificationDetailsModal" class="modal">
+                <div class="modal-content modal-medium">
+                    <div class="modal-header">
+                        <h2 id="notificationModalTitle" data-translate="notifications.modalTitle">Notification Details</h2>
+                        <button class="modal-close">&times;</button>
+                    </div>
+                    <div class="modal-form">
+                        <div class="notification-details-container" id="notificationDetailsContent">
+                            <div class="notification-detail-item">
+                                <div class="detail-label" data-translate="notifications.title">Title</div>
+                                <div class="detail-value" id="notificationModalTitleValue" style="font-weight: 700;"></div>
+                            </div>
+                            <div class="notification-detail-item">
+                                <div class="detail-label" data-translate="notifications.description">Description</div>
+                                <div class="detail-value" id="notificationModalDesc"></div>
+                            </div>
+                            <div class="notification-detail-item" id="notificationModalDetailsContainer" style="display: none;">
+                                <div class="detail-label" data-translate="notifications.details">Details</div>
+                                <div class="detail-value" id="notificationModalDetails"></div>
+                            </div>
+                            <div class="notification-detail-item">
+                                <div class="detail-label" data-translate="notifications.time">Time</div>
+                                <div class="detail-value" id="notificationModalTime"></div>
+                            </div>
+                        </div>
+                        <!-- Low Stock Products Table (shown when applicable) -->
+                        <div id="lowStockTableContainer" style="display: none; margin-top: 1.5rem;">
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th data-translate="common.product">Product</th>
+                                            <th data-translate="common.quantity">Quantity</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="notificationLowStockBody">
+                                        <tr>
+                                            <td colspan="2" class="empty-state" data-translate="common.allStocked">All products are well stocked</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="btn btn-secondary modal-cancel" data-translate="common.close">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Deleted Products Modal -->
             <div id="deletedProductsModal" class="modal">
                 <div class="modal-content">

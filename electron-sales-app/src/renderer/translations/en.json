@@ -94,7 +94,26 @@
     "saveCopy": "Save a Copy",
     "logout": "Logout",
     "notifications": "Notifications",
-    "noNotifications": "No new notifications"
+    "noNotifications": "No new notifications",
+    "title": "Title",
+    "details": "Details",
+    "time": "Time"
+  },
+  "notifications": {
+    "modalTitle": "Notification Details",
+    "title": "Title",
+    "description": "Description",
+    "details": "Details",
+    "time": "Time",
+    "lowStockAlert": "Low Stock Alert",
+    "lowStockMessage": "%d product(s) have low stock levels",
+    "systemEvent": "System Event",
+    "appStarted": "Application started and workbook loaded",
+    "dataRefreshed": "Workbook data refreshed",
+    "settingsSaved": "Application settings saved",
+    "appStartedDetails": "Your Sales Manager application is ready to use with all data loaded successfully.",
+    "dataRefreshedDetails": "All business data has been refreshed and updated from the database.",
+    "settingsSavedDetails": "Your application settings have been updated and saved successfully."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -240,6 +259,7 @@
     "totalStockItems": "Total Items In Stock",
     "totalStockValue": "Total Stock Value",
     "lowStockItems": "Low Stock Items",
+    "lowStockProducts": "product(s) have low stock levels",
     "recentMovements": "Recent Stock Movements",
     "type": "Type",
     "noMovements": "No inventory movements yet",

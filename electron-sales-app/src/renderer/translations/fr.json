@@ -94,7 +94,26 @@
     "saveCopy": "Enregistrer une copie",
     "logout": "Déconnexion",
     "notifications": "Notifications",
-    "noNotifications": "Aucune nouvelle notification"
+    "noNotifications": "Aucune nouvelle notification",
+    "title": "Titre",
+    "details": "Détails",
+    "time": "Heure"
+  },
+  "notifications": {
+    "modalTitle": "Détails de la notification",
+    "title": "Titre",
+    "description": "Description",
+    "details": "Détails",
+    "time": "Heure",
+    "lowStockAlert": "Alerte de stock faible",
+    "lowStockMessage": "%d produit(s) ont un stock faible",
+    "systemEvent": "Événement système",
+    "appStarted": "Application démarrée et classeur chargé",
+    "dataRefreshed": "Données du classeur actualisées",
+    "settingsSaved": "Paramètres de l'application enregistrés",
+    "appStartedDetails": "Votre application Sales Manager est prête à être utilisée avec toutes les données chargées avec succès.",
+    "dataRefreshedDetails": "Toutes les données commerciales ont été actualisées et mises à jour à partir de la base de données.",
+    "settingsSavedDetails": "Vos paramètres d'application ont été mis à jour et enregistrés avec succès."
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -237,6 +256,7 @@
     "totalStockItems": "Total des articles en stock",
     "totalStockValue": "Valeur totale du stock",
     "lowStockItems": "Articles en stock faible",
+    "lowStockProducts": "produit(s) ont un stock faible",
     "recentMovements": "Mouvements de stock récents",
     "type": "Type",
     "noMovements": "Aucun mouvement d'inventaire pour le moment",

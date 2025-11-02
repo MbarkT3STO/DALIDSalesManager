@@ -750,7 +750,7 @@ async function autoLoadDefaultWorkbook() {
   }
   if (result.success) {
     await loadWorkbookData();
-    addNotification('System Event', 'Application started and workbook loaded');
+   addNotification(t('notifications.systemEvent'), t('notifications.appStarted'), undefined, 'system', t('notifications.appStartedDetails'));
   } else {
     showToast('Failed to load workbook: ' + result.message, 'error');
   }
@@ -766,7 +766,7 @@ async function loadWorkbookData() {
       renderAllData();
       checkLowStockAndNotify();
       showToast('Data loaded successfully', 'success');
-      addNotification('System Event', 'Workbook data refreshed');
+      addNotification(t('notifications.systemEvent'), t('notifications.dataRefreshed'), undefined, 'system', t('notifications.dataRefreshedDetails'));
     } else {
       showToast(result.message || 'Failed to load data', 'error');
     }
@@ -1005,7 +1005,7 @@ function switchTab(tabName: string | null) {
 }
 
 // ============= HEADER NOTIFICATIONS =============
-let notifications: Array<{ id: string; title: string; desc: string; time: string; type?: string }> = [];
+let notifications: Array<{ id: string; title: string; desc: string; time: string; type?: string; details?: string; category?: string }> = [];
 
 function initializeHeaderFeatures() {
   // Notification bell toggle
@@ -1034,12 +1034,12 @@ function initializeHeaderFeatures() {
   });
 }
 
-function addNotification(title: string, desc: string, type?: string) {
+function addNotification(title: string, desc: string, type?: string, category?: string, details?: string) {
   const id = 'notif-' + Date.now();
   const now = new Date();
   const time = now.toLocaleTimeString();
   
-  notifications.unshift({ id, title, desc, time, type });
+  notifications.unshift({ id, title, desc, time, type, category, details });
   if (notifications.length > 15) notifications.pop();
   
   updateNotificationDisplay();
@@ -1060,18 +1060,90 @@ function updateNotificationDisplay() {
   notificationBadge.style.display = 'flex';
   notificationBadge.textContent = notifications.length.toString();
   
-  notificationList.innerHTML = notifications.map(n => `
-    <div class="notification-item">
-      <div class="notification-item-title">${n.title}</div>
-      <div class="notification-item-desc">${n.desc}</div>
-      <div class="notification-item-time">${n.time}</div>
-    </div>
-  `).join('');
+  notificationList.innerHTML = notifications.map((n, idx) => {
+    const isClickable = n.category === 'lowStock' || n.category === 'system';
+    const clickHandler = isClickable ? `onclick="showNotificationDetails(${idx})"` : '';
+    const cursor = isClickable ? 'style="cursor: pointer;"' : '';
+    const isLowStock = n.category === 'lowStock';
+    const lowStockClass = isLowStock ? 'notification-item-important' : '';
+    
+    return `
+      <div class="notification-item ${lowStockClass}" ${cursor} ${clickHandler}>
+        <div class="notification-item-header">
+          ${isLowStock ? '<div class="notification-importance-indicator"><svg width="16" height="16" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="2"><path d="M12 2L2 20h20Z"/></svg></div>' : ''}
+          <div class="notification-item-title">${n.title}</div>
+        </div>
+        <div class="notification-item-desc">${n.desc}</div>
+        <div class="notification-item-time">${n.time}</div>
+      </div>
+    `;
+  }).join('');
 }
 
 function clearAllNotifications() {
   notifications = [];
   updateNotificationDisplay();
+}
+
+function showNotificationDetails(index: number) {
+  const notification = notifications[index];
+  if (!notification) return;
+  
+  const modal = document.getElementById('notificationDetailsModal');
+  const titleEl = document.getElementById('notificationModalTitleValue') as HTMLElement | null;
+  const descEl = document.getElementById('notificationModalDesc') as HTMLElement | null;
+  const detailsContainerEl = document.getElementById('notificationModalDetailsContainer') as HTMLElement | null;
+  const detailsEl = document.getElementById('notificationModalDetails') as HTMLElement | null;
+  const timeEl = document.getElementById('notificationModalTime') as HTMLElement | null;
+  const lowStockTableContainer = document.getElementById('lowStockTableContainer') as HTMLElement | null;
+  const lowStockTableBody = document.getElementById('notificationLowStockBody') as HTMLElement | null;
+  
+  if (!modal || !titleEl) return;
+  
+  titleEl.textContent = notification.title;
+  if (descEl) descEl.textContent = notification.desc;
+  if (timeEl) timeEl.textContent = notification.time;
+  
+  if (notification.details) {
+    if (detailsEl) {
+      detailsEl.innerHTML = notification.details;
+    }
+    if (detailsContainerEl) {
+      detailsContainerEl.style.display = 'block';
+    }
+  } else {
+    if (detailsContainerEl) detailsContainerEl.style.display = 'none';
+  }
+  
+  // Show low stock table if this is a low stock alert
+  if ((notification.category === 'lowStock' || notification.title === t('notifications.lowStockAlert')) && lowStockTableContainer && lowStockTableBody) {
+    const threshold = appSettings.lowStockThreshold ?? 5;
+    const activeProducts = workbookData.products.filter(p => p.isActive !== false);
+    const lowStockProducts = activeProducts
+      .filter(p => p.quantity <= threshold)
+      .sort((a, b) => a.quantity - b.quantity || a.name.localeCompare(b.name));
+    
+    if (lowStockProducts.length === 0) {
+      lowStockTableBody.innerHTML = `<tr><td colspan="2" class="empty-state" data-translate="common.allStocked">All products are well stocked</td></tr>`;
+    } else {
+      lowStockTableBody.innerHTML = lowStockProducts.map(p => `
+        <tr>
+          <td><strong>${p.name}</strong></td>
+          <td>${p.quantity}</td>
+        </tr>
+      `).join('');
+    }
+    lowStockTableContainer.style.display = 'block';
+  } else if (lowStockTableContainer) {
+    lowStockTableContainer.style.display = 'none';
+  }
+  
+  modal.classList.add('active');
+  
+  const notificationDropdown = document.getElementById('notificationDropdown');
+  if (notificationDropdown) {
+    notificationDropdown.classList.remove('active');
+  }
 }
 
 // Theme toggle
@@ -1621,7 +1693,7 @@ function renderProducts() {
     const isLow = product.quantity <= threshold;
     return `
       <tr class="${isLow ? 'low-stock-row' : ''}">
-        <td><strong>${product.name}</strong> ${isLow ? '<span class="badge badge-warning badge-low">'+t('inventory.lowStockItems','Low Stock')+'</span>' : ''}</td>
+        <td><strong>${product.name}</strong> ${isLow ? '<span class="low-stock-indicator"><svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 2L2 20h20Z"/></svg> Low Stock</span>' : ''}</td>
         <td>${product.quantity}</td>
         <td>${formatCurrency(product.buyPrice)}</td>
         <td>${formatCurrency(product.salePrice)}</td>
@@ -1678,7 +1750,7 @@ const filterProductsDebounced = debounce(function() {
     const isLow = product.quantity <= threshold;
     return `
       <tr class="${isLow ? 'low-stock-row' : ''}">
-        <td><strong>${product.name}</strong> ${isLow ? '<span class="badge badge-warning badge-low">'+t('inventory.lowStockItems','Low Stock')+'</span>' : ''}</td>
+        <td><strong>${product.name}</strong> ${isLow ? '<span class="low-stock-indicator"><svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 2L2 20h20Z"/></svg> Low Stock</span>' : ''}</td>
         <td>${product.quantity}</td>
         <td>${formatCurrency(product.buyPrice)}</td>
         <td>${formatCurrency(product.salePrice)}</td>
@@ -5763,7 +5835,7 @@ async function checkLowStockAndNotify() {
     });
     
     // Add to notification list
-    addNotification('Low Stock Alert', `${lowStockProducts.length} product(s) have low stock levels`);
+    addNotification(t('notifications.lowStockAlert'), `${lowStockProducts.length} ${t('inventory.lowStockProducts', 'product(s) have low stock levels')}`, undefined, 'lowStock');
   }
 }
 
@@ -5822,7 +5894,7 @@ function handleSaveSettings() {
   applySettings();
   
   showToast(t('settings.settingsSaved', 'Settings saved successfully'), 'success');
-  addNotification('System Event', 'Application settings saved');
+  addNotification(t('notifications.systemEvent'), t('notifications.settingsSaved'), undefined, 'system', t('notifications.settingsSavedDetails'));
 }
 
 function handleResetSettings() {

@@ -94,7 +94,26 @@
     "saveCopy": "حفظ نسخة",
     "logout": "تسجيل الخروج",
     "notifications": "الإخطارات",
-    "noNotifications": "لا توجد إخطارات جديدة"
+    "noNotifications": "لا توجد إخطارات جديدة",
+    "title": "العنوان",
+    "details": "التفاصيل",
+    "time": "الوقت"
+  },
+  "notifications": {
+    "modalTitle": "تفاصيل التنبيه",
+    "title": "العنوان",
+    "description": "الوصف",
+    "details": "التفاصيل",
+    "time": "الوقت",
+    "lowStockAlert": "تنبيه المخزون المنخفض",
+    "lowStockMessage": "%d منتج(ات) لديها مستويات مخزون منخفضة",
+    "systemEvent": "حدث نظام",
+    "appStarted": "تم بدء التطبيق وتحميل المصنف",
+    "dataRefreshed": "تم تحديث بيانات المصنف",
+    "settingsSaved": "تم حفظ إعدادات التطبيق",
+    "appStartedDetails": "تطبيق Sales Manager جاهز للاستخدام مع تحميل جميع البيانات بنجاح.",
+    "dataRefreshedDetails": "تم تحديث جميع بيانات العمل وتحديثها من قاعدة البيانات.",
+    "settingsSavedDetails": "تم تحديث إعدادات التطبيق وحفظها بنجاح."
   },
   "dashboard": {
     "title": "لوحة التحكم",
@@ -237,6 +256,7 @@
     "totalStockItems": "إجمالي العناصر في المخزون",
     "totalStockValue": "إجمالي قيمة المخزون",
     "lowStockItems": "عناصر المخزون المنخفض",
+    "lowStockProducts": "منتج(ات) لديها مستويات مخزون منخفضة",
     "recentMovements": "حركات المخزون الأخيرة",
     "type": "النوع",
     "noMovements": "لا توجد حركات مخزون بعد",
