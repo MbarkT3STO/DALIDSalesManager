@@ -105,6 +105,8 @@ interface AppSettings {
   printQuality: string;
   // Invoice style settings
   invoiceStyle: 'classical' | 'modern' | 'blackwhite';
+  // Invoice sizing settings
+  invoiceSizing: 'full' | 'compact';
 }
 
 let appSettings: AppSettings = {
@@ -130,7 +132,9 @@ let appSettings: AppSettings = {
   printOrientation: 'portrait',
   printQuality: 'standard',
   // Invoice style default
-  invoiceStyle: 'classical'
+  invoiceStyle: 'classical',
+  // Invoice sizing default
+  invoiceSizing: 'full'
 };
 
 let currentEditingProduct: string | null = null;
@@ -546,6 +550,7 @@ function renderSettings() {
   (document.getElementById('printOrientationSelect') as HTMLSelectElement).value = appSettings.printOrientation;
   (document.getElementById('printQualitySelect') as HTMLSelectElement).value = appSettings.printQuality;
   (document.getElementById('invoiceStyleSelect') as HTMLSelectElement).value = appSettings.invoiceStyle;
+  (document.getElementById('invoiceSizingSelect') as HTMLSelectElement).value = appSettings.invoiceSizing;
   (document.getElementById('autoBackupToggle') as HTMLInputElement).checked = appSettings.autoBackup;
   (document.getElementById('backupRetentionSelect') as HTMLSelectElement).value = appSettings.backupRetention.toString();
   (document.getElementById('lowStockNotificationsToggle') as HTMLInputElement).checked = appSettings.lowStockNotifications;
@@ -581,44 +586,23 @@ function updateSettingsOverview() {
   if (themeValue) {
     const themeSelect = document.getElementById('themeSelect') as HTMLSelectElement;
     if (themeSelect) {
-      const themeText = {
+      const themeText: { [key: string]: string } = {
         'light': t('settings.light', 'Light'),
         'dark': t('settings.dark', 'Dark'),
         'auto': t('settings.auto', 'Auto (System)')
-      }[themeSelect.value] || themeSelect.value;
-      themeValue.textContent = themeText;
+      };
+      themeValue.textContent = themeText[themeSelect.value as keyof typeof themeText] || themeSelect.value;
     }
   }
-  
-  const languageValue = document.getElementById('currentLanguageValue');
-  if (languageValue) {
-    const languageSelect = document.getElementById('languageSelect') as HTMLSelectElement;
-    if (languageSelect) {
-      const languageText = {
-        'en': t('settings.english', 'English'),
-        'fr': t('settings.french', 'Français'),
-        'ar': t('settings.arabic', 'العربية')
-      }[languageSelect.value] || languageSelect.value;
-      languageValue.textContent = languageText;
-    }
+
+  const fontSizeValue = document.getElementById('currentFontSizeValue');
+  if (fontSizeValue) {
+    fontSizeValue.textContent = `${appSettings.fontSize}pt`;
   }
-  
-  const autoBackupValue = document.getElementById('autoBackupStatus');
-  if (autoBackupValue) {
-    const autoBackupToggle = document.getElementById('autoBackupToggle') as HTMLInputElement;
-    if (autoBackupToggle) {
-      autoBackupValue.textContent = autoBackupToggle.checked ? 
-        t('common.enabled', 'Enabled') : t('common.disabled', 'Disabled');
-    }
-  }
-  
-  const notificationsValue = document.getElementById('notificationsStatus');
-  if (notificationsValue) {
-    const notificationsToggle = document.getElementById('lowStockNotificationsToggle') as HTMLInputElement;
-    if (notificationsToggle) {
-      notificationsValue.textContent = notificationsToggle.checked ? 
-        t('common.enabled', 'Enabled') : t('common.disabled', 'Disabled');
-    }
+
+  const interfaceScaleValue = document.getElementById('currentInterfaceScaleValue');
+  if (interfaceScaleValue) {
+    interfaceScaleValue.textContent = `${appSettings.interfaceScale}%`;
   }
 }
 
@@ -1045,6 +1029,7 @@ function setupEventListeners() {
   document.getElementById('printPaperSizeSelect')?.addEventListener('change', handleSaveSettings);
   document.getElementById('printOrientationSelect')?.addEventListener('change', handleSaveSettings);
   document.getElementById('printQualitySelect')?.addEventListener('change', handleSaveSettings);
+  document.getElementById('invoiceSizingSelect')?.addEventListener('change', handleSaveSettings);
   document.getElementById('autoBackupToggle')?.addEventListener('change', updateSettingsOverview);
   document.getElementById('lowStockNotificationsToggle')?.addEventListener('change', updateSettingsOverview);
   
@@ -3054,6 +3039,9 @@ function generateInvoiceHTML(invoice: Invoice, style: 'classical' | 'modern' | '
   const isRTL = currentLanguage === 'ar';
   const dir = isRTL ? 'rtl' : 'ltr';
   
+  // Check if compact sizing is selected
+  const isCompact = appSettings.invoiceSizing === 'compact';
+  
   // Get the appropriate CSS based on the selected style
   const getInvoiceStyle = () => {
     switch (style) {
@@ -3061,47 +3049,48 @@ function generateInvoiceHTML(invoice: Invoice, style: 'classical' | 'modern' | '
         return `
         body {
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          padding: 40px;
-          max-width: 900px;
+          padding: ${isCompact ? '20px' : '40px'};
+          max-width: ${isCompact ? '600px' : '900px'};
           margin: 0 auto;
           direction: ${dir};
           background: linear-gradient(135deg, #f5f7fa 0%, #e4edf9 100%);
           color: #333;
+          font-size: ${isCompact ? '14px' : '16px'};
         }
         .header {
           text-align: center;
-          margin-bottom: 40px;
-          padding: 30px;
+          margin-bottom: ${isCompact ? '20px' : '40px'};
+          padding: ${isCompact ? '15px' : '30px'};
           background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
           color: white;
-          border-radius: 15px;
+          border-radius: ${isCompact ? '10px' : '15px'};
           box-shadow: 0 10px 30px rgba(124, 58, 237, 0.3);
         }
         .header h1 {
           margin: 0;
-          font-size: 2.5rem;
+          font-size: ${isCompact ? '1.8rem' : '2.5rem'};
           font-weight: 800;
           letter-spacing: 1px;
           background: none;
           display: inline-block;
-          padding: 10px 20px;
+          padding: ${isCompact ? '5px 10px' : '10px 20px'};
         }
         .header p {
-          margin: 10px 0;
-          font-size: 1.1rem;
+          margin: ${isCompact ? '5px 0' : '10px 0'};
+          font-size: ${isCompact ? '1rem' : '1.1rem'};
           opacity: 0.9;
         }
         .info-section {
           display: flex;
           justify-content: space-between;
-          margin-bottom: 30px;
-          gap: 30px;
+          margin-bottom: ${isCompact ? '15px' : '30px'};
+          gap: ${isCompact ? '15px' : '30px'};
         }
         .info-box {
           flex: 1;
-          padding: 25px;
+          padding: ${isCompact ? '15px' : '25px'};
           background: white;
-          border-radius: 12px;
+          border-radius: ${isCompact ? '8px' : '12px'};
           box-shadow: 0 4px 20px rgba(0,0,0,0.08);
           border: 1px solid #e2e8f0;
         }
@@ -3109,23 +3098,26 @@ function generateInvoiceHTML(invoice: Invoice, style: 'classical' | 'modern' | '
           margin-top: 0;
           color: #7c3aed;
           border-bottom: 2px solid #f1f5f9;
-          padding-bottom: 10px;
+          padding-bottom: ${isCompact ? '5px' : '10px'};
           font-weight: 700;
+          font-size: ${isCompact ? '1rem' : '1.1rem'};
         }
         .info-box p {
-          margin: 8px 0;
+          margin: ${isCompact ? '4px 0' : '8px 0'};
+          font-size: ${isCompact ? '0.9rem' : '1rem'};
         }
         table {
           width: 100%;
           border-collapse: collapse;
-          margin-bottom: 30px;
+          margin-bottom: ${isCompact ? '15px' : '30px'};
           background: white;
-          border-radius: 12px;
+          border-radius: ${isCompact ? '8px' : '12px'};
           overflow: hidden;
           box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+          font-size: ${isCompact ? '0.9rem' : '1rem'};
         }
         th, td {
-          padding: 15px;
+          padding: ${isCompact ? '8px' : '15px'};
           text-align: ${isRTL ? 'right' : 'left'};
         }
         th {
@@ -3134,6 +3126,7 @@ function generateInvoiceHTML(invoice: Invoice, style: 'classical' | 'modern' | '
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.5px;
+          font-size: ${isCompact ? '0.85rem' : '1rem'};
         }
         td {
           border-bottom: 1px solid #e2e8f0;
@@ -3146,39 +3139,40 @@ function generateInvoiceHTML(invoice: Invoice, style: 'classical' | 'modern' | '
         }
         .total-section {
           text-align: ${isRTL ? 'left' : 'right'};
-          margin-top: 20px;
+          margin-top: ${isCompact ? '10px' : '20px'};
         }
         .total-row {
           display: flex;
           justify-content: ${isRTL ? 'flex-start' : 'flex-end'};
-          padding: 12px 0;
+          padding: ${isCompact ? '6px 0' : '12px 0'};
         }
         .total-row span:first-child {
-          ${isRTL ? 'margin-left' : 'margin-right'}: 40px;
+          ${isRTL ? 'margin-left' : 'margin-right'}: ${isCompact ? '20px' : '40px'};
           font-weight: 600;
         }
         .grand-total {
-          font-size: 1.4rem;
+          font-size: ${isCompact ? '1.2rem' : '1.4rem'};
           background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
           font-weight: 800;
           border-top: 2px solid #e2e8f0;
-          padding-top: 15px;
-          margin-top: 15px;
+          padding-top: ${isCompact ? '8px' : '15px'};
+          margin-top: ${isCompact ? '8px' : '15px'};
         }
         .footer {
           text-align: center;
-          margin-top: 50px;
-          padding-top: 25px;
+          margin-top: ${isCompact ? '25px' : '50px'};
+          padding-top: ${isCompact ? '12px' : '25px'};
           border-top: 2px solid #e2e8f0;
           color: #64748b;
           font-weight: 500;
+          font-size: ${isCompact ? '0.9rem' : '1rem'};
         }
         @media print {
           body {
-            padding: 20px;
+            padding: ${isCompact ? '10px' : '20px'};
             -webkit-print-color-adjust: exact;
             color-adjust: exact;
           }
@@ -3194,39 +3188,40 @@ function generateInvoiceHTML(invoice: Invoice, style: 'classical' | 'modern' | '
         return `
         body {
           font-family: 'Times New Roman', Times, serif;
-          padding: 40px;
-        }
-        @media print {
-          body {
-            padding: 20px;
-            -webkit-print-color-adjust: exact;
-            color-adjust: exact;
-          }
-        }
-          max-width: 800px;
+          padding: ${isCompact ? '20px' : '40px'};
+          max-width: ${isCompact ? '600px' : '800px'};
           margin: 0 auto;
           direction: ${dir};
           color: #000;
           background: white;
+          font-size: ${isCompact ? '14px' : '16px'};
+        }
+        @media print {
+          body {
+            padding: ${isCompact ? '10px' : '20px'};
+            -webkit-print-color-adjust: exact;
+            color-adjust: exact;
+          }
         }
         .header {
           text-align: center;
-          margin-bottom: 40px;
-          padding-bottom: 20px;
-          border-bottom: 3px solid #000;
+          margin-bottom: ${isCompact ? '20px' : '40px'};
+          padding-bottom: ${isCompact ? '10px' : '20px'};
+          border-bottom: ${isCompact ? '2px' : '3px'} solid #000;
         }
         .header h1 {
           margin: 0;
-          font-size: 2rem;
+          font-size: ${isCompact ? '1.6rem' : '2rem'};
           font-weight: bold;
         }
         .header p {
-          margin: 5px 0;
+          margin: ${isCompact ? '3px 0' : '5px 0'};
+          font-size: ${isCompact ? '0.9rem' : '1rem'};
         }
         .info-section {
           display: flex;
           justify-content: space-between;
-          margin-bottom: 30px;
+          margin-bottom: ${isCompact ? '15px' : '30px'};
         }
         .info-box {
           flex: 1;
@@ -3234,16 +3229,22 @@ function generateInvoiceHTML(invoice: Invoice, style: 'classical' | 'modern' | '
         .info-box h3 {
           margin-top: 0;
           border-bottom: 1px solid #000;
-          padding-bottom: 5px;
+          padding-bottom: ${isCompact ? '3px' : '5px'};
           font-weight: bold;
+          font-size: ${isCompact ? '1rem' : '1.1rem'};
+        }
+        .info-box p {
+          margin: ${isCompact ? '4px 0' : '6px 0'};
+          font-size: ${isCompact ? '0.9rem' : '1rem'};
         }
         table {
           width: 100%;
           border-collapse: collapse;
-          margin-bottom: 30px;
+          margin-bottom: ${isCompact ? '15px' : '30px'};
+          font-size: ${isCompact ? '0.9rem' : '1rem'};
         }
         th, td {
-          padding: 10px;
+          padding: ${isCompact ? '6px' : '10px'};
           text-align: ${isRTL ? 'right' : 'left'};
           border: 1px solid #000;
         }
@@ -3251,39 +3252,34 @@ function generateInvoiceHTML(invoice: Invoice, style: 'classical' | 'modern' | '
           background: #000;
           color: white;
           font-weight: bold;
+          font-size: ${isCompact ? '0.85rem' : '1rem'};
         }
         .total-section {
           text-align: ${isRTL ? 'left' : 'right'};
-          margin-top: 20px;
+          margin-top: ${isCompact ? '10px' : '20px'};
         }
         .total-row {
           display: flex;
           justify-content: ${isRTL ? 'flex-start' : 'flex-end'};
-          padding: 8px 0;
+          padding: ${isCompact ? '4px 0' : '8px 0'};
         }
         .total-row span:first-child {
-          ${isRTL ? 'margin-left' : 'margin-right'}: 40px;
+          ${isRTL ? 'margin-left' : 'margin-right'}: ${isCompact ? '20px' : '40px'};
           font-weight: bold;
         }
         .grand-total {
-          font-size: 1.3rem;
+          font-size: ${isCompact ? '1.1rem' : '1.3rem'};
           font-weight: bold;
-          border-top: 2px solid #000;
-          padding-top: 10px;
-          margin-top: 10px;
+          border-top: ${isCompact ? '1px' : '2px'} solid #000;
+          padding-top: ${isCompact ? '5px' : '10px'};
+          margin-top: ${isCompact ? '5px' : '10px'};
         }
         .footer {
           text-align: center;
-          margin-top: 50px;
-          padding-top: 20px;
+          margin-top: ${isCompact ? '25px' : '50px'};
+          padding-top: ${isCompact ? '10px' : '20px'};
           border-top: 1px solid #000;
-        }
-        @media print {
-          body {
-            padding: 20px;
-            -webkit-print-color-adjust: exact;
-            color-adjust: exact;
-          }
+          font-size: ${isCompact ? '0.9rem' : '1rem'};
         }
       `;
       case 'classical':
@@ -3291,25 +3287,31 @@ function generateInvoiceHTML(invoice: Invoice, style: 'classical' | 'modern' | '
         return `
         body {
           font-family: Arial, sans-serif;
-          padding: 40px;
-          max-width: 800px;
+          padding: ${isCompact ? '20px' : '40px'};
+          max-width: ${isCompact ? '600px' : '800px'};
           margin: 0 auto;
           direction: ${dir};
+          font-size: ${isCompact ? '14px' : '16px'};
         }
         .header {
           text-align: center;
-          margin-bottom: 40px;
-          border-bottom: 3px solid #4f46e5;
-          padding-bottom: 20px;
+          margin-bottom: ${isCompact ? '20px' : '40px'};
+          border-bottom: ${isCompact ? '2px' : '3px'} solid #4f46e5;
+          padding-bottom: ${isCompact ? '10px' : '20px'};
         }
         .header h1 {
           color: #4f46e5;
           margin: 0;
+          font-size: ${isCompact ? '1.6rem' : '2rem'};
+        }
+        .header p {
+          margin: ${isCompact ? '3px 0' : '5px 0'};
+          font-size: ${isCompact ? '0.9rem' : '1rem'};
         }
         .info-section {
           display: flex;
           justify-content: space-between;
-          margin-bottom: 30px;
+          margin-bottom: ${isCompact ? '15px' : '30px'};
         }
         .info-box {
           flex: 1;
@@ -3318,14 +3320,20 @@ function generateInvoiceHTML(invoice: Invoice, style: 'classical' | 'modern' | '
         .info-box h3 {
           margin-top: 0;
           color: #333;
+          font-size: ${isCompact ? '1rem' : '1.1rem'};
+        }
+        .info-box p {
+          margin: ${isCompact ? '4px 0' : '6px 0'};
+          font-size: ${isCompact ? '0.9rem' : '1rem'};
         }
         table {
           width: 100%;
           border-collapse: collapse;
-          margin-bottom: 30px;
+          margin-bottom: ${isCompact ? '15px' : '30px'};
+          font-size: ${isCompact ? '0.9rem' : '1rem'};
         }
         th, td {
-          padding: 12px;
+          padding: ${isCompact ? '8px' : '12px'};
           text-align: ${isRTL ? 'right' : 'left'};
           border-bottom: 1px solid #ddd;
         }
@@ -3336,34 +3344,35 @@ function generateInvoiceHTML(invoice: Invoice, style: 'classical' | 'modern' | '
         }
         .total-section {
           text-align: ${isRTL ? 'left' : 'right'};
-          margin-top: 20px;
+          margin-top: ${isCompact ? '10px' : '20px'};
         }
         .total-row {
           display: flex;
           justify-content: ${isRTL ? 'flex-start' : 'flex-end'};
-          padding: 8px 0;
+          padding: ${isCompact ? '4px 0' : '8px 0'};
         }
         .total-row span:first-child {
-          ${isRTL ? 'margin-left' : 'margin-right'}: 40px;
+          ${isRTL ? 'margin-left' : 'margin-right'}: ${isCompact ? '20px' : '40px'};
           font-weight: bold;
         }
         .grand-total {
-          font-size: 1.2em;
+          font-size: ${isCompact ? '1.1rem' : '1.2rem'};
           color: #4f46e5;
-          border-top: 2px solid #4f46e5;
-          padding-top: 10px;
-          margin-top: 10px;
+          border-top: ${isCompact ? '1px' : '2px'} solid #4f46e5;
+          padding-top: ${isCompact ? '5px' : '10px'};
+          margin-top: ${isCompact ? '5px' : '10px'};
         }
         .footer {
           text-align: center;
-          margin-top: 50px;
-          padding-top: 20px;
+          margin-top: ${isCompact ? '25px' : '50px'};
+          padding-top: ${isCompact ? '10px' : '20px'};
           border-top: 1px solid #ddd;
           color: #666;
+          font-size: ${isCompact ? '0.9rem' : '1rem'};
         }
         @media print {
           body {
-            padding: 20px;
+            padding: ${isCompact ? '10px' : '20px'};
             -webkit-print-color-adjust: exact;
             color-adjust: exact;
           }
@@ -6586,6 +6595,7 @@ function handleSaveSettings() {
   appSettings.printOrientation = (document.getElementById('printOrientationSelect') as HTMLSelectElement).value;
   appSettings.printQuality = (document.getElementById('printQualitySelect') as HTMLSelectElement).value;
   appSettings.invoiceStyle = (document.getElementById('invoiceStyleSelect') as HTMLSelectElement).value as 'classical' | 'modern' | 'blackwhite';
+  appSettings.invoiceSizing = (document.getElementById('invoiceSizingSelect') as HTMLSelectElement).value as 'full' | 'compact';
   appSettings.autoBackup = (document.getElementById('autoBackupToggle') as HTMLInputElement).checked;
   appSettings.backupRetention = parseInt((document.getElementById('backupRetentionSelect') as HTMLSelectElement).value);
   appSettings.lowStockNotifications = (document.getElementById('lowStockNotificationsToggle') as HTMLInputElement).checked;
@@ -6630,7 +6640,9 @@ function handleResetSettings() {
     printOrientation: 'portrait',
     printQuality: 'standard',
     // Invoice style default
-    invoiceStyle: 'classical'
+    invoiceStyle: 'classical',
+    // Invoice sizing default
+    invoiceSizing: 'full'
   };
 
   // Save and apply settings
