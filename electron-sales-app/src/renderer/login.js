@@ -1,6 +1,35 @@
 // Login functionality
 const api = window.electronAPI;
 
+// Theme functionality for login page
+function initLoginTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+}
+
+function toggleLoginTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    
+    // Update theme toggle button if it exists
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    if (themeToggleBtn) {
+        const sunIcon = themeToggleBtn.querySelector('#sunIcon');
+        const moonIcon = themeToggleBtn.querySelector('#moonIcon');
+        if (newTheme === 'dark') {
+            sunIcon.style.display = 'none';
+            moonIcon.style.display = 'block';
+            themeToggleBtn.title = 'Switch to light mode';
+        } else {
+            sunIcon.style.display = 'block';
+            moonIcon.style.display = 'none';
+            themeToggleBtn.title = 'Switch to dark mode';
+        }
+    }
+}
+
 // Translation system - syncs with main app settings
 let currentLanguage = 'en';
 let translations = {};
@@ -86,6 +115,9 @@ const eyeIcon = document.getElementById('eyeIcon');
 window.addEventListener('DOMContentLoaded', () => {
     currentLanguage = getAppLanguage();
     loadTranslations(currentLanguage);
+    
+    // Initialize theme
+    initLoginTheme();
     
     // Check for remembered user
     const rememberedUser = localStorage.getItem('rememberedUser');

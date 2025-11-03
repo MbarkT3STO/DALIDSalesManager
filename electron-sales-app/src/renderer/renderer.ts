@@ -570,6 +570,56 @@ function renderSettings() {
   
   (document.getElementById('auditStartDate') as HTMLInputElement).value = thirtyDaysAgo.toISOString().split('T')[0];
   (document.getElementById('auditEndDate') as HTMLInputElement).value = today.toISOString().split('T')[0];
+  
+  // Update KPI values for settings overview
+  updateSettingsOverview();
+}
+
+function updateSettingsOverview() {
+  // Update KPI values for settings overview
+  const themeValue = document.getElementById('currentThemeValue');
+  if (themeValue) {
+    const themeSelect = document.getElementById('themeSelect') as HTMLSelectElement;
+    if (themeSelect) {
+      const themeText = {
+        'light': t('settings.light', 'Light'),
+        'dark': t('settings.dark', 'Dark'),
+        'auto': t('settings.auto', 'Auto (System)')
+      }[themeSelect.value] || themeSelect.value;
+      themeValue.textContent = themeText;
+    }
+  }
+  
+  const languageValue = document.getElementById('currentLanguageValue');
+  if (languageValue) {
+    const languageSelect = document.getElementById('languageSelect') as HTMLSelectElement;
+    if (languageSelect) {
+      const languageText = {
+        'en': t('settings.english', 'English'),
+        'fr': t('settings.french', 'Français'),
+        'ar': t('settings.arabic', 'العربية')
+      }[languageSelect.value] || languageSelect.value;
+      languageValue.textContent = languageText;
+    }
+  }
+  
+  const autoBackupValue = document.getElementById('autoBackupStatus');
+  if (autoBackupValue) {
+    const autoBackupToggle = document.getElementById('autoBackupToggle') as HTMLInputElement;
+    if (autoBackupToggle) {
+      autoBackupValue.textContent = autoBackupToggle.checked ? 
+        t('common.enabled', 'Enabled') : t('common.disabled', 'Disabled');
+    }
+  }
+  
+  const notificationsValue = document.getElementById('notificationsStatus');
+  if (notificationsValue) {
+    const notificationsToggle = document.getElementById('lowStockNotificationsToggle') as HTMLInputElement;
+    if (notificationsToggle) {
+      notificationsValue.textContent = notificationsToggle.checked ? 
+        t('common.enabled', 'Enabled') : t('common.disabled', 'Disabled');
+    }
+  }
 }
 
 function handleInterfaceScaleChange() {
@@ -577,6 +627,7 @@ function handleInterfaceScaleChange() {
   appSettings.interfaceScale = newScale;
   saveSettings();
   applySettings();
+  updateSettingsOverview();
 }
 
 function handleReduceAnimationsChange() {
@@ -584,6 +635,7 @@ function handleReduceAnimationsChange() {
   appSettings.reduceAnimations = reduceAnimations;
   saveSettings();
   applySettings();
+  updateSettingsOverview();
 }
 
 function handleUiDensityChange() {
@@ -591,6 +643,7 @@ function handleUiDensityChange() {
   appSettings.uiDensity = uiDensity;
   saveSettings();
   applySettings();
+  updateSettingsOverview();
 }
 
 // Populate GDPR customer dropdowns
@@ -983,8 +1036,8 @@ function setupEventListeners() {
   // Settings
   document.getElementById('saveSettingsBtn')?.addEventListener('click', handleSaveSettings);
   document.getElementById('resetSettingsBtn')?.addEventListener('click', handleResetSettings);
-  document.getElementById('languageSelect')?.addEventListener('change', handleLanguageChange);
-  document.getElementById('themeSelect')?.addEventListener('change', handleThemeChange);
+  document.getElementById('languageSelect')?.addEventListener('change', () => { handleLanguageChange(); updateSettingsOverview(); });
+  document.getElementById('themeSelect')?.addEventListener('change', () => { handleThemeChange(); updateSettingsOverview(); });
   document.getElementById('fontSizeSelect')?.addEventListener('change', handleFontSizeChange);
   document.getElementById('interfaceScaleSelect')?.addEventListener('change', handleInterfaceScaleChange);
   document.getElementById('reduceAnimationsToggle')?.addEventListener('change', handleReduceAnimationsChange);
@@ -992,6 +1045,8 @@ function setupEventListeners() {
   document.getElementById('printPaperSizeSelect')?.addEventListener('change', handleSaveSettings);
   document.getElementById('printOrientationSelect')?.addEventListener('change', handleSaveSettings);
   document.getElementById('printQualitySelect')?.addEventListener('change', handleSaveSettings);
+  document.getElementById('autoBackupToggle')?.addEventListener('change', updateSettingsOverview);
+  document.getElementById('lowStockNotificationsToggle')?.addEventListener('change', updateSettingsOverview);
   
   // GDPR & Audit
   document.getElementById('gdprExportBtn')?.addEventListener('click', handleGDPRExport);
@@ -1272,6 +1327,30 @@ async function renderAccounting() {
 
   await populateAccountsDatalist();
   await renderTrialBalance();
+  await updateAccountingOverview();
+}
+
+async function updateAccountingOverview() {
+  try {
+    // Get financial data for KPIs
+    const today = new Date().toISOString().split('T')[0];
+    const incomeRes = await api.accGetIncomeStatement(undefined, today);
+    const balanceRes = await api.accGetBalanceSheet(today);
+    
+    if (incomeRes.success) {
+      const report = incomeRes.report;
+      updateElement('totalRevenueValue', formatCurrency(report.totalRevenue));
+      updateElement('totalExpensesValue', formatCurrency(report.totalExpenses));
+      updateElement('netIncomeValue', formatCurrency(report.netIncome));
+    }
+    
+    if (balanceRes.success) {
+      const report = balanceRes.report;
+      updateElement('totalAssetsValue', formatCurrency(report.totalAssets));
+    }
+  } catch (e) {
+    console.error('Error updating accounting overview:', e);
+  }
 }
 
 function addJournalLineRow() {
@@ -1599,7 +1678,7 @@ function renderDashboard() {
   const totalProducts = activeProducts.length;
   const totalCustomers = workbookData.customers.length;
 
-  // Update stat cards
+  // Update KPI values
   updateElement('totalSales', formatCurrency(totalSales));
   updateElement('totalProfit', formatCurrency(totalProfit));
   updateElement('totalProducts', totalProducts.toString());
@@ -1685,7 +1764,7 @@ function renderRecentInvoices() {
     .slice(0, 5);
 
   if (recentInvoices.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No invoices yet</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state" data-translate="common.noInvoices">No invoices yet</td></tr>';
     return;
   }
 
@@ -1699,6 +1778,9 @@ function renderRecentInvoices() {
       <td><span class="badge badge-${getStatusBadgeClass(inv.status)}">${translateStatus(inv.status)}</span></td>
     </tr>
   `).join('');
+  
+  // Attach sorting functionality to table headers
+  attachTableSorting('recentInvoicesTable');
 }
 
 function renderLowStockAlert() {
@@ -1751,6 +1833,9 @@ function openLowStockModal() {
 
 // Products rendering
 function renderProducts() {
+  // Render product statistics
+  renderProductStats();
+  
   const tbody = document.getElementById('productsTableBody');
   if (!tbody) return;
 
@@ -1766,41 +1851,55 @@ function renderProducts() {
   tbody.innerHTML = activeProducts.map(product => {
     const profitMargin = ((product.salePrice - product.buyPrice) / product.buyPrice * 100).toFixed(1);
     const isLow = product.quantity <= threshold;
-    return `
-      <tr class="${isLow ? 'low-stock-row' : ''}">
-        <td><strong>${product.name}</strong> ${isLow ? '<span class="low-stock-indicator"><svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 2L2 20h20Z"/></svg> Low Stock</span>' : ''}</td>
-        <td>${product.quantity}</td>
-        <td>${formatCurrency(product.buyPrice)}</td>
-        <td>${formatCurrency(product.salePrice)}</td>
-        <td>${profitMargin}%</td>
-        <td>
-          <button class="btn-icon" onclick="viewProductAnalysis('${escapeHtml(product.name)}')" title="${t('products.viewAnalysis', 'View Analysis')}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 3v18h18"/>
-              <path d="M18 17V9"/>
-              <path d="M13 17V5"/>
-              <path d="M8 17v-3"/>
-            </svg>
-          </button>
-          <button class="btn-icon" onclick="editProduct('${escapeHtml(product.name)}')" title="${t('common.edit')}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-            </svg>
-          </button>
-          <button class="btn-icon" onclick="deleteProduct('${escapeHtml(product.name)}')" title="${t('common.delete')}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="3 6 5 6 21 6"/>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-            </svg>
-          </button>
-        </td>
-      </tr>
-    `;
+    return '<tr class="' + (isLow ? 'low-stock-row' : '') + '">' +
+      '<td><strong>' + product.name + '</strong> ' + (isLow ? '<span class="low-stock-indicator"><svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 2L2 20h20Z"/></svg> Low Stock</span>' : '') + '</td>' +
+      '<td>' + product.quantity + '</td>' +
+      '<td>' + formatCurrency(product.buyPrice) + '</td>' +
+      '<td>' + formatCurrency(product.salePrice) + '</td>' +
+      '<td>' + profitMargin + '%</td>' +
+      '<td>' +
+        '<button class="btn-icon" onclick="viewProductAnalysis(\'' + escapeHtml(product.name) + '\')" title="' + t('products.viewAnalysis', 'View Analysis') + '">' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+            '<path d="M3 3v18h18"/>' +
+            '<path d="M18 17V9"/>' +
+            '<path d="M13 17V5"/>' +
+            '<path d="M8 17v-3"/>' +
+          '</svg>' +
+        '</button>' +
+        '<button class="btn-icon" onclick="editProduct(\'' + escapeHtml(product.name) + '\')" title="' + t('common.edit') + '">' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+            '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>' +
+            '<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>' +
+          '</svg>' +
+        '</button>' +
+        '<button class="btn-icon" onclick="deleteProduct(\'' + escapeHtml(product.name) + '\')" title="' + t('common.delete') + '">' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+            '<polyline points="3 6 5 6 21 6"/>' +
+            '<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' +
+          '</svg>' +
+        '</button>' +
+      '</td>' +
+    '</tr>';
   }).join('');
   
   // Attach sorting functionality to table headers
   attachTableSorting('productsTable');
+}
+
+function renderProductStats() {
+  // Calculate product statistics
+  const activeProducts = workbookData.products.filter(p => p.isActive !== false);
+  const totalProducts = activeProducts.length;
+  const totalStockItems = activeProducts.reduce((sum, p) => sum + p.quantity, 0);
+  const totalStockValue = activeProducts.reduce((sum, p) => sum + (p.quantity * p.buyPrice), 0);
+  const threshold = appSettings.lowStockThreshold ?? 5;
+  const lowStockItems = activeProducts.filter(p => p.quantity <= threshold).length;
+  
+  // Update KPI values
+  updateElement('totalProductsValue', totalProducts.toString());
+  updateElement('totalStockItemsValue', totalStockItems.toString());
+  updateElement('totalStockValue', formatCurrency(totalStockValue));
+  updateElement('lowStockItemsValue', lowStockItems.toString());
 }
 
 // Debounced filter function for better performance
@@ -2010,46 +2109,6 @@ function openDeletedProductsModal() {
     showToast(error.message || 'Error restoring product', 'error');
   }
 };
-
-// Customers rendering
-function renderCustomers() {
-  const tbody = document.getElementById('customersTableBody');
-  if (!tbody) return;
-
-  if (workbookData.customers.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No customers found</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = workbookData.customers.map(customer => `
-    <tr>
-      <td><strong>${customer.name}</strong></td>
-      <td>${customer.phone}</td>
-      <td>${customer.email}</td>
-      <td>${customer.address}</td>
-      <td>
-        <button class="btn-icon" onclick="viewCustomerHistory('${escapeHtml(customer.name)}')" title="${t('customers.viewHistory')}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-            <polyline points="17 6 23 6 23 12"/>
-          </svg>
-        </button>
-        <button class="btn-icon" onclick="editCustomer('${escapeHtml(customer.name)}')" title="${t('common.edit')}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-          </svg>
-        </button>
-        <button class="btn-icon" onclick="deleteCustomer('${escapeHtml(customer.name)}')" title="${t('common.delete')}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="3 6 5 6 21 6"/>
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-          </svg>
-        </button>
-      </td>
-    </tr>
-  `).join('');
-}
 
 // Debounced filter function for better performance
 const filterCustomersDebounced = debounce(function() {
@@ -2461,12 +2520,73 @@ function renderCustomerInvoicesTable(invoices: Invoice[]) {
   }
 };
 
+// Customers rendering
+function renderCustomers() {
+  // Render customer statistics
+  renderCustomerStats();
+  
+  const tbody = document.getElementById('customersTableBody');
+  if (!tbody) return;
+
+  if (workbookData.customers.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No customers found</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = workbookData.customers.map(customer => {
+    return '<tr>' +
+      '<td><strong>' + customer.name + '</strong></td>' +
+      '<td>' + customer.phone + '</td>' +
+      '<td>' + customer.email + '</td>' +
+      '<td>' + customer.address + '</td>' +
+      '<td>' +
+        '<button class="btn-icon" onclick="viewCustomerHistory(\'' + escapeHtml(customer.name) + '\')" title="' + t('customers.viewHistory') + '">' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+            '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>' +
+            '<polyline points="17 6 23 6 23 12"/>' +
+          '</svg>' +
+        '</button>' +
+        '<button class="btn-icon" onclick="editCustomer(\'' + escapeHtml(customer.name) + '\')" title="' + t('common.edit') + '">' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+            '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>' +
+            '<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>' +
+          '</svg>' +
+        '</button>' +
+        '<button class="btn-icon btn-danger" onclick="deleteCustomer(\'' + escapeHtml(customer.name) + '\')" title="' + t('common.delete') + '">' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+            '<polyline points="3 6 5 6 21 6"/>' +
+            '<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' +
+          '</svg>' +
+        '</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+function renderCustomerStats() {
+  // Calculate customer statistics
+  const totalCustomers = workbookData.customers.length;
+  const activeInvoices = workbookData.invoices.filter(inv => inv.status !== 'Cancelled');
+  const totalRevenue = activeInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+  const totalProfit = activeInvoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
+  const avgOrderValue = activeInvoices.length > 0 ? totalRevenue / activeInvoices.length : 0;
+  
+  // Update KPI values
+  updateElement('totalCustomersValue', totalCustomers.toString());
+  updateElement('customersTotalRevenueValue', formatCurrency(totalRevenue));
+  updateElement('customersTotalProfitValue', formatCurrency(totalProfit));
+  updateElement('customersAvgOrderValue', formatCurrency(avgOrderValue));
+}
+
 // Invoices rendering
 let currentStatusFilter = 'all';
 let currentCustomerFilter = 'all';
 let currentDateFilter = '';
 
 function renderInvoices() {
+  // Render sales statistics
+  renderSalesStats();
+  
   const tbody = document.getElementById('invoicesTableBody');
   if (!tbody) return;
 
@@ -2496,47 +2616,65 @@ function renderInvoices() {
     return;
   }
 
-  tbody.innerHTML = filteredInvoices.map(invoice => `
-    <tr>
-      <td><strong>${invoice.invoiceId}</strong></td>
-      <td>${formatDate(invoice.date)}</td>
-      <td>${invoice.customerName}</td>
-      <td>${formatCurrency(invoice.totalAmount)}</td>
-      <td>${formatCurrency(invoice.totalProfit)}</td>
-      <td><span class="badge badge-${getStatusBadgeClass(invoice.status)}">${translateStatus(invoice.status)}</span></td>
-      <td>
-        <button class="btn-icon" onclick="viewInvoice('${invoice.invoiceId}')" title="${t('common.view')}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-            <circle cx="12" cy="12" r="3"/>
-          </svg>
-        </button>
-        <button class="btn-icon" onclick="editInvoiceStatus('${escapeHtml(invoice.invoiceId)}', '${escapeHtml(invoice.customerName)}', '${invoice.status}')" title="${t('sales.editStatus')}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-          </svg>
-        </button>
-        <button class="btn-icon" onclick="printInvoice('${invoice.invoiceId}')" title="${t('common.print')}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="6 9 6 2 18 2 18 9"/>
-            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
-            <rect x="6" y="14" width="12" height="8"/>
-          </svg>
-        </button>
-        <button class="btn-icon" onclick="exportInvoiceToPDF('${invoice.invoiceId}')" title="${t('common.export')} PDF">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-        </button>
-      </td>
-    </tr>
-  `).join('');
+  tbody.innerHTML = filteredInvoices.map(invoice => {
+    const statusClass = getStatusBadgeClass(invoice.status);
+    const statusLabel = translateStatus(invoice.status);
+    
+    return '<tr>' +
+      '<td><strong>' + invoice.invoiceId + '</strong></td>' +
+      '<td>' + formatDate(invoice.date) + '</td>' +
+      '<td>' + invoice.customerName + '</td>' +
+      '<td>' + formatCurrency(invoice.totalAmount) + '</td>' +
+      '<td>' + formatCurrency(invoice.totalProfit) + '</td>' +
+      '<td><span class="badge badge-' + statusClass + '">' + statusLabel + '</span></td>' +
+      '<td>' +
+        '<button class="btn-icon" onclick="viewInvoice(\'' + invoice.invoiceId + '\')" title="' + t('common.view') + '">' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+            '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>' +
+            '<circle cx="12" cy="12" r="3"/>' +
+          '</svg>' +
+        '</button>' +
+        '<button class="btn-icon" onclick="editInvoiceStatus(\'' + escapeHtml(invoice.invoiceId) + '\', \'' + escapeHtml(invoice.customerName) + '\', \'' + invoice.status + '\')" title="' + t('sales.editStatus') + '">' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+            '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>' +
+            '<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>' +
+          '</svg>' +
+        '</button>' +
+        '<button class="btn-icon" onclick="printInvoice(\'' + invoice.invoiceId + '\')" title="' + t('common.print') + '">' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+            '<polyline points="6 9 6 2 18 2 18 9"/>' +
+            '<path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>' +
+            '<rect x="6" y="14" width="12" height="8"/>' +
+          '</svg>' +
+        '</button>' +
+        '<button class="btn-icon" onclick="exportInvoiceToPDF(\'' + invoice.invoiceId + '\')" title="' + t('common.export') + ' PDF">' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+            '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>' +
+            '<polyline points="7 10 12 15 17 10"/>' +
+            '<line x1="12" y1="15" x2="12" y2="3"/>' +
+          '</svg>' +
+        '</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
   
   // Attach sorting functionality to table headers
   attachTableSorting('invoicesTable');
+}
+
+function renderSalesStats() {
+  // Calculate sales statistics
+  const activeInvoices = workbookData.invoices.filter(inv => inv.status !== 'Cancelled');
+  const totalRevenue = activeInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+  const totalProfit = activeInvoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
+  const totalInvoices = activeInvoices.length;
+  const avgOrderValue = activeInvoices.length > 0 ? totalRevenue / activeInvoices.length : 0;
+  
+  // Update KPI values
+  updateElement('totalRevenueValue', formatCurrency(totalRevenue));
+  updateElement('totalProfitValue', formatCurrency(totalProfit));
+  updateElement('totalInvoicesValue', totalInvoices.toString());
+  updateElement('avgOrderValue', formatCurrency(avgOrderValue));
 }
 
 // Populate customer filter dropdown
@@ -3306,10 +3444,51 @@ function generateInvoiceHTML(invoice: Invoice, style: 'classical' | 'modern' | '
 
 // Reports rendering
 function renderReports() {
+  // Initialize report count
+  const reportCountElement = document.getElementById('reportCount');
+  if (reportCountElement && reportCountElement.textContent === '0') {
+    updateElement('reportCount', '1');
+  }
+  
   // Wait a bit for Chart.js to be fully loaded
   setTimeout(() => {
     filterReports();
   }, 100);
+}
+
+// Update reports overview with additional metrics
+function updateReportsOverview(filteredInvoices: Invoice[]) {
+  // Calculate customer count
+  const customerCount = workbookData.customers.length;
+  updateElement('reportCustomerCount', customerCount.toString());
+  
+  // Calculate additional metrics
+  if (filteredInvoices.length > 0) {
+    // Profit margin
+    const totalSales = filteredInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+    const totalProfit = filteredInvoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
+    const profitMargin = totalSales > 0 ? ((totalProfit / totalSales) * 100).toFixed(1) : '0.0';
+    updateElement('reportProfitMargin', `${profitMargin}%`);
+    
+    // Average order value
+    const avgOrderValue = totalSales / filteredInvoices.length;
+    updateElement('reportAvgOrderValue', formatCurrency(avgOrderValue));
+    
+    // Products sold
+    const productsSold = filteredInvoices.reduce((sum, inv) => sum + inv.items.length, 0);
+    updateElement('reportProductsSold', productsSold.toString());
+  } else {
+    updateElement('reportProfitMargin', '0%');
+    updateElement('reportAvgOrderValue', formatCurrency(0));
+    updateElement('reportProductsSold', '0');
+  }
+  
+  // Reports generated count (incremental)
+  const reportCountElement = document.getElementById('reportCount');
+  if (reportCountElement) {
+    const currentCount = parseInt(reportCountElement.textContent || '0');
+    updateElement('reportCount', (currentCount + 1).toString());
+  }
 }
 
 // Users rendering
@@ -3564,6 +3743,9 @@ function filterReports() {
   updateElement('reportTotalSales', formatCurrency(totalSales));
   updateElement('reportTotalProfit', formatCurrency(totalProfit));
   updateElement('reportInvoiceCount', invoiceCount.toString());
+  
+  // Update additional metrics
+  updateReportsOverview(filteredInvoices);
 
   // Render all visualizations
   renderSalesByProduct(filteredInvoices);
@@ -3580,6 +3762,7 @@ function filterReports() {
       renderTopProductsTable(filteredInvoices);
       renderTopCustomersTable(filteredInvoices);
       createProductPerformanceChart(filteredInvoices);
+      createSalesGrowthChart(filteredInvoices);
       console.log('[REPORTS] All chart functions called');
     } catch (error) {
       console.error('[Charts] Error rendering charts:', error);
@@ -3722,6 +3905,139 @@ function renderTopCustomersTable(invoices: Invoice[]) {
   `).join('');
   
   console.log('[TopCustomers] ✓ Table rendered with', sorted.length, 'customers');
+}
+
+// Create Sales Growth Rate Chart
+function createSalesGrowthChart(invoices: Invoice[]) {
+  const ctx = (document.getElementById('salesGrowthChart') as HTMLCanvasElement)?.getContext('2d');
+  if (!ctx || typeof (window as any).Chart === 'undefined') return;
+
+  // Group by month for sales data
+  const monthlyData: { [key: string]: { revenue: number; } } = {};
+  
+  invoices.forEach(inv => {
+    const date = new Date(inv.date);
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    
+    if (!monthlyData[monthKey]) {
+      monthlyData[monthKey] = { revenue: 0 };
+    }
+    
+    monthlyData[monthKey].revenue += inv.totalAmount;
+  });
+
+  const months = Object.keys(monthlyData).sort();
+  
+  // Calculate growth rates
+  const growthRates: number[] = [];
+  const labels: string[] = [];
+  
+  for (let i = 1; i < months.length; i++) {
+    const currentMonth = months[i];
+    const previousMonth = months[i - 1];
+    
+    const currentRevenue = monthlyData[currentMonth].revenue;
+    const previousRevenue = monthlyData[previousMonth].revenue;
+    
+    if (previousRevenue > 0) {
+      const growthRate = ((currentRevenue - previousRevenue) / previousRevenue) * 100;
+      growthRates.push(parseFloat(growthRate.toFixed(1)));
+      
+      const [year, month] = currentMonth.split('-');
+      const date = new Date(parseInt(year), parseInt(month) - 1);
+      labels.push(date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
+    }
+  }
+  
+  // Get theme colors
+  const colors = getChartThemeColors();
+
+  reportCharts.salesGrowth = new (window as any).Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: t('reports.salesGrowthRate', 'Sales Growth Rate'),
+          data: growthRates,
+          backgroundColor: growthRates.map(rate => 
+            rate >= 0 ? colors.successLight : colors.dangerLight
+          ),
+          borderColor: growthRates.map(rate => 
+            rate >= 0 ? colors.success : colors.danger
+          ),
+          borderWidth: 2,
+          borderRadius: 6,
+          borderSkipped: false
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: {
+            color: colors.textSecondary,
+            font: { size: 12, weight: '600' },
+            usePointStyle: true,
+            padding: 15,
+            boxWidth: 10,
+            boxHeight: 10
+          }
+        },
+        tooltip: {
+          backgroundColor: colors.tooltipBackground,
+          titleColor: colors.textPrimary,
+          bodyColor: colors.textSecondary,
+          borderColor: colors.tooltipBorder,
+          borderWidth: 1,
+          padding: 12,
+          cornerRadius: 8,
+          titleFont: { size: 13, weight: '600' },
+          bodyFont: { size: 12 },
+          callbacks: {
+            label: function(context: any) {
+              return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + '%';
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: false,
+          grid: { 
+            color: colors.gridLine,
+            drawBorder: false
+          },
+          ticks: {
+            color: colors.textSecondary,
+            font: { size: 11, weight: '500' },
+            callback: function(value: any) {
+              return value.toFixed(0) + '%';
+            }
+          },
+          title: {
+            display: true,
+            text: t('reports.growthRate', 'Growth Rate (%)'),
+            color: colors.textSecondary,
+            font: { size: 12, weight: '600' }
+          }
+        },
+        x: {
+          grid: { display: false, drawBorder: false },
+          ticks: { 
+            color: colors.textSecondary,
+            font: { size: 11, weight: '500' },
+            maxRotation: 45,
+            minRotation: 45
+          }
+        }
+      }
+    }
+  });
 }
 
 function createProductPerformanceChart(invoices: Invoice[]) {
@@ -4139,11 +4455,23 @@ async function exportReport() {
     const totalCost = totalSales - totalProfit;
     const invoiceCount = filteredInvoices.length;
     const profitMargin = totalSales > 0 ? ((totalProfit / totalSales) * 100).toFixed(1) : '0.0';
+    
+    // Calculate additional metrics for Performance Insights
+    const avgOrderValue = invoiceCount > 0 ? (totalSales / invoiceCount) : 0;
+    let productsSold = 0;
+    filteredInvoices.forEach(inv => {
+      productsSold += inv.items.length;
+    });
+    
+    // Get report count
+    const reportCountElement = document.getElementById('reportCount');
+    const reportCount = reportCountElement ? (parseInt(reportCountElement.textContent || '0') + 1).toString() : '1';
 
     // Capture chart images
     let businessOverviewImg = '';
     let revenueProfitImg = '';
     let productPerfImg = '';
+    let salesGrowthImg = '';
     
     if (reportCharts.businessOverview) {
       const canvas = document.getElementById('businessOverviewChart') as HTMLCanvasElement;
@@ -4156,6 +4484,10 @@ async function exportReport() {
     if (reportCharts.productPerf) {
       const canvas = document.getElementById('productPerformanceChart') as HTMLCanvasElement;
       if (canvas) productPerfImg = canvas.toDataURL('image/png');
+    }
+    if (reportCharts.salesGrowth) {
+      const canvas = document.getElementById('salesGrowthChart') as HTMLCanvasElement;
+      if (canvas) salesGrowthImg = canvas.toDataURL('image/png');
     }
 
     // Top 10 Products
@@ -4177,6 +4509,20 @@ async function exportReport() {
     const topCustomers = Object.entries(customerSales)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10);
+
+    // Detailed Sales by Product
+    const detailedProductSales: { [key: string]: { quantity: number; sales: number; profit: number } } = {};
+    filteredInvoices.forEach(inv => {
+      inv.items.forEach(item => {
+        if (!detailedProductSales[item.productName]) {
+          detailedProductSales[item.productName] = { quantity: 0, sales: 0, profit: 0 };
+        }
+        detailedProductSales[item.productName].quantity += item.quantity;
+        detailedProductSales[item.productName].sales += item.total;
+        detailedProductSales[item.productName].profit += item.profit;
+      });
+    });
+    const detailedProducts = Object.entries(detailedProductSales).sort((a, b) => b[1].sales - a[1].sales);
 
     // Monthly performance
     const monthlyData: { [key: string]: { revenue: number; profit: number; invoices: number } } = {};
@@ -4447,7 +4793,7 @@ async function exportReport() {
         ` : ''}
 
         <!-- Revenue & Product Performance Charts -->
-        ${revenueProfitImg || productPerfImg ? `
+        ${revenueProfitImg || salesGrowthImg ? `
         <div class="section">
           <h2 class="section-title">${t('reports.detailedAnalysis', 'Detailed Analysis')}</h2>
           <div class="two-chart-grid">
@@ -4457,15 +4803,46 @@ async function exportReport() {
               <img src="${revenueProfitImg}" alt="Revenue vs Profit Chart">
             </div>
             ` : ''}
-            ${productPerfImg ? `
+            ${salesGrowthImg ? `
             <div class="chart-box">
-              <h3>${t('reports.salesByProduct', 'Product Performance')}</h3>
-              <img src="${productPerfImg}" alt="Product Performance Chart">
+              <h3>${t('reports.salesGrowthRate', 'Sales Growth Rate')}</h3>
+              <img src="${salesGrowthImg}" alt="Sales Growth Rate Chart">
             </div>
             ` : ''}
           </div>
         </div>
         ` : ''}
+        
+        <!-- Full Width Product Performance Chart -->
+        ${productPerfImg ? `
+        <div class="section">
+          <h2 class="section-title">${t('reports.salesByProduct', 'Product Performance')}</h2>
+          <img src="${productPerfImg}" class="chart-image" alt="Product Performance Chart">
+        </div>
+        ` : ''}
+
+        <!-- Performance Insights -->
+        <div class="section">
+          <h2 class="section-title">${t('reports.performanceInsights', 'Performance Insights')}</h2>
+          <div class="summary-grid">
+            <div class="summary-card">
+              <div class="label">${t('reports.profitMargin', 'Profit Margin')}</div>
+              <div class="value">${profitMargin}%</div>
+            </div>
+            <div class="summary-card">
+              <div class="label">${t('reports.avgOrderValue', 'Avg Order Value')}</div>
+              <div class="value">${formatCurrency(avgOrderValue)}</div>
+            </div>
+            <div class="summary-card">
+              <div class="label">${t('reports.productsSold', 'Products Sold')}</div>
+              <div class="value">${productsSold}</div>
+            </div>
+            <div class="summary-card">
+              <div class="label">${t('reports.reportsGenerated', 'Reports Generated')}</div>
+              <div class="value">${reportCount}</div>
+            </div>
+          </div>
+        </div>
 
         <!-- Monthly Performance -->
         <div class="section">
@@ -4550,6 +4927,31 @@ async function exportReport() {
           </div>
         </div>
 
+        <!-- Detailed Sales by Product -->
+        <div class="section">
+          <h2 class="section-title">${t('reports.detailedSalesByProduct', 'Detailed Sales by Product')}</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>${t('common.product', 'Product')}</th>
+                <th class="right">${t('reports.quantitySold', 'Quantity Sold')}</th>
+                <th class="right">${t('reports.totalSales', 'Total Sales')}</th>
+                <th class="right">${t('reports.totalProfit', 'Total Profit')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${detailedProducts.map(([name, data]) => `
+                <tr>
+                  <td><strong>${name}</strong></td>
+                  <td class="right">${data.quantity}</td>
+                  <td class="right amount">${formatCurrency(data.sales)}</td>
+                  <td class="right amount">${formatCurrency(data.profit)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
         <!-- Footer -->
         <div class="footer">
           <strong>DALID Sales Manager</strong> | ${t('reports.comprehensiveReport', 'Comprehensive Sales Report')}<br>
@@ -4605,7 +5007,10 @@ function closeModal(modalId: string) {
 function updateElement(id: string, value: string) {
   const element = document.getElementById(id);
   if (element) {
+    console.log('[Analytics] Updating element', id, 'with value:', value);
     element.textContent = value;
+  } else {
+    console.log('[Analytics] Element not found:', id);
   }
 }
 
@@ -4718,13 +5123,43 @@ function renderInventory() {
   const totalStockValue = activeProducts.reduce((sum, p) => sum + (p.quantity * p.buyPrice), 0);
   const threshold = appSettings.lowStockThreshold ?? 5;
   const lowStockCount = activeProducts.filter(p => p.quantity <= threshold).length;
+  
+  // Calculate out of stock items
+  const outOfStockCount = activeProducts.filter(p => p.quantity === 0).length;
+  
+  // Categorize products by stock level
+  const lowStock = activeProducts.filter(p => p.quantity > 0 && p.quantity < 10).length;
+  const mediumStock = activeProducts.filter(p => p.quantity >= 10 && p.quantity < 50).length;
+  const highStock = activeProducts.filter(p => p.quantity >= 50).length;
+  
+  // Calculate percentages for progress bars
+  const totalProducts = activeProducts.length;
+  const lowStockPercent = totalProducts > 0 ? Math.round((lowStock / totalProducts) * 100) : 0;
+  const mediumStockPercent = totalProducts > 0 ? Math.round((mediumStock / totalProducts) * 100) : 0;
+  const highStockPercent = totalProducts > 0 ? Math.round((highStock / totalProducts) * 100) : 0;
 
-  (document as any).getElementById('totalStockItems').textContent = totalStockItems;
-  (document as any).getElementById('totalStockValue').textContent = formatCurrency(totalStockValue);
-  (document as any).getElementById('lowStockCount').textContent = lowStockCount;
+  // Update KPI values
+  updateElement('totalStockItems', totalStockItems.toString());
+  updateElement('totalStockValue', formatCurrency(totalStockValue));
+  updateElement('lowStockCount', lowStockCount.toString());
+  updateElement('outOfStockCount', outOfStockCount.toString());
+  
+  // Update category counts
+  updateElement('lowStockCategoryCount', lowStock.toString());
+  updateElement('mediumStockCategoryCount', mediumStock.toString());
+  updateElement('highStockCategoryCount', highStock.toString());
+  
+  // Update progress bars
+  const lowStockProgress = document.getElementById('lowStockProgress') as HTMLElement;
+  const mediumStockProgress = document.getElementById('mediumStockProgress') as HTMLElement;
+  const highStockProgress = document.getElementById('highStockProgress') as HTMLElement;
+  
+  if (lowStockProgress) lowStockProgress.style.width = `${lowStockPercent}%`;
+  if (mediumStockProgress) mediumStockProgress.style.width = `${mediumStockPercent}%`;
+  if (highStockProgress) highStockProgress.style.width = `${highStockPercent}%`;
 
   // Render inventory movements table
-  const tbody = (document as any).getElementById('inventoryTableBody');
+  const tbody = document.getElementById('inventoryTableBody');
   if (!tbody) return;
 
   if (workbookData.inventory.length === 0) {
@@ -4735,17 +5170,24 @@ function renderInventory() {
   // Show last 50 movements, most recent first
   const recentMovements = [...workbookData.inventory].reverse().slice(0, 50);
 
-  tbody.innerHTML = recentMovements.map(movement => `
-    <tr>
-      <td>${movement.date}</td>
-      <td><strong>${movement.productName}</strong></td>
-      <td><span class="badge badge-${movement.type === 'IN' ? 'success' : movement.type === 'OUT' ? 'danger' : 'warning'}">${movement.type}</span></td>
-      <td>${movement.quantity}</td>
-      <td>${movement.reference || '-'}</td>
-      <td><strong>${movement.balanceAfter}</strong></td>
-      <td>${movement.notes || '-'}</td>
-    </tr>
-  `).join('');
+  tbody.innerHTML = recentMovements.map(movement => {
+    const typeClass = movement.type === 'IN' ? 'badge-success' : movement.type === 'OUT' ? 'badge-danger' : 'badge-warning';
+    const typeLabel = movement.type === 'IN' ? t('inventory.in', 'IN') : 
+                      movement.type === 'OUT' ? t('inventory.out', 'OUT') : 
+                      t('inventory.adjustment', 'ADJUSTMENT');
+    
+    return `
+      <tr>
+        <td>${movement.date}</td>
+        <td><strong>${movement.productName}</strong></td>
+        <td><span class="badge ${typeClass}">${typeLabel}</span></td>
+        <td>${movement.quantity}</td>
+        <td>${movement.reference || '-'}</td>
+        <td><strong>${movement.balanceAfter}</strong></td>
+        <td>${movement.notes || '-'}</td>
+      </tr>
+    `;
+  }).join('');
   
   // Attach sorting functionality to table headers
   attachTableSorting('inventoryTable');
@@ -4948,28 +5390,59 @@ let analyticsCharts: any = {};
 let dashboardChart: any = null;
 
 function renderAnalytics() {
-  // Calculate key metrics (exclude cancelled invoices)
+  console.log('[Analytics] ============================================');
+  console.log('[Analytics] renderAnalytics called');
+  console.log('[Analytics] Total invoices in workbook:', workbookData.invoices.length);
+  console.log('[Analytics] Sample invoices:', workbookData.invoices.slice(0, 3));
+  console.log('[Analytics] ============================================');
+  
+  // Get selected period
+  const periodSelect = document.getElementById('analyticsPeriod') as HTMLSelectElement;
+  const period = periodSelect ? periodSelect.value : '30';
+  console.log('[Analytics] Selected period:', period);
+  
+  // Filter invoices by period and exclude cancelled invoices
   const activeInvoices = workbookData.invoices.filter(inv => inv.status !== 'Cancelled');
-  const totalSales = activeInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
-  const totalProfit = activeInvoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
-  const avgOrderValue = activeInvoices.length > 0 ? totalSales / activeInvoices.length : 0;
-  const totalProductsSold = workbookData.sales.reduce((sum, sale) => sum + sale.quantity, 0);
+  console.log('[Analytics] Active invoices (non-cancelled):', activeInvoices.length);
+  const filteredInvoices = filterInvoicesByPeriod(activeInvoices, period);
+  
+  // Calculate key metrics
+  const totalSales = filteredInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+  const totalProfit = filteredInvoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
+  const avgOrderValue = filteredInvoices.length > 0 ? totalSales / filteredInvoices.length : 0;
+  
+  console.log('[Analytics] Calculated values - Sales:', totalSales, 'Profit:', totalProfit, 'Invoices count:', filteredInvoices.length);
+  
+  // Calculate products sold for the period
+  console.log('[Analytics] Total sales in workbook:', workbookData.sales.length);
+  console.log('[Analytics] Sample sales:', workbookData.sales.slice(0, 3));
+  const periodSales = workbookData.sales.filter(sale => {
+    const saleDate = new Date(sale.date);
+    // Handle potential invalid dates
+    if (isNaN(saleDate.getTime())) {
+      console.log('[Analytics] Invalid sale date:', sale.date);
+      return false;
+    }
+    const result = isDateInPeriod(saleDate, period);
+    console.log('[Analytics] Sale date check - date:', sale.date, 'parsed:', saleDate, 'in period:', result);
+    return result;
+  });
+  const totalProductsSold = periodSales.reduce((sum, sale) => sum + sale.quantity, 0);
   const profitMargin = totalSales > 0 ? (totalProfit / totalSales) * 100 : 0;
 
-  // Calculate today's profit
+  // Calculate today's profit (only if period includes today)
   const today = new Date().toISOString().split('T')[0];
-  const todayInvoices = activeInvoices.filter(inv => inv.date === today);
+  const todayInvoices = filteredInvoices.filter(inv => inv.date === today);
   const todayProfit = todayInvoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
-  const todaySales = todayInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
 
-  // Calculate yesterday's profit
+  // Calculate yesterday's profit (only if period includes yesterday)
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayDate = yesterday.toISOString().split('T')[0];
-  const yesterdayInvoices = activeInvoices.filter(inv => inv.date === yesterdayDate);
+  const yesterdayInvoices = filteredInvoices.filter(inv => inv.date === yesterdayDate);
   const yesterdayProfit = yesterdayInvoices.reduce((sum, inv) => sum + inv.totalProfit, 0);
 
-  // Update metrics
+  // Update KPI metrics
   updateElement('todayProfitValue', formatCurrency(todayProfit));
   updateElement('todayProfitChange', todayInvoices.length > 0 ? `${todayInvoices.length} orders` : 'No sales today');
   updateElement('yesterdayProfitValue', formatCurrency(yesterdayProfit));
@@ -4979,6 +5452,23 @@ function renderAnalytics() {
   updateElement('totalProductsSold', totalProductsSold.toString());
   updateElement('profitMarginMetric', `${profitMargin.toFixed(1)}%`);
   updateElement('productsSoldChange', `${totalProductsSold} units`);
+  
+  // Update financial metrics - These are the correct element IDs for analytics total revenue and profit
+  console.log('[Analytics] Updating revenue value:', totalSales, 'formatted:', formatCurrency(totalSales));
+  console.log('[Analytics] Updating profit value:', totalProfit, 'formatted:', formatCurrency(totalProfit));
+  updateElement('totalRevenueValue', formatCurrency(totalSales)); // Correct ID for analytics total revenue
+  updateElement('totalProfitValue', formatCurrency(totalProfit)); // Correct ID for analytics total profit
+  
+  // Update progress bars (simplified for demo)
+  const revenueProgress = document.getElementById('revenueProgress') as HTMLElement;
+  const profitProgress = document.getElementById('profitProgress') as HTMLElement;
+  const marginProgress = document.getElementById('marginProgress') as HTMLElement;
+  const productsProgress = document.getElementById('productsProgress') as HTMLElement;
+  
+  if (revenueProgress) revenueProgress.style.width = '75%';
+  if (profitProgress) profitProgress.style.width = '65%';
+  if (marginProgress) marginProgress.style.width = '80%';
+  if (productsProgress) productsProgress.style.width = '70%';
 
   // Destroy existing charts
   Object.values(analyticsCharts).forEach((chart: any) => {
@@ -4986,16 +5476,147 @@ function renderAnalytics() {
   });
   analyticsCharts = {};
 
-  // Get filtered invoices for analytics (exclude cancelled)
-  const filteredInvoices = workbookData.invoices.filter(inv => inv.status !== 'Cancelled');
-
-  // Render charts
-  renderSalesTrendChart();
-  renderTopProductsChart();
-  renderTopCustomersChart();
-  renderProfitTrendChart();
-  renderProductCategoriesChart();
+  // Render charts with filtered data
+  renderSalesTrendChart(filteredInvoices);
+  renderTopProductsChart(periodSales);
+  renderTopCustomersChart(filteredInvoices);
+  renderProfitTrendChart(filteredInvoices);
+  renderProductCategoriesChart(periodSales);
   renderInventoryStatusChart();
+  
+  console.log('[Analytics] ============================================');
+  console.log('[Analytics] renderAnalytics completed');
+  console.log('[Analytics] ============================================');
+}
+
+// Helper function to filter invoices by period
+function filterInvoicesByPeriod(invoices: Invoice[], period: string): Invoice[] {
+  if (period === 'all') return invoices;
+  
+  const now = new Date();
+  const periodDays = parseInt(period);
+  const cutoffDate = new Date(now);
+  cutoffDate.setDate(now.getDate() - periodDays);
+  
+  // Log for debugging
+  console.log('[Analytics] Filtering invoices for period:', period, 'days');
+  console.log('[Analytics] Cutoff date:', cutoffDate.toISOString());
+  console.log('[Analytics] Total invoices before filtering:', invoices.length);
+  
+  const filtered = invoices.filter(inv => {
+    // Try different date parsing approaches
+    let invDate: Date;
+    try {
+      // Log the raw date for debugging
+      console.log('[Analytics] Raw invoice date:', inv.date, 'for invoice:', inv.invoiceId);
+      
+      // Try parsing as ISO date string first
+      invDate = new Date(inv.date);
+      
+      // If that doesn't work, try other formats
+      if (isNaN(invDate.getTime())) {
+        console.log('[Analytics] ISO parsing failed, trying other formats');
+        // Try parsing as MM/DD/YYYY or DD/MM/YYYY
+        const parts = inv.date.split('/');
+        if (parts.length === 3) {
+          // Try MM/DD/YYYY format first
+          const month = parseInt(parts[0]);
+          const day = parseInt(parts[1]);
+          const year = parseInt(parts[2]);
+          
+          // Validate the parts
+          if (!isNaN(month) && !isNaN(day) && !isNaN(year) && month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+            invDate = new Date(year, month - 1, day);
+            console.log('[Analytics] MM/DD/YYYY parsing result:', invDate.toISOString());
+          }
+          
+          // If still invalid, try DD/MM/YYYY format
+          if (isNaN(invDate.getTime())) {
+            const day = parseInt(parts[0]);
+            const month = parseInt(parts[1]);
+            const year = parseInt(parts[2]);
+            
+            // Validate the parts
+            if (!isNaN(month) && !isNaN(day) && !isNaN(year) && month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+              invDate = new Date(year, month - 1, day);
+              console.log('[Analytics] DD/MM/YYYY parsing result:', invDate.toISOString());
+            }
+          }
+          
+          // If still invalid, try YYYY-MM-DD format
+          if (isNaN(invDate.getTime())) {
+            const dateParts = inv.date.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (dateParts) {
+              const year = parseInt(dateParts[1]);
+              const month = parseInt(dateParts[2]);
+              const day = parseInt(dateParts[3]);
+              
+              // Validate the parts
+              if (!isNaN(year) && !isNaN(month) && !isNaN(day) && month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                invDate = new Date(year, month - 1, day);
+                console.log('[Analytics] YYYY-MM-DD parsing result:', invDate.toISOString());
+              }
+            }
+          }
+        }
+      }
+      
+      // If all parsing attempts failed, log the issue
+      if (isNaN(invDate.getTime())) {
+        console.log('[Analytics] All parsing attempts failed for date:', inv.date);
+        // Try a fallback - parse as string and hope for the best
+        const fallbackDate = new Date(inv.date);
+        if (!isNaN(fallbackDate.getTime())) {
+          invDate = fallbackDate;
+          console.log('[Analytics] Fallback parsing result:', invDate.toISOString());
+        }
+      }
+    } catch (e) {
+      console.log('[Analytics] Error parsing date:', inv.date, 'for invoice:', inv.invoiceId, 'Error:', e);
+      return false; // Exclude invoices with invalid dates
+    }
+    
+    // Check if date is valid
+    if (isNaN(invDate.getTime())) {
+      console.log('[Analytics] Invalid date for invoice:', inv.invoiceId, 'date:', inv.date);
+      // As a last resort, include the invoice if we can't parse the date
+      // This ensures we don't accidentally filter out all invoices due to date parsing issues
+      console.log('[Analytics] Including invoice with invalid date as fallback:', inv.invoiceId);
+      return true;
+    }
+    
+    const result = invDate >= cutoffDate;
+    // Log invoices that don't match for debugging
+    if (!result) {
+      console.log('[Analytics] Excluding invoice:', inv.invoiceId, 'date:', inv.date, 'parsed date:', invDate.toISOString(), 'cutoff:', cutoffDate.toISOString());
+    } else {
+      console.log('[Analytics] Including invoice:', inv.invoiceId, 'date:', inv.date, 'parsed date:', invDate.toISOString());
+    }
+    return result;
+  });
+  
+  console.log('[Analytics] Total invoices after filtering:', filtered.length);
+  return filtered;
+}
+
+// Helper function to check if a date is within the selected period
+function isDateInPeriod(date: Date, period: string): boolean {
+  // Check if date is valid
+  if (isNaN(date.getTime())) {
+    console.log('[Analytics] Invalid date in isDateInPeriod:', date);
+    return false;
+  }
+  
+  if (period === 'all') return true;
+  
+  const now = new Date();
+  const periodDays = parseInt(period);
+  const cutoffDate = new Date(now);
+  cutoffDate.setDate(now.getDate() - periodDays);
+  
+  const result = date >= cutoffDate;
+  console.log('[Analytics] isDateInPeriod - date:', date, 'period:', period, 'cutoff:', cutoffDate, 'result:', result);
+  return result;
 }
 
 // Chart theme utility
@@ -5181,13 +5802,13 @@ function renderDashboardOverviewChart() {
   });
 }
 
-function renderSalesTrendChart() {
+function renderSalesTrendChart(filteredInvoices: Invoice[] = workbookData.invoices.filter(inv => inv.status !== 'Cancelled')) {
   const canvas = (document as any).getElementById('salesTrendChart');
   if (!canvas) return;
 
-  // Group sales by date (exclude cancelled invoices)
+  // Group sales by date
   const salesByDate: any = {};
-  workbookData.invoices.filter(inv => inv.status !== 'Cancelled').forEach(inv => {
+  filteredInvoices.forEach(inv => {
     const date = inv.date;
     salesByDate[date] = (salesByDate[date] || 0) + inv.totalAmount;
   });
@@ -5268,13 +5889,13 @@ function renderSalesTrendChart() {
   });
 }
 
-function renderTopProductsChart() {
+function renderTopProductsChart(periodSales: Sale[] = workbookData.sales) {
   const canvas = (document as any).getElementById('topProductsChart');
   if (!canvas) return;
 
   // Calculate revenue by product
   const productRevenue: any = {};
-  workbookData.sales.forEach(sale => {
+  periodSales.forEach(sale => {
     productRevenue[sale.productName] = (productRevenue[sale.productName] || 0) + sale.total;
   });
 
@@ -5355,13 +5976,13 @@ function renderTopProductsChart() {
   });
 }
 
-function renderTopCustomersChart() {
+function renderTopCustomersChart(filteredInvoices: Invoice[] = workbookData.invoices.filter(inv => inv.status !== 'Cancelled')) {
   const canvas = (document as any).getElementById('topCustomersChart');
   if (!canvas) return;
 
   // Calculate total spending by customer
   const customerSpending: any = {};
-  workbookData.invoices.filter(inv => inv.status !== 'Cancelled').forEach(inv => {
+  filteredInvoices.forEach(inv => {
     const customer = inv.customerName || 'Unknown';
     customerSpending[customer] = (customerSpending[customer] || 0) + inv.totalAmount;
   });
@@ -5443,13 +6064,13 @@ function renderTopCustomersChart() {
   });
 }
 
-function renderProfitTrendChart() {
+function renderProfitTrendChart(filteredInvoices: Invoice[] = workbookData.invoices.filter(inv => inv.status !== 'Cancelled')) {
   const canvas = (document as any).getElementById('profitTrendChart');
   if (!canvas) return;
 
-  // Group profit by date (exclude cancelled invoices)
+  // Group profit by date
   const profitByDate: any = {};
-  workbookData.invoices.filter(inv => inv.status !== 'Cancelled').forEach(inv => {
+  filteredInvoices.forEach(inv => {
     const date = inv.date;
     profitByDate[date] = (profitByDate[date] || 0) + inv.totalProfit;
   });
@@ -5530,13 +6151,13 @@ function renderProfitTrendChart() {
   });
 }
 
-function renderProductCategoriesChart() {
+function renderProductCategoriesChart(periodSales: Sale[] = workbookData.sales) {
   const canvas = (document as any).getElementById('productCategoriesChart');
   if (!canvas) return;
 
   // Calculate revenue by product
   const productRevenue: any = {};
-  workbookData.sales.forEach(sale => {
+  periodSales.forEach(sale => {
     productRevenue[sale.productName] = (productRevenue[sale.productName] || 0) + sale.total;
   });
 

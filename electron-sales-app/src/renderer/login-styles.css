@@ -9,16 +9,16 @@
 }
 
 :root {
-    --primary: #7c3aed;
-    --primary-dark: #6d28d9;
-    --primary-light: #8b5cf6;
-    --secondary: #ec4899;
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --primary-light: #818cf8;
+    --secondary: #8b5cf6;
     --success: #10b981;
     --error: #ef4444;
     --warning: #f59e0b;
     
     --text-primary: #0f172a;
-    --text-secondary: #475569;
+    --text-secondary: #334155;
     --text-muted: #94a3b8;
     --bg-primary: #f8fafc;
     --bg-secondary: #ffffff;
@@ -30,12 +30,12 @@
 
 [data-theme="dark"] {
     --text-primary: #f1f5f9;
-    --text-secondary: #cbd5e1;
+    --text-secondary: #e2e8f0;
     --text-muted: #94a3b8;
     --bg-primary: #0f172a;
     --bg-secondary: #1e293b;
     --bg-tertiary: #334155;
-    --border: #334155;
+    --border: #475569;
     --shadow: rgba(0, 0, 0, 0.3);
     --shadow-lg: rgba(0, 0, 0, 0.4);
 }
@@ -541,18 +541,6 @@ body {
     }
 }
 
-/* Form Footer */
-.form-footer {
-    text-align: center;
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
-}
-
-.footer-version {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-}
-
 /* Animations */
 @keyframes slideInLeft {
     from {
@@ -585,6 +573,51 @@ body {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* ============================================
+   SCROLLBAR STYLING
+   ============================================ */
+
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-light);
+    border-radius: 6px;
+    border: 2px solid var(--bg-secondary);
+    transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-gradient);
+    border-color: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-corner {
+    background: var(--bg-secondary);
+}
+
+/* Ensure scrollbars are always visible when content overflows */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-light) var(--bg-secondary);
+}
+
+/* Force scrollbars to be visible in containers that need them */
+.form-container,
+.modal-content,
+.login-container {
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-light) var(--bg-secondary);
 }
 
 /* ============================================
@@ -873,4 +906,53 @@ body {
 
 [data-theme="dark"] .form-input:focus {
     box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    :root {
+        --border: #000000;
+        --text-primary: #000000;
+        --text-secondary: #000000;
+        --text-muted: #333333;
+    }
+    
+    [data-theme="dark"] {
+        --border: #ffffff;
+        --text-primary: #ffffff;
+        --text-secondary: #ffffff;
+        --text-muted: #cccccc;
+    }
+    
+    .form-input {
+        border: 2px solid #000000;
+    }
+    
+    .btn-login {
+        border: 2px solid #000000;
+    }
+    
+    .checkbox-custom {
+        border: 2px solid #000000;
+    }
+    
+    .error-message {
+        border: 2px solid #000000;
+    }
+    
+    [data-theme="dark"] .form-input {
+        border: 2px solid #ffffff;
+    }
+    
+    [data-theme="dark"] .btn-login {
+        border: 2px solid #ffffff;
+    }
+    
+    [data-theme="dark"] .checkbox-custom {
+        border: 2px solid #ffffff;
+    }
+    
+    [data-theme="dark"] .error-message {
+        border: 2px solid #ffffff;
+    }
 }

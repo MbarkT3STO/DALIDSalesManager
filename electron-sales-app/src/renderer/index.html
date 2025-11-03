@@ -13,31 +13,47 @@
             window.performance.mark('pageLoadStart');
         }
         
-        // Theme Toggle Functionality - Inline for faster execution
+        // Theme Toggle Functionality - Enhanced with smooth transitions
         function initTheme() {
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
             updateThemeIcon(savedTheme);
+            // Add transition class for smooth theme switching
+            document.documentElement.classList.add('theme-transition');
         }
 
         function updateThemeIcon(theme) {
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            if (!themeToggleBtn) return;
+            
             const sunIcon = document.getElementById('sunIcon');
             const moonIcon = document.getElementById('moonIcon');
+            
             if (theme === 'dark') {
                 sunIcon.style.display = 'none';
                 moonIcon.style.display = 'block';
+                themeToggleBtn.title = 'Switch to light mode';
             } else {
                 sunIcon.style.display = 'block';
                 moonIcon.style.display = 'none';
+                themeToggleBtn.title = 'Switch to dark mode';
             }
         }
 
         function toggleTheme() {
             const currentTheme = document.documentElement.getAttribute('data-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            // Add transition effect
+            document.documentElement.classList.add('theme-transition');
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             updateThemeIcon(newTheme);
+            
+            // Remove transition class after animation completes
+            setTimeout(() => {
+                document.documentElement.classList.remove('theme-transition');
+            }, 300);
         }
 
         // Modern Toast Notification System
@@ -339,251 +355,378 @@
         <main class="main-content">
             <!-- Dashboard Tab -->
             <div id="dashboardTab" class="tab-content active">
-                <div class="dashboard-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="8" cy="21" r="1"/>
-                                <circle cx="19" cy="21" r="1"/>
-                                <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
-                            </svg>
-                        </div>
-                        <div class="stat-info">
-                            <h3 data-translate="dashboard.totalSales">Total Sales</h3>
-                            <p class="stat-value" id="totalSales">$0.00</p>
-                        </div>
+                <!-- Dashboard Overview -->
+                <div class="dashboard-section">
+                    <div class="section-header">
+                        <h3 data-translate="dashboard.overview">Dashboard Overview</h3>
+                        <p class="section-subtitle" data-translate="dashboard.overviewDescription">Key business metrics and statistics</p>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M3 3v18h18"/>
-                                <path d="m19 9-5 5-4-4-3 3"/>
-                                <circle cx="18" cy="8" r="2"/>
-                            </svg>
+                    
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="8" cy="21" r="1"/>
+                                        <circle cx="19" cy="21" r="1"/>
+                                        <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="kpi-content">
+                                <h4 data-translate="dashboard.totalSales">Total Sales</h4>
+                                <p class="kpi-value" id="totalSales">$0.00</p>
+                            </div>
                         </div>
-                        <div class="stat-info">
-                            <h3 data-translate="dashboard.totalProfit">Total Profit</h3>
-                            <p class="stat-value" id="totalProfit">$0.00</p>
+                        
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M3 3v18h18"/>
+                                        <path d="m19 9-5 5-4-4-3 3"/>
+                                        <circle cx="18" cy="8" r="2"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="kpi-content">
+                                <h4 data-translate="dashboard.totalProfit">Total Profit</h4>
+                                <p class="kpi-value" id="totalProfit">$0.00</p>
+                            </div>
                         </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="m7.5 4.27 9 5.15"/>
-                                <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
-                                <path d="m3.3 7 8.7 5 8.7-5"/>
-                                <path d="M12 22V12"/>
-                            </svg>
+                        
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="m7.5 4.27 9 5.15"/>
+                                        <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+                                        <path d="m3.3 7 8.7 5 8.7-5"/>
+                                        <path d="M12 22V12"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="kpi-content">
+                                <h4 data-translate="dashboard.totalProducts">Products</h4>
+                                <p class="kpi-value" id="totalProducts">0</p>
+                            </div>
                         </div>
-                        <div class="stat-info">
-                            <h3 data-translate="dashboard.totalProducts">Products</h3>
-                            <p class="stat-value" id="totalProducts">0</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                                <circle cx="9" cy="7" r="4"/>
-                                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                            </svg>
-                        </div>
-                        <div class="stat-info">
-                            <h3 data-translate="dashboard.totalCustomers">Customers</h3>
-                            <p class="stat-value" id="totalCustomers">0</p>
+                        
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="9" cy="7" r="4"/>
+                                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="kpi-content">
+                                <h4 data-translate="dashboard.totalCustomers">Customers</h4>
+                                <p class="kpi-value" id="totalCustomers">0</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-
+                
+                <!-- Financial Performance -->
                 <div class="dashboard-section">
-                    <h2 data-translate="dashboard.insights">Insights</h2>
-                    <div class="dashboard-insights">
-                        <div class="insight-card">
-                            <h3 data-translate="dashboard.overview">Business Overview</h3>
-                            <canvas id="dashboardOverviewChart"></canvas>
+                    <div class="section-header">
+                        <h3 data-translate="dashboard.financialPerformance">Financial Performance</h3>
+                        <p class="section-subtitle" data-translate="dashboard.financialPerformanceDescription">Sales and profit trends</p>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <canvas id="dashboardOverviewChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity -->
+                <!-- Changed from dashboard-grid to dashboard-sections-stack to make each section full width -->
+                <div class="dashboard-sections-stack">
+                    <div class="dashboard-section">
+                        <div class="section-header">
+                            <h3 data-translate="dashboard.recentInvoices">Recent Invoices</h3>
+                            <p class="section-subtitle" data-translate="dashboard.recentInvoicesDescription">Latest customer transactions</p>
+                        </div>
+                        
+                        <div class="table-container">
+                            <table class="data-table" id="recentInvoicesTable">
+                                <thead>
+                                    <tr>
+                                        <th data-translate="dashboard.invoiceId" class="sortable">Invoice ID</th>
+                                        <th data-translate="common.date" class="sortable">Date</th>
+                                        <th data-translate="common.customer" class="sortable">Customer</th>
+                                        <th data-translate="common.amount" class="sortable">Amount</th>
+                                        <th data-translate="dashboard.profit" class="sortable">Profit</th>
+                                        <th data-translate="common.status" class="sortable">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentInvoicesBody">
+                                    <tr>
+                                        <td colspan="6" class="empty-state" data-translate="common.noInvoices">No invoices yet</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                </div>
-
-                <div class="dashboard-section">
-                    <h2 data-translate="dashboard.recentInvoices">Recent Invoices</h2>
-                    <div id="recentInvoices" class="table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th data-translate="dashboard.invoiceId">Invoice ID</th>
-                                    <th data-translate="common.date">Date</th>
-                                    <th data-translate="common.customer">Customer</th>
-                                    <th data-translate="common.amount">Amount</th>
-                                    <th data-translate="dashboard.profit">Profit</th>
-                                    <th data-translate="common.status">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="recentInvoicesBody">
-                                <tr>
-                                    <td colspan="6" class="empty-state" data-translate="common.noInvoices">No invoices yet</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="dashboard-section">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-                        <h2 data-translate="dashboard.lowStockAlert">Low Stock Alert</h2>
-                        <button class="btn btn-secondary btn-small" onclick="openLowStockModal()" style="display: flex; align-items: center; gap: 0.5rem;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <line x1="12" y1="16" x2="12" y2="12"/>
-                                <line x1="12" y1="8" x2="12.01" y2="8"/>
-                            </svg>
-                            <span data-translate="common.viewAll">View All</span>
-                        </button>
-                    </div>
-                    <div id="lowStockAlert" class="alert-container">
-                        <p class="empty-state" data-translate="common.allStocked">All products are well stocked</p>
+                    
+                    <div class="dashboard-section">
+                        <div class="section-header" style="display: flex; align-items: center; justify-content: space-between;">
+                            <div>
+                                <h3 data-translate="dashboard.lowStockAlert">Low Stock Alert</h3>
+                                <p class="section-subtitle" data-translate="dashboard.lowStockDescription">Products running low on inventory</p>
+                            </div>
+                            <button class="btn btn-secondary btn-small" onclick="openLowStockModal()" style="display: flex; align-items: center; gap: 0.5rem;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="16" x2="12" y2="12"/>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                </svg>
+                                <span data-translate="common.viewAll">View All</span>
+                            </button>
+                        </div>
+                        
+                        <div id="lowStockAlert" class="alert-container">
+                            <p class="empty-state" data-translate="common.allStocked">All products are well stocked</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Accounting Tab -->
             <div id="accountingTab" class="tab-content">
-                <div class="tab-header">
-                    <h2 data-translate="accounting.title">Accounting</h2>
-                </div>
-
-                <div class="dashboard-grid" style="margin-bottom: 1.5rem;">
-                    <div class="stat-card">
-                        <div class="stat-info">
-                            <h3 data-translate="accounting.quickJournal">Quick Journal Entry</h3>
-                            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: end;">
-                                <div class="form-group" style="min-width: 160px;">
-                                    <label data-translate="common.date">Date</label>
-                                    <input type="date" id="jeDate" class="form-control">
-                                </div>
-                                <div class="form-group" style="flex: 1; min-width: 200px;">
-                                    <label data-translate="common.description">Description</label>
-                                    <input type="text" id="jeDesc" class="form-control" data-translate-placeholder="common.description" placeholder="Description">
-                                </div>
-                                <div class="form-group" style="min-width: 140px;">
-                                    <label data-translate="accounting.reference">Reference</label>
-                                    <input type="text" id="jeRef" class="form-control" data-translate-placeholder="accounting.reference" placeholder="Ref#">
+                <!-- Accounting Overview -->
+                <div class="accounting-section">
+                    <div class="section-header">
+                        <h3 data-translate="accounting.overview">Accounting Overview</h3>
+                        <p class="section-subtitle" data-translate="accounting.overviewDescription">Key accounting metrics and financial summaries</p>
+                    </div>
+                    
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                    </svg>
                                 </div>
                             </div>
-                            <div style="margin-top: 10px;">
-                                <table class="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th data-translate="accounting.line">Line</th>
-                                            <th data-translate="accounting.account">Account</th>
-                                            <th data-translate="accounting.debit">Debit</th>
-                                            <th data-translate="accounting.credit">Credit</th>
-                                            <th data-translate="common.actions">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="jeLinesBody">
-                                        <tr>
-                                            <td>1</td>
-                                            <td><input class="form-control je-account" data-translate-placeholder="accounting.accountCodePlaceholder" placeholder="Account (code)" list="accountsDatalist"></td>
-                                            <td><input type="number" class="form-control je-debit" min="0" step="0.01"></td>
-                                            <td><input type="number" class="form-control je-credit" min="0" step="0.01"></td>
-                                            <td><button class="btn btn-secondary btn-small btn-icon-only" id="jeAddLineBtn" title="Add Line">
-                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <path d="M12 5v14M5 12h14"/>
-                                                </svg>
-                                            </button></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                                <!-- Accounts datalist for autocomplete -->
-                                <datalist id="accountsDatalist"></datalist>
-                                <div style="display:flex; gap: 10px; margin-top: 10px;">
-                                    <button class="btn btn-primary" id="jeSubmitBtn" data-translate="accounting.postJournal">Post Journal</button>
-                                    <span id="jeTotals" style="align-self: center; color: var(--text-secondary);"></span>
+                            <div class="kpi-content">
+                                <h4 data-translate="accounting.totalRevenue">Total Revenue</h4>
+                                <p class="kpi-value" id="totalRevenueValue">$0.00</p>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                    </svg>
                                 </div>
+                            </div>
+                            <div class="kpi-content">
+                                <h4 data-translate="accounting.totalExpenses">Total Expenses</h4>
+                                <p class="kpi-value" id="totalExpensesValue">$0.00</p>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="kpi-content">
+                                <h4 data-translate="accounting.netIncome">Net Income</h4>
+                                <p class="kpi-value" id="netIncomeValue">$0.00</p>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M3 3v18h18"/>
+                                        <path d="M18 17V9"/>
+                                        <path d="M13 17V5"/>
+                                        <path d="M8 17v-3"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="kpi-content">
+                                <h4 data-translate="accounting.totalAssets">Total Assets</h4>
+                                <p class="kpi-value" id="totalAssetsValue">$0.00</p>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <div class="dashboard-section">
-                    <h2 data-translate="accounting.trialBalance">Trial Balance</h2>
-                    <div style="display:flex; gap: 8px; margin-bottom: 10px; align-items: end; flex-wrap: wrap;">
-                        <div class="form-group">
-                            <label data-translate="reports.fromDate">From Date:</label>
-                            <input type="date" id="tbFrom" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label data-translate="reports.toDate">To Date:</label>
-                            <input type="date" id="tbTo" class="form-control">
-                        </div>
-                        <button class="btn btn-secondary" id="tbRefreshBtn" data-translate="common.refreshData">Refresh</button>
-                        <button class="btn btn-secondary btn-icon-only" id="tbExportCsvBtn" title="Export CSV">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                <polyline points="7 10 12 15 17 10"/>
-                                <line x1="12" y1="15" x2="12" y2="3"/>
-                                <circle cx="12" cy="5" r="2"/>
-                            </svg>
-                        </button>
-                        <button class="btn btn-secondary btn-icon-only" id="tbExportPdfBtn" title="Export PDF">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                <polyline points="7 10 12 15 17 10"/>
-                                <line x1="12" y1="15" x2="12" y2="3"/>
-                            </svg>
-                        </button>
+                
+                <!-- Quick Journal Entry -->
+                <div class="accounting-section">
+                    <div class="section-header">
+                        <h3 data-translate="accounting.quickJournal">Quick Journal Entry</h3>
+                        <p class="section-subtitle" data-translate="accounting.quickJournalDescription">Create and post journal entries quickly</p>
                     </div>
-                    <div class="table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th data-translate="accounting.code">Code</th>
-                                    <th data-translate="accounting.account">Account</th>
-                                    <th data-translate="accounting.type">Type</th>
-                                    <th data-translate="accounting.debit">Debit</th>
-                                    <th data-translate="accounting.credit">Credit</th>
-                                    <th data-translate="accounting.balance">Balance</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbBody">
-                                <tr><td colspan="6" class="empty-state" data-translate="common.noData">No data</td></tr>
-                            </tbody>
-                        </table>
+                    
+                    <div class="form-container">
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: end; margin-bottom: 1rem;">
+                            <div class="form-group" style="min-width: 160px;">
+                                <label data-translate="common.date">Date</label>
+                                <input type="date" id="jeDate" class="form-control">
+                            </div>
+                            <div class="form-group" style="flex: 1; min-width: 200px;">
+                                <label data-translate="common.description">Description</label>
+                                <input type="text" id="jeDesc" class="form-control" data-translate-placeholder="common.description" placeholder="Description">
+                            </div>
+                            <div class="form-group" style="min-width: 140px;">
+                                <label data-translate="accounting.reference">Reference</label>
+                                <input type="text" id="jeRef" class="form-control" data-translate-placeholder="accounting.reference" placeholder="Ref#">
+                            </div>
+                        </div>
+                        
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th data-translate="accounting.line">Line</th>
+                                        <th data-translate="accounting.account">Account</th>
+                                        <th data-translate="accounting.debit">Debit</th>
+                                        <th data-translate="accounting.credit">Credit</th>
+                                        <th data-translate="common.actions">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="jeLinesBody">
+                                    <tr>
+                                        <td>1</td>
+                                        <td><input class="form-control je-account" data-translate-placeholder="accounting.accountCodePlaceholder" placeholder="Account (code)" list="accountsDatalist"></td>
+                                        <td><input type="number" class="form-control je-debit" min="0" step="0.01"></td>
+                                        <td><input type="number" class="form-control je-credit" min="0" step="0.01"></td>
+                                        <td><button class="btn btn-secondary btn-small btn-icon-only" id="jeAddLineBtn" title="Add Line">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M12 5v14M5 12h14"/>
+                                            </svg>
+                                        </button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Accounts datalist for autocomplete -->
+                        <datalist id="accountsDatalist"></datalist>
+                        
+                        <div style="display:flex; gap: 1rem; margin-top: 1rem; align-items: center; flex-wrap: wrap;">
+                            <button class="btn btn-primary" id="jeSubmitBtn" data-translate="accounting.postJournal">Post Journal</button>
+                            <span id="jeTotals" style="color: var(--text-secondary);"></span>
+                        </div>
                     </div>
                 </div>
-
-                <div class="dashboard-section">
-                    <h2 data-translate="accounting.financialStatements">Financial Statements</h2>
-                    <div style="display:flex; gap: 8px; margin-bottom: 10px; align-items: end; flex-wrap: wrap;">
-                        <div class="form-group">
-                            <label data-translate="reports.fromDate">From Date:</label>
-                            <input type="date" id="fsFrom" class="form-control">
+                
+                <!-- Financial Reports -->
+                <div class="accounting-grid">
+                    <!-- Trial Balance -->
+                    <div class="accounting-section">
+                        <div class="section-header" style="display: flex; align-items: center; justify-content: space-between;">
+                            <div>
+                                <h3 data-translate="accounting.trialBalance">Trial Balance</h3>
+                                <p class="section-subtitle" data-translate="accounting.trialBalanceDescription">Verify accounting accuracy with debit/credit balances</p>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="btn btn-secondary btn-icon-only" id="tbExportCsvBtn" title="Export CSV">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="7 10 12 15 17 10"/>
+                                        <line x1="12" y1="15" x2="12" y2="3"/>
+                                        <circle cx="12" cy="5" r="2"/>
+                                    </svg>
+                                </button>
+                                <button class="btn btn-secondary btn-icon-only" id="tbExportPdfBtn" title="Export PDF">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="7 10 12 15 17 10"/>
+                                        <line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label data-translate="accounting.toOrAsOf">To / As of</label>
-                            <input type="date" id="fsTo" class="form-control">
+                        
+                        <div style="display:flex; gap: 1rem; margin-bottom: 1rem; align-items: end; flex-wrap: wrap;">
+                            <div class="form-group">
+                                <label data-translate="reports.fromDate">From Date:</label>
+                                <input type="date" id="tbFrom" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label data-translate="reports.toDate">To Date:</label>
+                                <input type="date" id="tbTo" class="form-control">
+                            </div>
+                            <button class="btn btn-secondary" id="tbRefreshBtn" data-translate="common.refreshData">Refresh</button>
                         </div>
-                        <button class="btn btn-secondary" id="fsIncomeBtn" data-translate="accounting.incomeStatement">Income Statement</button>
-                        <button class="btn btn-secondary" id="fsBalanceBtn" data-translate="accounting.balanceSheet">Balance Sheet</button>
-                        <button class="btn btn-secondary btn-icon-only" id="fsExportCsvBtn" title="Export CSV">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                <polyline points="7 10 12 15 17 10"/>
-                                <line x1="12" y1="15" x2="12" y2="3"/>
-                                <circle cx="12" cy="5" r="2"/>
-                            </svg>
-                        </button>
-                        <button class="btn btn-secondary btn-icon-only" id="fsExportPdfBtn" title="Export PDF">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                <polyline points="7 10 12 15 17 10"/>
-                                <line x1="12" y1="15" x2="12" y2="3"/>
-                            </svg>
-                        </button>
+                        
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th data-translate="accounting.code">Code</th>
+                                        <th data-translate="accounting.account">Account</th>
+                                        <th data-translate="accounting.type">Type</th>
+                                        <th data-translate="accounting.debit">Debit</th>
+                                        <th data-translate="accounting.credit">Credit</th>
+                                        <th data-translate="accounting.balance">Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbBody">
+                                    <tr><td colspan="6" class="empty-state" data-translate="common.noData">No data</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div id="fsOutput" class="table-container"></div>
+                    
+                    <!-- Financial Statements -->
+                    <div class="accounting-section">
+                        <div class="section-header" style="display: flex; align-items: center; justify-content: space-between;">
+                            <div>
+                                <h3 data-translate="accounting.financialStatements">Financial Statements</h3>
+                                <p class="section-subtitle" data-translate="accounting.financialStatementsDescription">Generate income statements and balance sheets</p>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="btn btn-secondary btn-icon-only" id="fsExportCsvBtn" title="Export CSV">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="7 10 12 15 17 10"/>
+                                        <line x1="12" y1="15" x2="12" y2="3"/>
+                                        <circle cx="12" cy="5" r="2"/>
+                                    </svg>
+                                </button>
+                                <button class="btn btn-secondary btn-icon-only" id="fsExportPdfBtn" title="Export PDF">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="7 10 12 15 17 10"/>
+                                        <line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div style="display:flex; gap: 1rem; margin-bottom: 1rem; align-items: end; flex-wrap: wrap;">
+                            <div class="form-group">
+                                <label data-translate="reports.fromDate">From Date:</label>
+                                <input type="date" id="fsFrom" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label data-translate="accounting.toOrAsOf">To / As of</label>
+                                <input type="date" id="fsTo" class="form-control">
+                            </div>
+                            <button class="btn btn-secondary" id="fsIncomeBtn" data-translate="accounting.incomeStatement">Income Statement</button>
+                            <button class="btn btn-secondary" id="fsBalanceBtn" data-translate="accounting.balanceSheet">Balance Sheet</button>
+                        </div>
+                        
+                        <div id="fsOutput" class="table-container"></div>
+                    </div>
                 </div>
             </div>
 
@@ -614,28 +757,119 @@
                     </div>
                 </div>
 
-                <div class="search-bar">
-                    <input type="text" id="productSearch" data-translate-placeholder="products.searchPlaceholder" placeholder="Search products..." class="search-input">
-                </div>
-
-                <div class="table-container">
-                    <table class="data-table" id="productsTable">
-                        <thead>
-                            <tr>
-                                <th data-translate="products.productName" class="sortable">Product Name</th>
-                                <th data-translate="products.quantity" class="sortable">Quantity</th>
-                                <th data-translate="products.buyPrice" class="sortable">Buy Price</th>
-                                <th data-translate="products.salePrice" class="sortable">Sale Price</th>
-                                <th data-translate="products.profitMargin" class="sortable">Profit Margin</th>
-                                <th data-translate="common.actions">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="productsTableBody">
-                            <tr>
-                                <td colspan="6" class="empty-state" data-translate="common.noProducts">No products found</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <!-- Products Dashboard -->
+                <div class="products-dashboard">
+                    <!-- Products Overview -->
+                    <div class="products-section">
+                        <div class="section-header">
+                            <h3 data-translate="products.overview">Products Overview</h3>
+                            <p class="section-subtitle" data-translate="products.productMetrics">Key product metrics and statistics</p>
+                        </div>
+                        
+                        <div class="kpi-grid">
+                            <div class="kpi-card">
+                                <div class="kpi-header">
+                                    <div class="kpi-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M3 3v18h18"/>
+                                            <path d="M18 17V9"/>
+                                            <path d="M13 17V5"/>
+                                            <path d="M8 17v-3"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="kpi-content">
+                                    <h4 data-translate="products.totalProducts">Total Products</h4>
+                                    <p class="kpi-value" id="totalProductsValue">0</p>
+                                </div>
+                            </div>
+                            
+                            <div class="kpi-card">
+                                <div class="kpi-header">
+                                    <div class="kpi-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="8.5" cy="7" r="4"/>
+                                            <path d="M20 8v6M23 11h-6"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="kpi-content">
+                                    <h4 data-translate="products.totalStockItems">Total Stock Items</h4>
+                                    <p class="kpi-value" id="totalStockItemsValue">0</p>
+                                </div>
+                            </div>
+                            
+                            <div class="kpi-card">
+                                <div class="kpi-header">
+                                    <div class="kpi-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="kpi-content">
+                                    <h4 data-translate="products.totalStockValue">Total Stock Value</h4>
+                                    <p class="kpi-value" id="totalStockValue">$0.00</p>
+                                </div>
+                            </div>
+                            
+                            <div class="kpi-card kpi-warning">
+                                <div class="kpi-header">
+                                    <div class="kpi-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                            <path d="M12 9v4M12 17h.01"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="kpi-content">
+                                    <h4 data-translate="products.lowStockItems">Low Stock Items</h4>
+                                    <p class="kpi-value" id="lowStockItemsValue">0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Product Search -->
+                    <div class="products-section">
+                        <div class="section-header">
+                            <h3 data-translate="products.productSearch">Product Search</h3>
+                            <p class="section-subtitle" data-translate="products.searchAndFilter">Find and filter products</p>
+                        </div>
+                        
+                        <div class="search-bar">
+                            <input type="text" id="productSearch" data-translate-placeholder="products.searchPlaceholder" placeholder="Search products..." class="search-input">
+                        </div>
+                    </div>
+                    
+                    <!-- Products Table -->
+                    <div class="products-section">
+                        <div class="section-header">
+                            <h3 data-translate="products.productList">Product List</h3>
+                            <p class="section-subtitle" data-translate="products.allProducts">All active products</p>
+                        </div>
+                        
+                        <div class="table-container">
+                            <table class="data-table" id="productsTable">
+                                <thead>
+                                    <tr>
+                                        <th data-translate="products.productName" class="sortable">Product Name</th>
+                                        <th data-translate="products.quantity" class="sortable">Quantity</th>
+                                        <th data-translate="products.buyPrice" class="sortable">Buy Price</th>
+                                        <th data-translate="products.salePrice" class="sortable">Sale Price</th>
+                                        <th data-translate="products.profitMargin" class="sortable">Profit Margin</th>
+                                        <th data-translate="common.actions">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productsTableBody">
+                                    <tr>
+                                        <td colspan="6" class="empty-state" data-translate="common.noProducts">No products found</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -888,27 +1122,116 @@
                     </button>
                 </div>
 
-                <div class="search-bar">
-                    <input type="text" id="customerSearch" data-translate-placeholder="customers.searchPlaceholder" placeholder="Search customers..." class="search-input">
-                </div>
-
-                <div class="table-container">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th data-translate="customers.customerName">Customer Name</th>
-                                <th data-translate="customers.phone">Phone</th>
-                                <th data-translate="customers.email">Email</th>
-                                <th data-translate="customers.address">Address</th>
-                                <th data-translate="common.actions">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="customersTableBody">
-                            <tr>
-                                <td colspan="5" class="empty-state" data-translate="common.noCustomers">No customers found</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <!-- Customers Dashboard -->
+                <div class="customers-dashboard">
+                    <!-- Customers Overview -->
+                    <div class="customers-section">
+                        <div class="section-header">
+                            <h3 data-translate="customers.overview">Customers Overview</h3>
+                            <p class="section-subtitle" data-translate="customers.customerMetrics">Key customer metrics and statistics</p>
+                        </div>
+                        
+                        <div class="kpi-grid">
+                            <div class="kpi-card">
+                                <div class="kpi-header">
+                                    <div class="kpi-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="8.5" cy="7" r="4"/>
+                                            <path d="M20 8v6M23 11h-6"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="kpi-content">
+                                    <h4 data-translate="customers.totalCustomers">Total Customers</h4>
+                                    <p class="kpi-value" id="totalCustomersValue">0</p>
+                                </div>
+                            </div>
+                            
+                            <div class="kpi-card">
+                                <div class="kpi-header">
+                                    <div class="kpi-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="kpi-content">
+                                    <h4 data-translate="customers.totalRevenue">Total Revenue</h4>
+                                    <p class="kpi-value" id="customersTotalRevenueValue">$0.00</p>
+                                </div>
+                            </div>
+                            
+                            <div class="kpi-card">
+                                <div class="kpi-header">
+                                    <div class="kpi-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                            <path d="M12 9v4M12 17h.01"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="kpi-content">
+                                    <h4 data-translate="customers.totalProfit">Total Profit</h4>
+                                    <p class="kpi-value" id="customersTotalProfitValue">$0.00</p>
+                                </div>
+                            </div>
+                            
+                            <div class="kpi-card">
+                                <div class="kpi-header">
+                                    <div class="kpi-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <path d="M12 6v6l4 2"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="kpi-content">
+                                    <h4 data-translate="customers.avgOrderValue">Avg Order Value</h4>
+                                    <p class="kpi-value" id="customersAvgOrderValue">$0.00</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Customer Search -->
+                    <div class="customers-section">
+                        <div class="section-header">
+                            <h3 data-translate="customers.customerSearch">Customer Search</h3>
+                            <p class="section-subtitle" data-translate="customers.searchAndFilter">Find and filter customers</p>
+                        </div>
+                        
+                        <div class="search-bar">
+                            <input type="text" id="customerSearch" data-translate-placeholder="customers.searchPlaceholder" placeholder="Search customers..." class="search-input">
+                        </div>
+                    </div>
+                    
+                    <!-- Customers Table -->
+                    <div class="customers-section">
+                        <div class="section-header">
+                            <h3 data-translate="customers.customerList">Customer List</h3>
+                            <p class="section-subtitle" data-translate="customers.allCustomers">All registered customers</p>
+                        </div>
+                        
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th data-translate="customers.customerName">Customer Name</th>
+                                        <th data-translate="customers.phone">Phone</th>
+                                        <th data-translate="customers.email">Email</th>
+                                        <th data-translate="customers.address">Address</th>
+                                        <th data-translate="common.actions">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="customersTableBody">
+                                    <tr>
+                                        <td colspan="5" class="empty-state" data-translate="common.noCustomers">No customers found</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -923,55 +1246,143 @@
                     </button>
                 </div>
 
-                <!-- Invoice Filters -->
-                <div class="invoice-filters">
-                    <div class="filter-group">
-                        <label for="invoiceStatusFilter" data-translate="common.status">Status:</label>
-                        <select id="invoiceStatusFilter" class="form-control">
-                            <option value="all" data-translate="sales.allStatuses">All Statuses</option>
-                            <option value="Paid" data-translate="sales.paid">Paid</option>
-                            <option value="Pending" data-translate="sales.pending">Pending</option>
-                            <option value="Cancelled" data-translate="sales.cancelled">Cancelled</option>
-                        </select>
+                <!-- Sales Dashboard -->
+                <div class="sales-dashboard">
+                    <!-- Sales Overview -->
+                    <div class="sales-section">
+                        <div class="section-header">
+                            <h3 data-translate="sales.overview">Sales Overview</h3>
+                            <p class="section-subtitle" data-translate="sales.performanceSummary">Business performance metrics</p>
+                        </div>
+                        
+                        <div class="kpi-grid">
+                            <div class="kpi-card">
+                                <div class="kpi-header">
+                                    <div class="kpi-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="kpi-content">
+                                    <h4 data-translate="sales.totalRevenue">Total Revenue</h4>
+                                    <p class="kpi-value" id="totalRevenueValue">$0.00</p>
+                                </div>
+                            </div>
+                            
+                            <div class="kpi-card">
+                                <div class="kpi-header">
+                                    <div class="kpi-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                            <path d="M12 9v4M12 17h.01"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="kpi-content">
+                                    <h4 data-translate="sales.totalProfit">Total Profit</h4>
+                                    <p class="kpi-value" id="totalProfitValue">$0.00</p>
+                                </div>
+                            </div>
+                            
+                            <div class="kpi-card">
+                                <div class="kpi-header">
+                                    <div class="kpi-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="8.5" cy="7" r="4"/>
+                                            <path d="M20 8v6M23 11h-6"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="kpi-content">
+                                    <h4 data-translate="sales.totalInvoices">Total Invoices</h4>
+                                    <p class="kpi-value" id="totalInvoicesValue">0</p>
+                                </div>
+                            </div>
+                            
+                            <div class="kpi-card">
+                                <div class="kpi-header">
+                                    <div class="kpi-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <path d="M12 6v6l4 2"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="kpi-content">
+                                    <h4 data-translate="sales.avgOrderValue">Avg Order Value</h4>
+                                    <p class="kpi-value" id="avgOrderValue">$0.00</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="filter-group">
-                        <label for="invoiceCustomerFilter" data-translate="common.customer">Customer:</label>
-                        <select id="invoiceCustomerFilter" class="form-control">
-                            <option value="all" data-translate="sales.allCustomers">All Customers</option>
-                        </select>
+                    
+                    <!-- Invoice Filters -->
+                    <div class="sales-section">
+                        <div class="section-header">
+                            <h3 data-translate="sales.invoiceFilters">Invoice Filters</h3>
+                            <p class="section-subtitle" data-translate="sales.filterInvoices">Search and filter invoices</p>
+                        </div>
+                        
+                        <div class="invoice-filters">
+                            <div class="filter-group">
+                                <label for="invoiceStatusFilter" data-translate="common.status">Status:</label>
+                                <select id="invoiceStatusFilter" class="form-control">
+                                    <option value="all" data-translate="sales.allStatuses">All Statuses</option>
+                                    <option value="Paid" data-translate="sales.paid">Paid</option>
+                                    <option value="Pending" data-translate="sales.pending">Pending</option>
+                                    <option value="Cancelled" data-translate="sales.cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="invoiceCustomerFilter" data-translate="common.customer">Customer:</label>
+                                <select id="invoiceCustomerFilter" class="form-control">
+                                    <option value="all" data-translate="sales.allCustomers">All Customers</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="invoiceDateFilter" data-translate="common.date">Date:</label>
+                                <input type="date" id="invoiceDateFilter" class="form-control" data-translate-placeholder="sales.selectDate">
+                            </div>
+                            <button id="clearInvoiceFilters" class="btn btn-secondary btn-small btn-icon-only" title="Clear Filters">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 3H2l7 8v7l6-3v-4z"/>
+                                    <line x1="8" y1="8" x2="16" y2="16"/>
+                                    <line x1="16" y1="8" x2="8" y2="16"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
-                    <div class="filter-group">
-                        <label for="invoiceDateFilter" data-translate="common.date">Date:</label>
-                        <input type="date" id="invoiceDateFilter" class="form-control" data-translate-placeholder="sales.selectDate">
+                    
+                    <!-- Invoices Table -->
+                    <div class="sales-section">
+                        <div class="section-header">
+                            <h3 data-translate="sales.invoiceList">Invoice List</h3>
+                            <p class="section-subtitle" data-translate="sales.allInvoices">All recorded invoices</p>
+                        </div>
+                        
+                        <div class="table-container">
+                            <table class="data-table" id="invoicesTable">
+                                <thead>
+                                    <tr>
+                                        <th data-translate="sales.invoiceId" class="sortable">Invoice ID</th>
+                                        <th data-translate="sales.date" class="sortable">Date</th>
+                                        <th data-translate="sales.customer" class="sortable">Customer</th>
+                                        <th data-translate="sales.totalAmount" class="sortable">Total Amount</th>
+                                        <th data-translate="sales.totalProfit" class="sortable">Total Profit</th>
+                                        <th data-translate="sales.status" class="sortable">Status</th>
+                                        <th data-translate="common.actions">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invoicesTableBody">
+                                    <tr>
+                                        <td colspan="7" class="empty-state" data-translate="common.noInvoices">No invoices found</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <button id="clearInvoiceFilters" class="btn btn-secondary btn-small btn-icon-only" title="Clear Filters">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M22 3H2l7 8v7l6-3v-4z"/>
-                            <line x1="8" y1="8" x2="16" y2="16"/>
-                            <line x1="16" y1="8" x2="8" y2="16"/>
-                        </svg>
-                    </button>
-                </div>
-
-                <div class="table-container">
-                    <table class="data-table" id="invoicesTable">
-                        <thead>
-                            <tr>
-                                <th data-translate="sales.invoiceId" class="sortable">Invoice ID</th>
-                                <th data-translate="sales.date" class="sortable">Date</th>
-                                <th data-translate="sales.customer" class="sortable">Customer</th>
-                                <th data-translate="sales.totalAmount" class="sortable">Total Amount</th>
-                                <th data-translate="sales.totalProfit" class="sortable">Total Profit</th>
-                                <th data-translate="sales.status" class="sortable">Status</th>
-                                <th data-translate="common.actions">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="invoicesTableBody">
-                            <tr>
-                                <td colspan="7" class="empty-state" data-translate="common.noInvoices">No invoices found</td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
             </div>
 
@@ -995,68 +1406,153 @@
                     </div>
                 </div>
 
-                <!-- Inventory Summary Cards -->
-                <div class="dashboard-grid" style="margin-bottom: 2rem;">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                <circle cx="8.5" cy="7" r="4"/>
-                                <path d="M20 8v6M23 11h-6"/>
-                            </svg>
+                <!-- Inventory Dashboard -->
+                <div class="inventory-dashboard">
+                    <!-- Inventory Overview -->
+                    <div class="inventory-section">
+                        <div class="section-header">
+                            <h3 data-translate="inventory.overview">Inventory Overview</h3>
+                            <p class="section-subtitle" data-translate="inventory.stockSummary">Current stock status and metrics</p>
                         </div>
-                        <div class="stat-info">
-                            <h3 data-translate="inventory.totalStockItems">Total Items In Stock</h3>
-                            <p class="stat-value" id="totalStockItems">0</p>
+                        
+                        <div class="kpi-grid">
+                            <div class="kpi-card">
+                                <div class="kpi-header">
+                                    <div class="kpi-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="8.5" cy="7" r="4"/>
+                                            <path d="M20 8v6M23 11h-6"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="kpi-content">
+                                    <h4 data-translate="inventory.totalStockItems">Total Items In Stock</h4>
+                                    <p class="kpi-value" id="totalStockItems">0</p>
+                                </div>
+                            </div>
+                            
+                            <div class="kpi-card">
+                                <div class="kpi-header">
+                                    <div class="kpi-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="kpi-content">
+                                    <h4 data-translate="inventory.totalStockValue">Total Stock Value</h4>
+                                    <p class="kpi-value" id="totalStockValue">$0.00</p>
+                                </div>
+                            </div>
+                            
+                            <div class="kpi-card kpi-warning">
+                                <div class="kpi-header">
+                                    <div class="kpi-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                            <path d="M12 9v4M12 17h.01"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="kpi-content">
+                                    <h4 data-translate="inventory.lowStockItems">Low Stock Items</h4>
+                                    <p class="kpi-value" id="lowStockCount">0</p>
+                                </div>
+                            </div>
+                            
+                            <div class="kpi-card">
+                                <div class="kpi-header">
+                                    <div class="kpi-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="kpi-content">
+                                    <h4 data-translate="inventory.outOfStock">Out of Stock</h4>
+                                    <p class="kpi-value" id="outOfStockCount">0</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                            </svg>
+                    
+                    <!-- Stock Movements -->
+                    <div class="inventory-section">
+                        <div class="section-header">
+                            <h3 data-translate="inventory.recentMovements">Recent Stock Movements</h3>
+                            <p class="section-subtitle" data-translate="inventory.latestActivity">Latest inventory transactions</p>
                         </div>
-                        <div class="stat-info">
-                            <h3 data-translate="inventory.totalStockValue">Total Stock Value</h3>
-                            <p class="stat-value" id="totalStockValue">$0.00</p>
+                        
+                        <div class="table-container">
+                            <table class="data-table" id="inventoryTable">
+                                <thead>
+                                    <tr>
+                                        <th data-translate="common.date" class="sortable">Date</th>
+                                        <th data-translate="common.product" class="sortable">Product</th>
+                                        <th data-translate="inventory.type" class="sortable">Type</th>
+                                        <th data-translate="common.quantity" class="sortable">Quantity</th>
+                                        <th data-translate="inventory.reference" class="sortable">Reference</th>
+                                        <th data-translate="inventory.balanceAfter" class="sortable">Balance After</th>
+                                        <th data-translate="inventory.notes">Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inventoryTableBody">
+                                    <tr>
+                                        <td colspan="7" class="empty-state" data-translate="inventory.noMovements">No inventory movements yet</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                                <path d="M12 9v4M12 17h.01"/>
-                            </svg>
+                    
+                    <!-- Stock Categories -->
+                    <div class="inventory-section">
+                        <div class="section-header">
+                            <h3 data-translate="inventory.stockCategories">Stock Categories</h3>
+                            <p class="section-subtitle" data-translate="inventory.inventoryDistribution">Distribution by stock levels</p>
                         </div>
-                        <div class="stat-info">
-                            <h3 data-translate="inventory.lowStockItems">Low Stock Items</h3>
-                            <p class="stat-value" id="lowStockCount">0</p>
+                        
+                        <div class="stock-categories">
+                            <div class="category-card">
+                                <div class="category-header">
+                                    <h4 data-translate="inventory.lowStock">Low Stock</h4>
+                                    <span class="category-count" id="lowStockCategoryCount">0</span>
+                                </div>
+                                <div class="category-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" id="lowStockProgress" style="width: 0%; background: var(--warning-gradient);"></div>
+                                    </div>
+                                </div>
+                                <p class="category-description" data-translate="inventory.lowStockDesc">Items with stock below threshold</p>
+                            </div>
+                            
+                            <div class="category-card">
+                                <div class="category-header">
+                                    <h4 data-translate="inventory.mediumStock">Medium Stock</h4>
+                                    <span class="category-count" id="mediumStockCategoryCount">0</span>
+                                </div>
+                                <div class="category-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" id="mediumStockProgress" style="width: 0%; background: var(--primary-gradient);"></div>
+                                    </div>
+                                </div>
+                                <p class="category-description" data-translate="inventory.mediumStockDesc">Items with adequate stock levels</p>
+                            </div>
+                            
+                            <div class="category-card">
+                                <div class="category-header">
+                                    <h4 data-translate="inventory.highStock">High Stock</h4>
+                                    <span class="category-count" id="highStockCategoryCount">0</span>
+                                </div>
+                                <div class="category-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" id="highStockProgress" style="width: 0%; background: var(--success-gradient);"></div>
+                                    </div>
+                                </div>
+                                <p class="category-description" data-translate="inventory.highStockDesc">Items with abundant stock levels</p>
+                            </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Stock Movements Table -->
-                <div class="dashboard-section">
-                    <h2 data-translate="inventory.recentMovements">Recent Stock Movements</h2>
-                    <div class="table-container">
-                        <table class="data-table" id="inventoryTable">
-                            <thead>
-                                <tr>
-                                    <th data-translate="common.date" class="sortable">Date</th>
-                                    <th data-translate="common.product" class="sortable">Product</th>
-                                    <th data-translate="inventory.type" class="sortable">Type</th>
-                                    <th data-translate="common.quantity" class="sortable">Quantity</th>
-                                    <th data-translate="inventory.reference" class="sortable">Reference</th>
-                                    <th data-translate="inventory.balanceAfter" class="sortable">Balance After</th>
-                                    <th data-translate="inventory.notes">Notes</th>
-                                </tr>
-                            </thead>
-                            <tbody id="inventoryTableBody">
-                                <tr>
-                                    <td colspan="7" class="empty-state" data-translate="inventory.noMovements">No inventory movements yet</td>
-                                </tr>
-                            </tbody>
-                        </table>
                     </div>
                 </div>
             </div>
@@ -1085,261 +1581,518 @@
                     </div>
                 </div>
 
-                <!-- Key Metrics Grid -->
-                <div class="analytics-metrics">
-                    <div class="metric-card metric-card-highlight">
-                        <div class="metric-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <path d="M12 6v6l4 2"/>
-                            </svg>
+                <!-- Analytics Dashboard -->
+                <div class="analytics-dashboard">
+                    <!-- Key Performance Indicators -->
+                    <div class="analytics-section">
+                        <div class="section-header">
+                            <h3 data-translate="analytics.keyMetrics">Key Performance Indicators</h3>
+                            <p class="section-subtitle" data-translate="analytics.overview">Business performance overview</p>
                         </div>
-                        <div class="metric-info">
-                            <h4 data-translate="analytics.todayProfit">Today's Profit</h4>
-                            <p class="metric-value" id="todayProfitValue">$0.00</p>
-                            <span class="metric-change positive" id="todayProfitChange" data-translate="analytics.today">Today</span>
+                        
+                        <div class="kpi-grid">
+                            <div class="kpi-card kpi-primary">
+                                <div class="kpi-header">
+                                    <div class="kpi-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <path d="M12 6v6l4 2"/>
+                                        </svg>
+                                    </div>
+                                    <div class="kpi-change positive">
+                                        <span id="todayProfitChange" data-translate="analytics.today">Today</span>
+                                    </div>
+                                </div>
+                                <div class="kpi-content">
+                                    <h4 data-translate="analytics.todayProfit">Today's Profit</h4>
+                                    <p class="kpi-value" id="todayProfitValue">$0.00</p>
+                                </div>
+                            </div>
+                            
+                            <div class="kpi-card kpi-primary">
+                                <div class="kpi-header">
+                                    <div class="kpi-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <path d="M12 6v6l-4 2"/>
+                                        </svg>
+                                    </div>
+                                    <div class="kpi-change">
+                                        <span id="yesterdayProfitChange" data-translate="analytics.yesterday">Yesterday</span>
+                                    </div>
+                                </div>
+                                <div class="kpi-content">
+                                    <h4 data-translate="analytics.yesterdayProfit">Yesterday's Profit</h4>
+                                    <p class="kpi-value" id="yesterdayProfitValue">$0.00</p>
+                                </div>
+                            </div>
+                            
+                            <div class="kpi-card">
+                                <div class="kpi-header">
+                                    <div class="kpi-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                        </svg>
+                                    </div>
+                                    <div class="kpi-change positive">
+                                        <span id="avgOrderChange">+0%</span>
+                                    </div>
+                                </div>
+                                <div class="kpi-content">
+                                    <h4 data-translate="analytics.avgOrderValue">Avg Order Value</h4>
+                                    <p class="kpi-value" id="avgOrderValue">$0.00</p>
+                                </div>
+                            </div>
+                            
+                            <div class="kpi-card">
+                                <div class="kpi-header">
+                                    <div class="kpi-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="8.5" cy="7" r="4"/>
+                                            <path d="M20 8v6M23 11h-6"/>
+                                        </svg>
+                                    </div>
+                                    <div class="kpi-change positive">
+                                        <span id="customersChange">+0</span>
+                                    </div>
+                                </div>
+                                <div class="kpi-content">
+                                    <h4 data-translate="analytics.totalCustomersMetric">Total Customers</h4>
+                                    <p class="kpi-value" id="totalCustomersMetric">0</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="metric-card metric-card-highlight">
-                        <div class="metric-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <path d="M12 6v6l-4 2"/>
-                            </svg>
+                    
+                    <!-- Financial Performance -->
+                    <div class="analytics-section">
+                        <div class="section-header">
+                            <h3 data-translate="analytics.financialPerformance">Financial Performance</h3>
+                            <p class="section-subtitle" data-translate="analytics.revenueAndProfit">Revenue and profit trends</p>
                         </div>
-                        <div class="metric-info">
-                            <h4 data-translate="analytics.yesterdayProfit">Yesterday's Profit</h4>
-                            <p class="metric-value" id="yesterdayProfitValue">$0.00</p>
-                            <span class="metric-change" id="yesterdayProfitChange" data-translate="analytics.yesterday">Yesterday</span>
-                        </div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                            </svg>
-                        </div>
-                        <div class="metric-info">
-                            <h4 data-translate="analytics.avgOrderValue">Average Order Value</h4>
-                            <p class="metric-value" id="avgOrderValue">$0.00</p>
-                            <span class="metric-change positive" id="avgOrderChange">+0%</span>
-                        </div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                <circle cx="8.5" cy="7" r="4"/>
-                                <path d="M20 8v6M23 11h-6"/>
-                            </svg>
-                        </div>
-                        <div class="metric-info">
-                            <h4 data-translate="analytics.totalCustomersMetric">Total Customers</h4>
-                            <p class="metric-value" id="totalCustomersMetric">0</p>
-                            <span class="metric-change positive" id="customersChange">+0</span>
-                        </div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                            </svg>
-                        </div>
-                        <div class="metric-info">
-                            <h4 data-translate="analytics.productsSold">Products Sold</h4>
-                            <p class="metric-value" id="totalProductsSold">0</p>
-                            <span class="metric-change" id="productsSoldChange">0 <span data-translate="analytics.units">units</span></span>
-                        </div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M3 3v18h18"/>
-                                <path d="M18 17V9l-5 5-5-5-3 3"/>
-                            </svg>
-                        </div>
-                        <div class="metric-info">
-                            <h4 data-translate="analytics.profitMarginMetric">Profit Margin</h4>
-                            <p class="metric-value" id="profitMarginMetric">0%</p>
-                            <span class="metric-change positive" id="profitMarginChange">+0%</span>
+                        
+                        <div class="financial-grid">
+                            <div class="financial-card">
+                                <div class="financial-header">
+                                    <h4 data-translate="analytics.totalRevenue">Total Revenue</h4>
+                                    <span class="financial-change positive">+0%</span>
+                                </div>
+                                <p class="financial-value" id="totalRevenueValue">$0.00</p>
+                                <div class="financial-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" id="revenueProgress" style="width: 0%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="financial-card">
+                                <div class="financial-header">
+                                    <h4 data-translate="analytics.totalProfit">Total Profit</h4>
+                                    <span class="financial-change positive">+0%</span>
+                                </div>
+                                <p class="financial-value" id="totalProfitValue">$0.00</p>
+                                <div class="financial-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" id="profitProgress" style="width: 0%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="financial-card">
+                                <div class="financial-header">
+                                    <h4 data-translate="analytics.profitMarginMetric">Profit Margin</h4>
+                                    <span class="financial-change positive" id="profitMarginChange">+0%</span>
+                                </div>
+                                <p class="financial-value" id="profitMarginMetric">0%</p>
+                                <div class="financial-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" id="marginProgress" style="width: 0%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="financial-card">
+                                <div class="financial-header">
+                                    <h4 data-translate="analytics.productsSold">Products Sold</h4>
+                                    <span class="financial-change" id="productsSoldChange">0 <span data-translate="analytics.units">units</span></span>
+                                </div>
+                                <p class="financial-value" id="totalProductsSold">0</p>
+                                <div class="financial-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" id="productsProgress" style="width: 0%;"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Charts Grid -->
-                <div class="charts-grid">
-                    <!-- Sales Trend Chart -->
-                    <div class="chart-container">
-                        <div class="chart-header">
-                            <h3 data-translate="analytics.salesTrend">Sales Trend</h3>
-                            <p class="chart-subtitle" data-translate="analytics.revenueOverTime">Revenue over time</p>
+                    
+                    <!-- Charts Section -->
+                    <div class="analytics-section">
+                        <div class="section-header">
+                            <h3 data-translate="analytics.visualAnalytics">Visual Analytics</h3>
+                            <p class="section-subtitle" data-translate="analytics.trendsAndInsights">Trends and insights</p>
                         </div>
-                        <canvas id="salesTrendChart"></canvas>
-                    </div>
-
-                    <!-- Profit Trend Chart -->
-                    <div class="chart-container">
-                        <div class="chart-header">
-                            <h3 data-translate="analytics.profitTrend">Profit Trend</h3>
-                            <p class="chart-subtitle" data-translate="analytics.profitOverTime">Profit over time</p>
+                        
+                        <div class="charts-container">
+                            <div class="chart-row">
+                                <!-- Sales Trend Chart -->
+                                <div class="chart-wrapper">
+                                    <div class="chart-header">
+                                        <h4 data-translate="analytics.salesTrend">Sales Trend</h4>
+                                        <p class="chart-subtitle" data-translate="analytics.revenueOverTime">Revenue over time</p>
+                                    </div>
+                                    <div class="chart-box">
+                                        <canvas id="salesTrendChart"></canvas>
+                                    </div>
+                                </div>
+                                
+                                <!-- Profit Trend Chart -->
+                                <div class="chart-wrapper">
+                                    <div class="chart-header">
+                                        <h4 data-translate="analytics.profitTrend">Profit Trend</h4>
+                                        <p class="chart-subtitle" data-translate="analytics.profitOverTime">Profit over time</p>
+                                    </div>
+                                    <div class="chart-box">
+                                        <canvas id="profitTrendChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="chart-row">
+                                <!-- Top Products Chart -->
+                                <div class="chart-wrapper">
+                                    <div class="chart-header">
+                                        <h4 data-translate="analytics.topProducts">Top Products</h4>
+                                        <p class="chart-subtitle" data-translate="analytics.bestSelling">Best selling products</p>
+                                    </div>
+                                    <div class="chart-box">
+                                        <canvas id="topProductsChart"></canvas>
+                                    </div>
+                                </div>
+                                
+                                <!-- Customer Activity Chart -->
+                                <div class="chart-wrapper">
+                                    <div class="chart-header">
+                                        <h4 data-translate="analytics.topCustomers">Top Customers</h4>
+                                        <p class="chart-subtitle" data-translate="analytics.topPurchases">By total purchases</p>
+                                    </div>
+                                    <div class="chart-box">
+                                        <canvas id="topCustomersChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <canvas id="profitTrendChart"></canvas>
-                    </div>
-
-                    <!-- Top Products Chart -->
-                    <div class="chart-container">
-                        <div class="chart-header">
-                            <h3 data-translate="analytics.topProducts">Top Products</h3>
-                            <p class="chart-subtitle" data-translate="analytics.bestSelling">Best selling products</p>
-                        </div>
-                        <canvas id="topProductsChart"></canvas>
-                    </div>
-
-                    <!-- Product Categories Chart -->
-                    <div class="chart-container">
-                        <div class="chart-header">
-                            <h3 data-translate="analytics.salesByProduct">Sales by Product</h3>
-                            <p class="chart-subtitle" data-translate="analytics.revenueDistribution">Revenue distribution</p>
-                        </div>
-                        <canvas id="productCategoriesChart"></canvas>
-                    </div>
-
-                    <!-- Customer Activity Chart -->
-                    <div class="chart-container">
-                        <div class="chart-header">
-                            <h3 data-translate="analytics.topCustomers">Top Customers</h3>
-                            <p class="chart-subtitle" data-translate="analytics.topPurchases">By total purchases</p>
-                        </div>
-                        <canvas id="topCustomersChart"></canvas>
-                    </div>
-
-                    <!-- Inventory Status Chart -->
-                    <div class="chart-container">
-                        <div class="chart-header">
-                            <h3 data-translate="analytics.inventoryStatus">Inventory Status</h3>
-                            <p class="chart-subtitle" data-translate="analytics.stockLevels">Stock levels</p>
-                        </div>
-                        <canvas id="inventoryStatusChart"></canvas>
                     </div>
                 </div>
             </div>
 
             <!-- Reports Tab -->
             <div id="reportsTab" class="tab-content">
-                <div class="tab-header">
-                    <h2 data-translate="reports.title">Reports & Analytics</h2>
-                    <button id="exportReportBtn" class="btn btn-secondary btn-icon-only" title="Export Report">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-                        </svg>
-                    </button>
+                <!-- Reports Overview -->
+                <div class="reports-section">
+                    <div class="section-header">
+                        <h3 data-translate="reports.overview">Reports Overview</h3>
+                        <p class="section-subtitle" data-translate="reports.overviewDescription">Key business metrics and performance insights</p>
+                    </div>
+                    
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="kpi-content">
+                                <h4 data-translate="reports.totalSales">Total Sales</h4>
+                                <p class="kpi-value" id="reportTotalSales">$0.00</p>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="kpi-content">
+                                <h4 data-translate="reports.totalProfit">Total Profit</h4>
+                                <p class="kpi-value" id="reportTotalProfit">$0.00</p>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="8.5" cy="7" r="4"/>
+                                        <path d="M20 8v6M23 11h-6"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="kpi-content">
+                                <h4 data-translate="reports.invoiceCount">Invoices Count</h4>
+                                <p class="kpi-value" id="reportInvoiceCount">0</p>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="8.5" cy="7" r="4"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="kpi-content">
+                                <h4 data-translate="reports.customerCount">Customer Count</h4>
+                                <p class="kpi-value" id="reportCustomerCount">0</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
-                <div class="report-filters">
-                    <div class="form-group">
-                        <label data-translate="reports.fromDate">From Date:</label>
-                        <input type="date" id="reportFromDate" class="form-control">
+                
+                <!-- Report Filters -->
+                <div class="reports-section">
+                    <div class="section-header">
+                        <h3 data-translate="reports.filterReports">Filter Reports</h3>
+                        <p class="section-subtitle" data-translate="reports.filterDescription">Select date range to filter report data</p>
                     </div>
-                    <div class="form-group">
-                        <label data-translate="reports.toDate">To Date:</label>
-                        <input type="date" id="reportToDate" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label style="visibility: hidden;">Filter</label>
-                        <button id="filterReportBtn" class="btn btn-primary btn-icon-only" title="Apply Filter">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 3H2l7 8v7l6-3v-4z"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="report-summary">
-                    <div class="summary-card">
-                        <h3 data-translate="reports.totalSales">Total Sales</h3>
-                        <p class="summary-value" id="reportTotalSales">$0.00</p>
-                    </div>
-                    <div class="summary-card">
-                        <h3 data-translate="reports.totalProfit">Total Profit</h3>
-                        <p class="summary-value" id="reportTotalProfit">$0.00</p>
-                    </div>
-                    <div class="summary-card">
-                        <h3 data-translate="reports.invoiceCount">Invoices Count</h3>
-                        <p class="summary-value" id="reportInvoiceCount">0</p>
-                    </div>
-                </div>
-
-                <!-- Charts Row 1: Business Overview -->
-                <div class="charts-grid">
-                    <div class="chart-card full-width">
-                        <h3 data-translate="reports.businessOverview">Business Performance Overview</h3>
-                        <div class="chart-container" style="height: 450px;">
-                            <canvas id="businessOverviewChart"></canvas>
+                    
+                    <div class="form-container">
+                        <div class="report-filters">
+                            <div class="form-group">
+                                <label data-translate="reports.fromDate">From Date:</label>
+                                <input type="date" id="reportFromDate" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label data-translate="reports.toDate">To Date:</label>
+                                <input type="date" id="reportToDate" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label style="visibility: hidden;">Filter</label>
+                                <button id="filterReportBtn" class="btn btn-primary btn-icon-only" title="Apply Filter">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M22 3H2l7 8v7l6-3v-4z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="form-group" style="margin-left: auto;">
+                                <label style="visibility: hidden;">Export</label>
+                                <button id="exportReportBtn" class="btn btn-secondary btn-icon-only" title="Export Report">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Charts Row 2: Revenue Analysis -->
-                <div class="charts-grid">
-                    <div class="chart-card">
-                        <h3 data-translate="reports.revenueVsProfit">Revenue Breakdown</h3>
-                        <div class="chart-container">
-                            <canvas id="revenueVsProfitChart"></canvas>
+                <!-- Charts and Top Performers -->
+                <div class="reports-section">
+                    <div class="section-header">
+                        <h3 data-translate="reports.businessPerformance">Business Performance</h3>
+                        <p class="section-subtitle" data-translate="reports.performanceDescription">Business trends and top performers</p>
+                    </div>
+                    
+                    <!-- Full Width Charts -->
+                    <div style="margin-bottom: 1.5rem;">
+                        <!-- Business Performance Overview -->
+                        <div class="reports-section" style="margin-bottom: 1.5rem;">
+                            <div class="section-header">
+                                <h4 data-translate="reports.businessOverview">Business Performance Overview</h4>
+                                <p class="section-subtitle" data-translate="reports.businessOverviewDescription">Monthly revenue, profit, cost trends and customer metrics</p>
+                            </div>
+                            
+                            <div class="chart-container" style="height: 450px;">
+                                <canvas id="businessOverviewChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Product Performance (Bigger Chart) -->
+                        <div class="reports-section" style="margin-bottom: 1.5rem;">
+                            <div class="section-header">
+                                <h4 data-translate="reports.salesByProduct">Product Performance</h4>
+                                <p class="section-subtitle" data-translate="reports.productPerformanceDescription">Product sales quantity and revenue comparison</p>
+                            </div>
+                            
+                            <div class="chart-container" style="height: 500px;">
+                                <canvas id="productPerformanceChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- New Charts -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.5rem;">
+                            <div class="reports-section">
+                                <div class="section-header">
+                                    <h4 data-translate="reports.revenueVsProfit">Revenue Breakdown</h4>
+                                    <p class="section-subtitle" data-translate="reports.revenueBreakdownDescription">Visual breakdown of revenue vs profit distribution</p>
+                                </div>
+                                
+                                <div class="chart-container" style="height: 350px;">
+                                    <canvas id="revenueVsProfitChart"></canvas>
+                                </div>
+                            </div>
+                            
+                            <div class="reports-section">
+                                <div class="section-header">
+                                    <h4 data-translate="reports.salesGrowthRate">Sales Growth Rate</h4>
+                                    <p class="section-subtitle" data-translate="reports.salesGrowthDescription">Monthly sales growth percentage comparison</p>
+                                </div>
+                                
+                                <div class="chart-container" style="height: 350px;">
+                                    <canvas id="salesGrowthChart"></canvas>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="chart-card">
-                        <h3 data-translate="reports.salesByProduct">Product Performance Overview</h3>
-                        <div class="chart-container">
-                            <canvas id="productPerformanceChart"></canvas>
+                    
+                    <!-- Top Performers Side by Side -->
+                    <div class="reports-section">
+                        <div class="section-header">
+                            <h4 data-translate="reports.topPerformers">Top Performers</h4>
+                            <p class="section-subtitle" data-translate="reports.topPerformersDescription">Top products and customers by revenue</p>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                            <div class="reports-section" style="margin-bottom: 0;">
+                                <div class="section-header">
+                                    <h5 data-translate="reports.topProducts">Top 10 Products</h5>
+                                    <p class="section-subtitle" data-translate="reports.topProductsDescription">Highest revenue generating products</p>
+                                </div>
+                                
+                                <div class="table-container" style="max-height: 300px; overflow-y: auto;">
+                                    <table class="data-table" id="topProductsTable">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 30px;">#</th>
+                                                <th data-translate="common.product">Product</th>
+                                                <th data-translate="reports.totalSales" style="text-align: right;">Sales</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="topProductsBody">
+                                            <tr>
+                                                <td colspan="3" class="empty-state">Loading...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div class="reports-section" style="margin-bottom: 0;">
+                                <div class="section-header">
+                                    <h5 data-translate="reports.topCustomers">Top 10 Customers</h5>
+                                    <p class="section-subtitle" data-translate="reports.topCustomersDescription">Highest spending customers</p>
+                                </div>
+                                
+                                <div class="table-container" style="max-height: 300px; overflow-y: auto;">
+                                    <table class="data-table" id="topCustomersTable">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 30px;">#</th>
+                                                <th data-translate="common.customer">Customer</th>
+                                                <th data-translate="reports.totalSpent" style="text-align: right;">Total Spent</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="topCustomersBody">
+                                            <tr>
+                                                <td colspan="3" class="empty-state">Loading...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Top 10 Tables -->
-                <div class="charts-grid">
-                    <div class="chart-card">
-                        <h3 data-translate="reports.topProducts">Top 10 Products by Revenue</h3>
-                        <div class="table-container" style="max-height: 400px; overflow-y: auto;">
-                            <table class="data-table" id="topProductsTable">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 50px;">#</th>
-                                        <th data-translate="common.product">Product</th>
-                                        <th data-translate="reports.totalSales" style="text-align: right;">Sales</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="topProductsBody">
-                                    <tr>
-                                        <td colspan="3" class="empty-state">Loading...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                
+                <!-- Performance Insights -->
+                <div class="reports-section">
+                    <div class="section-header">
+                        <h3 data-translate="reports.performanceInsights">Performance Insights</h3>
+                        <p class="section-subtitle" data-translate="reports.insightsDescription">Key performance indicators and business intelligence</p>
                     </div>
-                    <div class="chart-card">
-                        <h3 data-translate="reports.topCustomers">Top 10 Customers by Spending</h3>
-                        <div class="table-container" style="max-height: 400px; overflow-y: auto;">
-                            <table class="data-table" id="topCustomersTable">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 50px;">#</th>
-                                        <th data-translate="common.customer">Customer</th>
-                                        <th data-translate="reports.totalSpent" style="text-align: right;">Total Spent</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="topCustomersBody">
-                                    <tr>
-                                        <td colspan="3" class="empty-state">Loading...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                    
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="kpi-content">
+                                <h4 data-translate="reports.profitMargin">Profit Margin</h4>
+                                <p class="kpi-value" id="reportProfitMargin">0%</p>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="kpi-content">
+                                <h4 data-translate="reports.avgOrderValue">Avg Order Value</h4>
+                                <p class="kpi-value" id="reportAvgOrderValue">$0.00</p>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M3 3v18h18"/>
+                                        <path d="M18 17V9"/>
+                                        <path d="M13 17V5"/>
+                                        <path d="M8 17v-3"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="kpi-content">
+                                <h4 data-translate="reports.productsSold">Products Sold</h4>
+                                <p class="kpi-value" id="reportProductsSold">0</p>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14 2 14 8 20 8"/>
+                                        <line x1="16" y1="13" x2="8" y2="13"/>
+                                        <line x1="16" y1="17" x2="8" y2="17"/>
+                                        <polyline points="10 9 9 9 8 9"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="kpi-content">
+                                <h4 data-translate="reports.reportsGenerated">Reports Generated</h4>
+                                <p class="kpi-value" id="reportCount">0</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-
-                <div class="report-section">
-                    <h3 data-translate="reports.detailedSalesByProduct">Detailed Sales by Product</h3>
+                
+                <!-- Detailed Sales by Product -->
+                <div class="reports-section">
+                    <div class="section-header">
+                        <h3 data-translate="reports.detailedSalesByProduct">Detailed Sales by Product</h3>
+                        <p class="section-subtitle" data-translate="reports.detailedSalesDescription">Comprehensive product sales data with quantities and profits</p>
+                    </div>
+                    
                     <div id="salesByProduct" class="table-container">
                         <table class="data-table">
                             <thead>
@@ -1398,14 +2151,84 @@
 
             <!-- Settings Tab -->
             <div id="settingsTab" class="tab-content">
-                <div class="tab-header">
-                    <h2 data-translate="settings.title">Settings</h2>
+                <!-- Settings Overview -->
+                <div class="settings-section">
+                    <div class="section-header">
+                        <h3 data-translate="settings.overview">Settings Overview</h3>
+                        <p class="section-subtitle" data-translate="settings.overviewDescription">Configure application preferences and manage system settings</p>
+                    </div>
+                    
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                                        <path d="M12 8v6"/>
+                                        <path d="M9 13h6"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="kpi-content">
+                                <h4 data-translate="settings.currentTheme">Current Theme</h4>
+                                <p class="kpi-value" id="currentThemeValue">Light</p>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="kpi-content">
+                                <h4 data-translate="settings.language">Language</h4>
+                                <p class="kpi-value" id="currentLanguageValue">English</p>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <polyline points="12 6 12 12 16 14"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="kpi-content">
+                                <h4 data-translate="settings.autoBackup">Auto Backup</h4>
+                                <p class="kpi-value" id="autoBackupStatus">Enabled</p>
+                            </div>
+                        </div>
+                        
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <div class="kpi-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                                        <line x1="3" y1="6" x2="21" y2="6"/>
+                                        <path d="M16 10a4 4 0 0 1-8 0"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="kpi-content">
+                                <h4 data-translate="settings.notifications">Notifications</h4>
+                                <p class="kpi-value" id="notificationsStatus">Enabled</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
+                
                 <div class="settings-container">
                     <!-- Language Settings -->
                     <div class="settings-section">
-                        <h3 data-translate="settings.languageRegion">Language & Region</h3>
+                        <div class="section-header">
+                            <h3 data-translate="settings.languageRegion">Language & Region</h3>
+                            <p class="section-subtitle" data-translate="settings.languageRegionDescription">Configure language, currency, and regional preferences</p>
+                        </div>
                         <div class="settings-group">
                             <label for="languageSelect" data-translate="settings.language">Language</label>
                             <select id="languageSelect" class="form-control">
@@ -1434,7 +2257,10 @@
 
                     <!-- Display Settings -->
                     <div class="settings-section">
-                        <h3 data-translate="settings.display">Display</h3>
+                        <div class="section-header">
+                            <h3 data-translate="settings.display">Display</h3>
+                            <p class="section-subtitle" data-translate="settings.displayDescription">Customize the appearance and behavior of the interface</p>
+                        </div>
                         <div class="settings-group">
                             <label for="themeSelect" data-translate="settings.theme">Theme</label>
                             <select id="themeSelect" class="form-control">
@@ -1487,7 +2313,10 @@
 
                     <!-- Print Settings -->
                     <div class="settings-section">
-                        <h3 data-translate="settings.printSettings">Print Settings</h3>
+                        <div class="section-header">
+                            <h3 data-translate="settings.printSettings">Print Settings</h3>
+                            <p class="section-subtitle" data-translate="settings.printSettingsDescription">Configure default print options and invoice styles</p>
+                        </div>
                         <div class="settings-group">
                             <label for="printPaperSizeSelect" data-translate="settings.printPaperSize">Paper Size</label>
                             <select id="printPaperSizeSelect" class="form-control">
@@ -1528,7 +2357,10 @@
 
                     <!-- Data Settings -->
                     <div class="settings-section">
-                        <h3 data-translate="settings.dataManagement">Data Management</h3>
+                        <div class="section-header">
+                            <h3 data-translate="settings.dataManagement">Data Management</h3>
+                            <p class="section-subtitle" data-translate="settings.dataManagementDescription">Configure backup and data handling preferences</p>
+                        </div>
                         <div class="settings-group">
                             <label for="autoBackupToggle" data-translate="settings.autoBackup">Auto Backup</label>
                             <div class="toggle-switch">
@@ -1585,7 +2417,10 @@
 
                     <!-- Notification Settings -->
                     <div class="settings-section">
-                        <h3 data-translate="settings.notifications">Notifications</h3>
+                        <div class="section-header">
+                            <h3 data-translate="settings.notifications">Notifications</h3>
+                            <p class="section-subtitle" data-translate="settings.notificationsDescription">Configure notification preferences and alerts</p>
+                        </div>
                         <div class="settings-group">
                             <label for="lowStockNotificationsToggle" data-translate="settings.lowStockAlerts">Low Stock Alerts</label>
                             <div class="toggle-switch">
@@ -1611,7 +2446,10 @@
 
                     <!-- Application Settings -->
                     <div class="settings-section">
-                        <h3 data-translate="settings.application">Application</h3>
+                        <div class="section-header">
+                            <h3 data-translate="settings.application">Application</h3>
+                            <p class="section-subtitle" data-translate="settings.applicationDescription">Configure application behavior and startup preferences</p>
+                        </div>
                         <div class="settings-group">
                             <label for="startupBehaviorSelect" data-translate="settings.startupBehavior">Startup Behavior</label>
                             <select id="startupBehaviorSelect" class="form-control">
@@ -1654,8 +2492,10 @@
 
                     <!-- GDPR & Data Privacy -->
                     <div class="settings-section">
-                        <h3 data-translate="gdpr.title">GDPR & Data Privacy</h3>
-                        <p class="section-subtitle" data-translate="gdpr.subtitle">Manage customer data privacy and compliance</p>
+                        <div class="section-header">
+                            <h3 data-translate="gdpr.title">GDPR & Data Privacy</h3>
+                            <p class="section-subtitle" data-translate="gdpr.subtitle">Manage customer data privacy and compliance</p>
+                        </div>
                         
                         <!-- Export Customer Data -->
                         <div class="settings-group">
@@ -1697,8 +2537,10 @@
 
                     <!-- Audit & Compliance -->
                     <div class="settings-section">
-                        <h3 data-translate="audit.title">Audit & Compliance</h3>
-                        <p class="section-subtitle" data-translate="audit.subtitle">View activity logs and generate audit reports</p>
+                        <div class="section-header">
+                            <h3 data-translate="audit.title">Audit & Compliance</h3>
+                            <p class="section-subtitle" data-translate="audit.subtitle">View activity logs and generate audit reports</p>
+                        </div>
                         
                         <!-- View Activity Logs -->
                         <div class="settings-group">
