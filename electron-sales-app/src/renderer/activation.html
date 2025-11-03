@@ -591,7 +591,7 @@
             </div>
             Get Started
           </div>
-          <p class="note">Your copy of DALID Sales Manager requires activation to function. Click the button below to proceed with the activation process.</p>
+          <p class="note">Your copy of DALID Sales Manager requires activation to function.</p>
         </div>
 
         <!-- Action Buttons -->
@@ -601,15 +601,6 @@
               <path d="M18 6l-12 12M6 6l12 12"/>
             </svg>
             Quit
-          </button>
-          <button id="openActivationModalBtn" class="btn btn-primary">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 1v6"/>
-              <path d="M5.5 10.5l-4.5 4.5 4.5 4.5"/>
-              <path d="M18.5 10.5l4.5 4.5-4.5 4.5"/>
-              <rect x="3" y="8" width="18" height="8" rx="2"/>
-            </svg>
-            Activate Now
           </button>
         </div>
       </div>
@@ -671,7 +662,6 @@
 
     // DOM Elements
     const activationModal = document.getElementById('activationModal');
-    const openActivationModalBtn = document.getElementById('openActivationModalBtn');
     const closeModalBtn = document.getElementById('closeModalBtn');
     const cancelModalBtn = document.getElementById('cancelModalBtn');
     const quitAppBtn = document.getElementById('quitAppBtn');
@@ -755,7 +745,6 @@
     }
 
     // Event Listeners
-    openActivationModalBtn.addEventListener('click', openActivationModal);
     closeModalBtn.addEventListener('click', closeActivationModal);
     cancelModalBtn.addEventListener('click', closeActivationModal);
     

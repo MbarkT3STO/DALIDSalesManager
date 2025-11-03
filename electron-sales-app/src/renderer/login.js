@@ -1,35 +1,6 @@
 // Login functionality
 const api = window.electronAPI;
 
-// Theme functionality for login page
-function initLoginTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-}
-
-function toggleLoginTheme() {
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-    
-    // Update theme toggle button if it exists
-    const themeToggleBtn = document.getElementById('themeToggleBtn');
-    if (themeToggleBtn) {
-        const sunIcon = themeToggleBtn.querySelector('#sunIcon');
-        const moonIcon = themeToggleBtn.querySelector('#moonIcon');
-        if (newTheme === 'dark') {
-            sunIcon.style.display = 'none';
-            moonIcon.style.display = 'block';
-            themeToggleBtn.title = 'Switch to light mode';
-        } else {
-            sunIcon.style.display = 'block';
-            moonIcon.style.display = 'none';
-            themeToggleBtn.title = 'Switch to dark mode';
-        }
-    }
-}
-
 // Translation system - syncs with main app settings
 let currentLanguage = 'en';
 let translations = {};
@@ -116,9 +87,6 @@ window.addEventListener('DOMContentLoaded', () => {
     currentLanguage = getAppLanguage();
     loadTranslations(currentLanguage);
     
-    // Initialize theme
-    initLoginTheme();
-    
     // Check for remembered user
     const rememberedUser = localStorage.getItem('rememberedUser');
     if (rememberedUser) {
@@ -156,6 +124,12 @@ loginForm.addEventListener('submit', async (e) => {
     const password = passwordInput.value;
     const rememberMe = rememberMeCheckbox.checked;
     
+    // Validation
+    if (!username || !password) {
+        showError('Please enter both username and password');
+        return;
+    }
+    
     // Hide error message
     errorMessage.style.display = 'none';
     
@@ -174,69 +148,58 @@ loginForm.addEventListener('submit', async (e) => {
         // Authenticate user with database
         const result = await api.authenticateUser(username, password);
     
-    if (result.success && result.user) {
-        const user = result.user;
-        // Save user session
-        sessionStorage.setItem('currentUser', JSON.stringify({
-            username: user.username,
-            role: user.role,
-            fullName: user.fullName,
-            loginTime: new Date().toISOString()
-        }));
-        
-        // Remember user if checkbox is checked
-        if (rememberMe) {
-            localStorage.setItem('rememberedUser', username);
+        if (result.success && result.user) {
+            const user = result.user;
+            // Save user session
+            sessionStorage.setItem('currentUser', JSON.stringify({
+                username: user.username,
+                role: user.role,
+                fullName: user.fullName,
+                loginTime: new Date().toISOString()
+            }));
+            
+            // Remember user if checkbox is checked
+            if (rememberMe) {
+                localStorage.setItem('rememberedUser', username);
+            } else {
+                localStorage.removeItem('rememberedUser');
+            }
+            
+            // Success animation
+            loginBtn.style.background = 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)';
+            loginBtn.querySelector('.btn-loader').innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+            `;
+            
+            // Redirect to main app
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 500);
+            
         } else {
-            localStorage.removeItem('rememberedUser');
+            // Show error
+            showError('Invalid username or password');
+            
+            // Clear password
+            passwordInput.value = '';
+            passwordInput.focus();
         }
-        
-        // Success animation
-        loginBtn.style.background = 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)';
-        loginBtn.querySelector('.btn-loader').innerHTML = `
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
-                <polyline points="20 6 9 17 4 12"/>
-            </svg>
-        `;
-        
-        // Redirect to main app
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 500);
-        
-    } else {
-        // Show error
-        errorText.textContent = 'Invalid username or password';
-        errorMessage.style.display = 'flex';
-        
-        // Reset button
-        loginBtn.disabled = false;
-        loginBtn.querySelector('.btn-text').style.display = 'inline';
-        loginBtn.querySelector('.btn-loader').style.display = 'none';
-        
-        // Shake animation
-        loginForm.style.animation = 'none';
-        setTimeout(() => {
-            loginForm.style.animation = '';
-        }, 10);
-        
-        // Clear password
-        passwordInput.value = '';
-        passwordInput.focus();
-    }
     } catch (error) {
         // Show error
-        errorText.textContent = error.message || 'An error occurred during login';
-        errorMessage.style.display = 'flex';
-        
-        // Reset button
-        loginBtn.disabled = false;
-        loginBtn.querySelector('.btn-text').style.display = 'inline';
-        loginBtn.querySelector('.btn-loader').style.display = 'none';
+        showError(error.message || 'An error occurred during login');
         
         // Clear password
         passwordInput.value = '';
         passwordInput.focus();
+    } finally {
+        // Reset button if not successful
+        if (errorMessage.style.display !== 'none') {
+            loginBtn.disabled = false;
+            loginBtn.querySelector('.btn-text').style.display = 'inline';
+            loginBtn.querySelector('.btn-loader').style.display = 'none';
+        }
     }
 });
 
@@ -247,17 +210,35 @@ usernameInput.addEventListener('keypress', (e) => {
     }
 });
 
+passwordInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        loginForm.dispatchEvent(new Event('submit'));
+    }
+});
+
 // Add input animation
 [usernameInput, passwordInput].forEach(input => {
     input.addEventListener('focus', () => {
-        input.parentElement.style.transform = 'scale(1.02)';
-        input.parentElement.style.transition = 'transform 0.2s ease';
+        input.parentElement.parentElement.style.transform = 'translateY(-2px)';
+        input.parentElement.parentElement.style.transition = 'transform 0.2s ease';
     });
     
     input.addEventListener('blur', () => {
-        input.parentElement.style.transform = 'scale(1)';
+        input.parentElement.parentElement.style.transform = 'translateY(0)';
     });
 });
+
+// Show error message
+function showError(message) {
+    errorText.textContent = message;
+    errorMessage.style.display = 'flex';
+    
+    // Shake animation
+    loginForm.style.animation = 'none';
+    setTimeout(() => {
+        loginForm.style.animation = 'shake 0.5s';
+    }, 10);
+}
 
 // Prevent default behavior on demo links
 document.querySelectorAll('a[href="#"]').forEach(link => {
@@ -265,3 +246,14 @@ document.querySelectorAll('a[href="#"]').forEach(link => {
         e.preventDefault();
     });
 });
+
+// Add shake animation to styles
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        20%, 60% { transform: translateX(-5px); }
+        40%, 80% { transform: translateX(5px); }
+    }
+`;
+document.head.appendChild(style);
