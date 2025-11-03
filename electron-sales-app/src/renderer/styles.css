@@ -1569,6 +1569,122 @@ body {
     flex-shrink: 0;
 }
 
+/* Dark theme button styles - COMPREHENSIVE */
+[data-theme="dark"] .btn,
+[data-theme="dark"] .btn-secondary {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .btn:hover,
+[data-theme="dark"] .btn-secondary:hover {
+    background: var(--bg-hover);
+    border-color: var(--primary-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .btn svg,
+[data-theme="dark"] .btn-secondary svg {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .btn-primary {
+    background: var(--primary-gradient);
+    color: var(--text-inverse);
+    border: none;
+}
+
+[data-theme="dark"] .btn-primary:hover {
+    background: var(--primary-gradient);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow-lg);
+}
+
+[data-theme="dark"] .btn-primary svg {
+    color: var(--text-inverse);
+}
+
+[data-theme="dark"] .btn-success {
+    background: var(--success-gradient);
+    color: var(--text-inverse);
+    border: none;
+}
+
+[data-theme="dark"] .btn-success:hover {
+    background: var(--success-gradient);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+}
+
+[data-theme="dark"] .btn-success svg {
+    color: var(--text-inverse);
+}
+
+[data-theme="dark"] .btn-danger {
+    background: var(--danger-gradient);
+    color: var(--text-inverse);
+    border: none;
+}
+
+[data-theme="dark"] .btn-danger:hover {
+    background: var(--danger-gradient);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+}
+
+[data-theme="dark"] .btn-danger svg {
+    color: var(--text-inverse);
+}
+
+[data-theme="dark"] .btn-warning {
+    background: var(--warning-gradient);
+    color: var(--text-inverse);
+    border: none;
+}
+
+[data-theme="dark"] .btn-warning:hover {
+    background: var(--warning-gradient);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+}
+
+[data-theme="dark"] .btn-warning svg {
+    color: var(--text-inverse);
+}
+
+[data-theme="dark"] .btn-info {
+    background: var(--info-gradient);
+    color: var(--text-inverse);
+    border: none;
+}
+
+[data-theme="dark"] .btn-info:hover {
+    background: var(--info-gradient);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+}
+
+[data-theme="dark"] .btn-info svg {
+    color: var(--text-inverse);
+}
+
+[data-theme="dark"] .btn-icon-only {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .btn-icon-only:hover {
+    background: var(--bg-hover);
+    border-color: var(--primary-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .btn-icon-only svg {
+    color: var(--text-primary);
+}
+
 /* ============================================
    BADGES - STATUS INDICATORS
    ============================================ */
@@ -3171,6 +3287,337 @@ select.form-control {
 }
 
 /* ============================================
+   UTILITY CLASSES - BUTTON SPACING
+   ============================================ */
+
+.btn-gap-xs {
+    gap: var(--spacing-xs);
+}
+
+.btn-gap-sm {
+    gap: var(--spacing-sm);
+}
+
+.btn-gap-md {
+    gap: var(--spacing-md);
+}
+
+.btn-gap-lg {
+    gap: var(--spacing-lg);
+}
+
+.btn-gap-xl {
+    gap: var(--spacing-xl);
+}
+
+.btn-group {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.btn-group-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.btn-group-horizontal {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.btn-group-left {
+    justify-content: flex-start;
+}
+
+.btn-group-center {
+    justify-content: center;
+}
+
+.btn-group-right {
+    justify-content: flex-end;
+}
+
+.btn-group-space-between {
+    justify-content: space-between;
+}
+
+.btn-group-space-around {
+    justify-content: space-around;
+}
+
+.btn-group-responsive {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    align-items: center;
+}
+
+@media (max-width: 768px) {
+    .btn-group-responsive {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .btn-group-responsive .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ============================================
+   BUTTON ALIGNMENT UTILITIES
+   ============================================ */
+
+.btn-align-left {
+    margin-right: auto;
+}
+
+.btn-align-right {
+    margin-left: auto;
+}
+
+.btn-align-center {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ============================================
+   BUTTON WRAPPER FOR CONSISTENT SPACING
+   ============================================ */
+
+.btn-wrapper {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.btn-wrapper-stacked {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+/* ============================================
+   TAB HEADER BUTTONS
+   ============================================ */
+
+.tab-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+.tab-header .btn-group {
+    gap: var(--spacing-sm);
+}
+
+.tab-header h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: var(--font-2xl);
+    font-weight: 800;
+}
+
+/* ============================================
+   SETTINGS ACTIONS
+   ============================================ */
+
+.settings-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: flex-end;
+    margin-top: var(--spacing-2xl);
+    padding-top: var(--spacing-2xl);
+    border-top: 2px solid var(--border-color);
+}
+
+.settings-actions .btn {
+    min-width: 160px;
+    padding: var(--spacing-md) var(--spacing-xl);
+}
+
+/* ============================================
+   BUTTON GROUPS IN SETTINGS
+   ============================================ */
+
+.settings-section .btn-group {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    margin-top: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.settings-section .btn-group .btn {
+    margin: 0;
+}
+
+.settings-section .btn-group-horizontal {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.settings-section .btn-group-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+/* ============================================
+   DATA MANAGEMENT BUTTONS
+   ============================================ */
+
+.settings-section .data-management-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    margin-top: var(--spacing-sm);
+}
+
+.settings-section .data-management-buttons .btn {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+/* ============================================
+   PRIVACY & COMPLIANCE BUTTONS
+   ============================================ */
+
+.settings-section .privacy-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    margin-top: var(--spacing-sm);
+    align-items: center;
+}
+
+.settings-section .privacy-buttons .btn {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.settings-section .audit-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    margin-top: var(--spacing-sm);
+    align-items: center;
+}
+
+/* ============================================
+   RESPONSIVE SETTINGS
+   ============================================ */
+
+@media (max-width: 768px) {
+    .settings-container {
+        padding: 0;
+    }
+    
+    .settings-section {
+        padding: var(--spacing-xl);
+        border-radius: var(--radius-xl);
+    }
+    
+    .settings-section h3 {
+        font-size: var(--font-xl);
+    }
+    
+    .settings-actions {
+        flex-direction: column;
+    }
+    
+    .settings-actions .btn {
+        width: 100%;
+    }
+    
+    .settings-section .data-management-buttons {
+        flex-direction: column;
+    }
+    
+    .settings-section .privacy-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .settings-section .privacy-buttons .btn {
+        justify-content: center;
+    }
+    
+    .settings-section .audit-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .settings-section .audit-buttons .btn {
+        justify-content: center;
+    }
+}
+
+/* ============================================
+   BUTTON GROUP RESPONSIVE BEHAVIOR
+   ============================================ */
+
+@media (max-width: 768px) {
+    .btn-group-responsive {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .btn-group-responsive .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .btn-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .btn-wrapper .form-group {
+        width: 100%;
+    }
+    
+    .btn-wrapper .form-group label {
+        text-align: left;
+    }
+    
+    .tab-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .tab-header .btn-group {
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .tab-header h2 {
+        text-align: center;
+    }
+}
+
+
+.settings-section .audit-buttons .btn {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+/* ============================================
    SALES DASHBOARD - MODERN DESIGN
    ============================================ */
 
@@ -3583,6 +4030,38 @@ select.form-control {
     box-shadow: 0 0 16px rgba(124, 58, 237, 0.5);
 }
 
+.settings-subsection {
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    background: var(--bg-secondary);
+}
+
+.settings-subsection:last-child {
+    margin-bottom: 0;
+}
+
+.settings-subsection h4 {
+    color: var(--text-primary);
+    font-size: var(--font-xl);
+    font-weight: 700;
+    margin: 0 0 var(--spacing-lg) 0;
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.settings-subsection h4::before {
+    content: '';
+    width: 4px;
+    height: 24px;
+    background: var(--primary-gradient);
+    border-radius: var(--radius-full);
+}
+
 .settings-group {
     margin-bottom: var(--spacing-xl);
 }
@@ -3739,7 +4218,241 @@ select.form-control {
     background: white;
 }
 
-/* Settings Redesign */
+/* Dark theme adjustments for button groups */
+[data-theme="dark"] .btn-group {
+    /* Ensure button groups maintain proper contrast in dark mode */
+}
+
+/* Dark theme button styles - COMPREHENSIVE */
+[data-theme="dark"] .btn,
+[data-theme="dark"] .btn-secondary {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .btn:hover,
+[data-theme="dark"] .btn-secondary:hover {
+    background: var(--bg-hover);
+    border-color: var(--primary-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .btn svg,
+[data-theme="dark"] .btn-secondary svg {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .btn-primary {
+    background: var(--primary-gradient);
+    color: var(--text-inverse);
+    border: none;
+}
+
+[data-theme="dark"] .btn-primary:hover {
+    background: var(--primary-gradient);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow-lg);
+}
+
+[data-theme="dark"] .btn-primary svg {
+    color: var(--text-inverse);
+}
+
+[data-theme="dark"] .btn-success {
+    background: var(--success-gradient);
+    color: var(--text-inverse);
+    border: none;
+}
+
+[data-theme="dark"] .btn-success:hover {
+    background: var(--success-gradient);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+}
+
+[data-theme="dark"] .btn-success svg {
+    color: var(--text-inverse);
+}
+
+[data-theme="dark"] .btn-danger {
+    background: var(--danger-gradient);
+    color: var(--text-inverse);
+    border: none;
+}
+
+[data-theme="dark"] .btn-danger:hover {
+    background: var(--danger-gradient);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+}
+
+[data-theme="dark"] .btn-danger svg {
+    color: var(--text-inverse);
+}
+
+[data-theme="dark"] .btn-warning {
+    background: var(--warning-gradient);
+    color: var(--text-inverse);
+    border: none;
+}
+
+[data-theme="dark"] .btn-warning:hover {
+    background: var(--warning-gradient);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+}
+
+[data-theme="dark"] .btn-warning svg {
+    color: var(--text-inverse);
+}
+
+[data-theme="dark"] .btn-info {
+    background: var(--info-gradient);
+    color: var(--text-inverse);
+    border: none;
+}
+
+[data-theme="dark"] .btn-info:hover {
+    background: var(--info-gradient);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+}
+
+[data-theme="dark"] .btn-info svg {
+    color: var(--text-inverse);
+}
+
+[data-theme="dark"] .btn-icon-only {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .btn-icon-only:hover {
+    background: var(--bg-hover);
+    border-color: var(--primary-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .btn-icon-only svg {
+    color: var(--text-primary);
+}
+
+/* Specific fixes for audit and privacy buttons in dark mode */
+[data-theme="dark"] .settings-section .privacy-buttons .btn-primary,
+[data-theme="dark"] .settings-section .audit-buttons .btn-primary {
+    background: var(--primary-gradient);
+    color: var(--text-inverse);
+    border: none;
+}
+
+[data-theme="dark"] .settings-section .privacy-buttons .btn-primary:hover,
+[data-theme="dark"] .settings-section .audit-buttons .btn-primary:hover {
+    background: var(--primary-gradient);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow-lg);
+}
+
+[data-theme="dark"] .settings-section .privacy-buttons .btn-primary svg,
+[data-theme="dark"] .settings-section .audit-buttons .btn-primary svg {
+    color: var(--text-inverse);
+}
+
+/* Fix for the view logs button specifically */
+[data-theme="dark"] .settings-section .audit-buttons .btn.btn-primary {
+    background: var(--primary-gradient);
+    color: var(--text-inverse);
+    border: none;
+}
+
+[data-theme="dark"] .settings-section .audit-buttons .btn.btn-primary:hover {
+    background: var(--primary-gradient);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow-lg);
+}
+
+[data-theme="dark"] .settings-section .audit-buttons .btn.btn-primary svg {
+    color: var(--text-inverse);
+}
+
+/* Ensure proper button spacing in dark mode */
+[data-theme="dark"] .audit-buttons,
+[data-theme="dark"] .privacy-buttons,
+[data-theme="dark"] .data-management-buttons {
+    gap: var(--spacing-sm);
+}
+
+/* Fix for settings actions buttons in dark mode */
+[data-theme="dark"] .settings-actions .btn-primary {
+    background: var(--primary-gradient);
+    color: var(--text-inverse);
+    border: none;
+}
+
+[data-theme="dark"] .settings-actions .btn-primary:hover {
+    background: var(--primary-gradient);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow-lg);
+}
+
+[data-theme="dark"] .settings-actions .btn-primary svg {
+    color: var(--text-inverse);
+}
+
+[data-theme="dark"] .settings-actions .btn-secondary {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .settings-actions .btn-secondary:hover {
+    background: var(--bg-hover);
+    border-color: var(--primary-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .settings-actions .btn-secondary svg {
+    color: var(--text-primary);
+}
+
+/* Ensure all settings section buttons have proper dark mode styling */
+[data-theme="dark"] .settings-section .btn {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .settings-section .btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--primary-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .settings-section .btn svg {
+    color: var(--text-primary);
+}
+
+/* Fix for danger buttons in dark mode */
+[data-theme="dark"] .btn-danger {
+    background: var(--danger-gradient);
+    color: var(--text-inverse);
+    border: none;
+}
+
+[data-theme="dark"] .btn-danger:hover {
+    background: var(--danger-gradient);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+}
+
+[data-theme="dark"] .btn-danger svg {
+    color: var(--text-inverse);
+}
+
+/* ============================================
+   SETTINGS REDESIGN
+   ============================================ */
 .settings-section .kpi-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -3794,6 +4507,37 @@ select.form-control {
     font-weight: 800;
     color: var(--text-primary);
     line-height: 1.2;
+}
+
+/* ============================================
+   BUTTON SPACING CONSISTENCY CHECK
+   ============================================ */
+
+/* Ensure all button groups have consistent spacing */
+.btn-group,
+.btn-group-horizontal,
+.btn-group-vertical,
+.btn-wrapper,
+.btn-wrapper-stacked,
+.settings-section .btn-group,
+.settings-section .data-management-buttons,
+.settings-section .privacy-buttons,
+.settings-section .audit-buttons {
+    gap: var(--spacing-sm);
+}
+
+/* Ensure buttons within groups have consistent margins */
+.btn-group .btn,
+.btn-group-horizontal .btn,
+.btn-group-vertical .btn,
+.btn-wrapper .btn,
+.btn-wrapper-stacked .btn {
+    margin: 0;
+}
+
+/* Ensure form groups within button wrappers have consistent spacing */
+.btn-wrapper .form-group {
+    margin: 0;
 }
 
 @media (max-width: 768px) {
