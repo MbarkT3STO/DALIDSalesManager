@@ -401,28 +401,40 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: var(--radius-xl);
+    transition: all var(--transition-base);
+}
+
+.notification-btn:hover {
+    background: var(--bg-tertiary);
+    transform: translateY(-2px);
+}
+
+.notification-btn:hover svg {
+    color: var(--primary-color);
 }
 
 .notification-badge {
     position: absolute;
-    top: -8px;
-    right: -8px;
+    top: -6px;
+    right: -6px;
     background: var(--danger-gradient);
     color: white;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
+    border-radius: var(--radius-full);
+    width: 22px;
+    height: 22px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
-    font-weight: 700;
-    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+    font-size: 11px;
+    font-weight: 800;
+    box-shadow: var(--shadow-md);
     animation: pulse 2s ease-in-out infinite;
     z-index: 1002; /* Ensure badge appears above all */
     border: 2px solid var(--bg-card); /* Add border to make it stand out */
-    min-width: 24px; /* Ensure minimum size */
-    min-height: 24px; /* Ensure minimum size */
+    min-width: 22px; /* Ensure minimum size */
+    min-height: 22px; /* Ensure minimum size */
+    transition: all var(--transition-base);
 }
 
 @keyframes pulse {
@@ -444,13 +456,15 @@ body {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-2xl);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-    min-width: 360px;
-    max-height: 420px;
+    box-shadow: var(--shadow-xl);
+    min-width: 380px;
+    max-height: 460px;
     display: none;
     flex-direction: column;
     z-index: 1000;
     overflow: hidden;
+    transform-origin: top right;
+    transition: all var(--transition-base);
 }
 
 .notification-dropdown.active {
@@ -461,11 +475,11 @@ body {
 @keyframes slideDown {
     from {
         opacity: 0;
-        transform: translateY(-8px);
+        transform: translateY(-8px) scale(0.95);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
     }
 }
 
@@ -475,30 +489,42 @@ body {
     align-items: center;
     padding: var(--spacing-lg);
     border-bottom: 1px solid var(--border-color);
+    background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
 }
 
 .notification-header h3 {
-    font-size: var(--font-base);
-    font-weight: 700;
+    font-size: var(--font-lg);
+    font-weight: 800;
     margin: 0;
     color: var(--text-primary);
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .notification-list {
     flex: 1;
     overflow-y: auto;
-    max-height: 320px;
+    overflow-x: hidden;
+    max-height: 360px;
 }
 
 .notification-item {
-    padding: var(--spacing-md) var(--spacing-lg);
+    padding: var(--spacing-lg);
     border-bottom: 1px solid var(--border-color);
     transition: all 0.2s ease;
     cursor: pointer;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    overflow-x: hidden;
 }
 
 .notification-item:hover {
-    background: var(--bg-tertiary);
+    background: var(--bg-hover);
+    transform: translateX(4px);
 }
 
 .notification-item:last-child {
@@ -506,20 +532,53 @@ body {
 }
 
 .notification-item-title {
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: var(--spacing-xs);
+    font-size: var(--font-base);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .notification-item-desc {
-    font-size: var(--font-xs);
+    font-size: var(--font-sm);
     color: var(--text-secondary);
+    line-height: 1.5;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .notification-item-time {
     font-size: var(--font-xs);
     color: var(--text-tertiary);
     margin-top: var(--spacing-xs);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Notification type indicators */
+.notification-type-system {
+    border-left: 3px solid var(--primary-color);
+}
+
+.notification-type-success {
+    border-left: 3px solid var(--success-color);
+}
+
+.notification-type-warning {
+    border-left: 3px solid var(--warning-color);
+}
+
+.notification-type-error {
+    border-left: 3px solid var(--danger-color);
 }
 
 /* Low Stock Notification Indicator */
@@ -531,7 +590,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xs);
-    padding: var(--spacing-md) var(--spacing-lg) !important;
+    padding: var(--spacing-lg) !important;
 }
 
 .notification-item-important:hover {
@@ -584,6 +643,21 @@ body {
     padding: var(--spacing-2xl) var(--spacing-lg);
     color: var(--text-tertiary);
     font-size: var(--font-sm);
+    font-style: italic;
+}
+
+/* Notification Clear Button */
+#clearNotificationsBtn {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-base);
+}
+
+#clearNotificationsBtn:hover {
+    background: var(--danger-gradient);
+    color: white;
+    border-color: var(--danger-color);
+    transform: rotate(90deg);
 }
 
 /* ===== USER INFO ===== */

@@ -118,7 +118,8 @@
     "characters": "حروف",
     "remaining": "متبقي",
     "ascending": "تصاعدي",
-    "descending": "تنازلي"
+    "descending": "تنازلي",
+    "clearAll": "مسح الكل"
   },
   "notifications": {
     "modalTitle": "تفاصيل التنبيه",

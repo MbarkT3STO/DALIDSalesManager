@@ -118,7 +118,8 @@
     "characters": "caractères",
     "remaining": "restant",
     "ascending": "Croissant",
-    "descending": "Décroissant"
+    "descending": "Décroissant",
+    "clearAll": "Tout effacer"
   },
   "notifications": {
     "modalTitle": "Détails de la notification",

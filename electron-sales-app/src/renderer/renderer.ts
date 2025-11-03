@@ -1169,7 +1169,7 @@ function updateNotificationDisplay() {
   if (!notificationList) return;
   
   if (notifications.length === 0) {
-    notificationList.innerHTML = `<p class="notification-empty" data-translate="common.noNotifications">No new notifications</p>`;
+    notificationList.innerHTML = `<p class="notification-empty" data-translate="common.noNotifications">${t('common.noNotifications')}</p>`;
     notificationBadge.style.display = 'none';
     return;
   }
@@ -1184,14 +1184,27 @@ function updateNotificationDisplay() {
     const isLowStock = n.category === 'lowStock';
     const lowStockClass = isLowStock ? 'notification-item-important' : '';
     
+    // Add type-based styling
+    let typeClass = '';
+    if (n.type === 'success') typeClass = 'notification-type-success';
+    else if (n.type === 'warning') typeClass = 'notification-type-warning';
+    else if (n.type === 'error') typeClass = 'notification-type-error';
+    else if (n.type === 'system') typeClass = 'notification-type-system';
+    
     return `
-      <div class="notification-item ${lowStockClass}" ${cursor} ${clickHandler}>
+      <div class="notification-item ${lowStockClass} ${typeClass}" ${cursor} ${clickHandler}>
         <div class="notification-item-header">
           ${isLowStock ? '<div class="notification-importance-indicator"><svg width="16" height="16" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="2"><path d="M12 2L2 20h20Z"/></svg></div>' : ''}
           <div class="notification-item-title">${n.title}</div>
         </div>
         <div class="notification-item-desc">${n.desc}</div>
-        <div class="notification-item-time">${n.time}</div>
+        <div class="notification-item-time">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          ${n.time}
+        </div>
       </div>
     `;
   }).join('');

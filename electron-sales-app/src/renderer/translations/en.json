@@ -118,7 +118,8 @@
     "characters": "characters",
     "remaining": "remaining",
     "ascending": "Ascending",
-    "descending": "Descending"
+    "descending": "Descending",
+    "clearAll": "Clear all"
   },
   "notifications": {
     "modalTitle": "Notification Details",
