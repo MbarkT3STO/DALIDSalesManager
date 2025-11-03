@@ -2652,21 +2652,23 @@
                 <button class="modal-close">&times;</button>
             </div>
             <form id="productForm" class="modal-form">
-                <div class="form-group">
-                    <label for="productName"><span data-translate="products.productName">Product Name</span> <span data-translate="products.required">*</span></label>
-                    <input type="text" id="productName" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="productQuantity"><span data-translate="products.quantity">Quantity</span> <span data-translate="products.required">*</span></label>
-                    <input type="number" id="productQuantity" class="form-control" min="0" required>
-                </div>
-                <div class="form-group">
-                    <label for="productBuyPrice"><span data-translate="products.buyPrice">Buy Price</span> <span data-translate="products.required">*</span></label>
-                    <input type="number" id="productBuyPrice" class="form-control" min="0" step="0.01" required>
-                </div>
-                <div class="form-group">
-                    <label for="productSalePrice"><span data-translate="products.salePrice">Sale Price</span> <span data-translate="products.required">*</span></label>
-                    <input type="number" id="productSalePrice" class="form-control" min="0" step="0.01" required>
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="productName"><span data-translate="products.productName">Product Name</span> <span data-translate="products.required">*</span></label>
+                        <input type="text" id="productName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="productQuantity"><span data-translate="products.quantity">Quantity</span> <span data-translate="products.required">*</span></label>
+                        <input type="number" id="productQuantity" class="form-control" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="productBuyPrice"><span data-translate="products.buyPrice">Buy Price</span> <span data-translate="products.required">*</span></label>
+                        <input type="number" id="productBuyPrice" class="form-control" min="0" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="productSalePrice"><span data-translate="products.salePrice">Sale Price</span> <span data-translate="products.required">*</span></label>
+                        <input type="number" id="productSalePrice" class="form-control" min="0" step="0.01" required>
+                    </div>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary modal-cancel" data-translate="common.cancel">Cancel</button>
@@ -2684,21 +2686,23 @@
                 <button class="modal-close">&times;</button>
             </div>
             <form id="customerForm" class="modal-form">
-                <div class="form-group">
-                    <label for="customerName"><span data-translate="customers.customerName">Customer Name</span> <span data-translate="customers.required">*</span></label>
-                    <input type="text" id="customerName" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="customerPhone" data-translate="customers.phone">Phone</label>
-                    <input type="tel" id="customerPhone" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label for="customerEmail" data-translate="customers.email">Email</label>
-                    <input type="email" id="customerEmail" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label for="customerAddress" data-translate="customers.address">Address</label>
-                    <textarea id="customerAddress" class="form-control" rows="3"></textarea>
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="customerName"><span data-translate="customers.customerName">Customer Name</span> <span data-translate="customers.required">*</span></label>
+                        <input type="text" id="customerName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerPhone" data-translate="customers.phone">Phone</label>
+                        <input type="tel" id="customerPhone" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="customerEmail" data-translate="customers.email">Email</label>
+                        <input type="email" id="customerEmail" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="customerAddress" data-translate="customers.address">Address</label>
+                        <textarea id="customerAddress" class="form-control" rows="3"></textarea>
+                    </div>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary modal-cancel" data-translate="common.cancel">Cancel</button>
@@ -2844,21 +2848,23 @@
                 <button class="modal-close">&times;</button>
             </div>
             <form id="editStatusForm" class="modal-form">
-                <div class="form-group">
-                    <label data-translate="sales.invoiceId">Invoice ID</label>
-                    <input type="text" id="editStatusInvoiceId" class="form-control" readonly>
-                </div>
-                <div class="form-group">
-                    <label data-translate="common.customer">Customer</label>
-                    <input type="text" id="editStatusCustomer" class="form-control" readonly>
-                </div>
-                <div class="form-group">
-                    <label for="editStatusSelect"><span data-translate="sales.status">Status</span> <span data-translate="sales.required">*</span></label>
-                    <select id="editStatusSelect" class="form-control" required>
-                        <option value="Paid" data-translate="sales.paid">Paid</option>
-                        <option value="Pending" data-translate="sales.pending">Pending</option>
-                        <option value="Cancelled" data-translate="sales.cancelled">Cancelled</option>
-                    </select>
+                <div class="form-section">
+                    <div class="form-group">
+                        <label data-translate="sales.invoiceId">Invoice ID</label>
+                        <input type="text" id="editStatusInvoiceId" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label data-translate="common.customer">Customer</label>
+                        <input type="text" id="editStatusCustomer" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="editStatusSelect"><span data-translate="sales.status">Status</span> <span data-translate="sales.required">*</span></label>
+                        <select id="editStatusSelect" class="form-control" required>
+                            <option value="Paid" data-translate="sales.paid">Paid</option>
+                            <option value="Pending" data-translate="sales.pending">Pending</option>
+                            <option value="Cancelled" data-translate="sales.cancelled">Cancelled</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary modal-cancel" data-translate="common.cancel">Cancel</button>
@@ -2876,36 +2882,38 @@
                 <button class="modal-close">&times;</button>
             </div>
             <form id="inventoryForm" class="modal-form">
-                <div class="form-group">
-                    <label for="movementProduct"><span data-translate="common.product">Product</span> <span data-translate="inventory.required">*</span></label>
-                    <select id="movementProduct" class="form-control" required>
-                        <option value="" data-translate="inventory.selectProduct">Select Product</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="movementType"><span data-translate="inventory.movementType">Movement Type</span> <span data-translate="inventory.required">*</span></label>
-                    <select id="movementType" class="form-control" required>
-                        <option value="IN" data-translate="inventory.stockIn">Stock In (Purchase/Return)</option>
-                        <option value="OUT" data-translate="inventory.stockOut">Stock Out (Sale/Damage)</option>
-                        <option value="ADJUSTMENT" data-translate="inventory.adjustmentType">Adjustment (Inventory Count)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="movementQuantity"><span data-translate="common.quantity">Quantity</span> <span data-translate="inventory.required">*</span></label>
-                    <input type="number" id="movementQuantity" class="form-control" min="1" required>
-                    <small class="form-hint"><span data-translate="inventory.currentStock">Current stock:</span> <span id="currentStock">0</span></small>
-                </div>
-                <div class="form-group">
-                    <label for="movementDate"><span data-translate="common.date">Date</span> <span data-translate="inventory.required">*</span></label>
-                    <input type="date" id="movementDate" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="movementReference" data-translate="inventory.reference">Reference</label>
-                    <input type="text" id="movementReference" class="form-control" placeholder="PO#, Invoice#, etc.">
-                </div>
-                <div class="form-group">
-                    <label for="movementNotes" data-translate="inventory.notes">Notes</label>
-                    <textarea id="movementNotes" class="form-control" rows="3" placeholder="Additional notes..."></textarea>
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="movementProduct"><span data-translate="common.product">Product</span> <span data-translate="inventory.required">*</span></label>
+                        <select id="movementProduct" class="form-control" required>
+                            <option value="" data-translate="inventory.selectProduct">Select Product</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="movementType"><span data-translate="inventory.movementType">Movement Type</span> <span data-translate="inventory.required">*</span></label>
+                        <select id="movementType" class="form-control" required>
+                            <option value="IN" data-translate="inventory.stockIn">Stock In (Purchase/Return)</option>
+                            <option value="OUT" data-translate="inventory.stockOut">Stock Out (Sale/Damage)</option>
+                            <option value="ADJUSTMENT" data-translate="inventory.adjustmentType">Adjustment (Inventory Count)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="movementQuantity"><span data-translate="common.quantity">Quantity</span> <span data-translate="inventory.required">*</span></label>
+                        <input type="number" id="movementQuantity" class="form-control" min="1" required>
+                        <small class="form-hint"><span data-translate="inventory.currentStock">Current stock:</span> <span id="currentStock">0</span></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="movementDate"><span data-translate="common.date">Date</span> <span data-translate="inventory.required">*</span></label>
+                        <input type="date" id="movementDate" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="movementReference" data-translate="inventory.reference">Reference</label>
+                        <input type="text" id="movementReference" class="form-control" placeholder="PO#, Invoice#, etc.">
+                    </div>
+                    <div class="form-group">
+                        <label for="movementNotes" data-translate="inventory.notes">Notes</label>
+                        <textarea id="movementNotes" class="form-control" rows="3" placeholder="Additional notes..."></textarea>
+                    </div>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary modal-cancel" data-translate="common.cancel">Cancel</button>
@@ -2923,35 +2931,37 @@
                 <button class="modal-close">&times;</button>
             </div>
             <form id="userForm" class="modal-form">
-                <div class="form-group">
-                    <label for="userUsername"><span data-translate="users.username">Username</span> <span data-translate="users.required">*</span></label>
-                    <input type="text" id="userUsername" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="userPassword"><span data-translate="users.password">Password</span> <span data-translate="users.required">*</span></label>
-                    <input type="password" id="userPassword" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="userFullName"><span data-translate="users.fullName">Full Name</span> <span data-translate="users.required">*</span></label>
-                    <input type="text" id="userFullName" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="userRole"><span data-translate="users.role">Role</span> <span data-translate="users.required">*</span></label>
-                    <select id="userRole" class="form-control" required>
-                        <option value="Admin" data-translate="users.admin">Admin</option>
-                        <option value="Manager" data-translate="users.manager">Manager</option>
-                        <option value="Cashier" data-translate="users.cashier">Cashier</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="userEmail" data-translate="users.email">Email</label>
-                    <input type="email" id="userEmail" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="userIsActive" checked>
-                        <span data-translate="users.activeUser">Active User</span>
-                    </label>
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="userUsername"><span data-translate="users.username">Username</span> <span data-translate="users.required">*</span></label>
+                        <input type="text" id="userUsername" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userPassword"><span data-translate="users.password">Password</span> <span data-translate="users.required">*</span></label>
+                        <input type="password" id="userPassword" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userFullName"><span data-translate="users.fullName">Full Name</span> <span data-translate="users.required">*</span></label>
+                        <input type="text" id="userFullName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userRole"><span data-translate="users.role">Role</span> <span data-translate="users.required">*</span></label>
+                        <select id="userRole" class="form-control" required>
+                            <option value="Admin" data-translate="users.admin">Admin</option>
+                            <option value="Manager" data-translate="users.manager">Manager</option>
+                            <option value="Cashier" data-translate="users.cashier">Cashier</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="userEmail" data-translate="users.email">Email</label>
+                        <input type="email" id="userEmail" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="userIsActive" checked>
+                            <span data-translate="users.activeUser">Active User</span>
+                        </label>
+                    </div>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary modal-cancel" data-translate="common.cancel">Cancel</button>

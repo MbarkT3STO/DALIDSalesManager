@@ -1009,6 +1009,11 @@ body {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
 }
 
 .data-table thead {
@@ -1576,6 +1581,7 @@ body {
     overflow-y: auto;
     animation: slideUp var(--transition-slow) ease;
     border: 1px solid var(--border-color);
+    backdrop-filter: blur(10px);
 }
 
 /* Dashboard Insights */
@@ -1742,10 +1748,11 @@ body {
 
 .modal-header {
     padding: var(--spacing-xl);
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 2px solid var(--primary-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
 }
 
 .modal-header h2 {
@@ -1780,17 +1787,24 @@ body {
 
 .modal-form {
     padding: var(--spacing-xl);
+    background: var(--bg-primary);
 }
 
 .section-header {
     margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary-color);
 }
 
 .section-header h3 {
     font-size: var(--font-xl);
-    font-weight: 700;
+    font-weight: 800;
     color: var(--text-primary);
     margin-bottom: 0.5rem;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .section-subtitle {
@@ -2039,28 +2053,44 @@ select.form-control {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
     margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
 }
 
 .form-row {
     display: grid;
     gap: 1rem;
     align-items: end;
+    padding: 1rem;
+    border-radius: var(--radius-md);
 }
 
 .form-row.product-row {
     grid-template-columns: 1fr auto;
     margin-bottom: 0.5rem;
+    background: var(--bg-primary);
 }
 
 .form-row.details-row {
     grid-template-columns: 1fr 1fr 1fr 1fr;
     margin-top: 1.5rem;
+    background: var(--bg-primary);
 }
 
 .form-row-hint {
     margin-top: -0.5rem;
     margin-bottom: 1rem;
     padding-left: calc(100% / 4 + 100% / 4 + 2rem);
+}
+
+.form-section {
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.5rem;
 }
 
 .price-group {
@@ -2080,17 +2110,28 @@ select.form-control {
 
 .invoice-items-form {
     margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
 }
 
 .invoice-items-list {
     margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
 }
 
 .invoice-summary {
-    background-color: var(--bg-secondary);
-    padding: 1rem;
-    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
     margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
 }
 
 .summary-row {
