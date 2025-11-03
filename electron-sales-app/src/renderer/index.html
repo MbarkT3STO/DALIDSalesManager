@@ -2757,14 +2757,24 @@
 
                 <h3 data-translate="sales.invoiceItems">Invoice Items</h3>
                 <div class="invoice-items-form">
-                    <div class="form-row">
-                        <div class="form-group">
+                    <div class="form-row product-row">
+                        <div class="form-group product-search-group">
                             <label for="itemProduct" data-translate="sales.product">Product</label>
                             <div class="autocomplete-wrapper">
                                 <input type="text" id="itemProduct" class="form-control" data-translate-placeholder="sales.typeToSearch">
                                 <div id="productAutocomplete" class="autocomplete-dropdown"></div>
                             </div>
                         </div>
+                        <div class="form-group add-button-group">
+                            <label>&nbsp;</label>
+                            <button type="button" id="addItemBtn" class="btn btn-primary btn-icon-only" title="Add Item">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 5v14M5 12h14"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-row details-row">
                         <div class="form-group">
                             <label for="itemQuantity" data-translate="sales.quantity">Quantity</label>
                             <input type="number" id="itemQuantity" class="form-control" min="1" value="1">
@@ -2774,17 +2784,16 @@
                             <input type="number" id="itemUnitPrice" class="form-control" min="0" step="0.01" readonly>
                         </div>
                         <div class="form-group">
+                            <label for="itemCustomPrice" data-translate="sales.customPrice">Custom Price</label>
+                            <input type="number" id="itemCustomPrice" class="form-control" min="0" step="0.01">
+                        </div>
+                        <div class="form-group">
                             <label for="itemTotal" data-translate="sales.total">Total</label>
                             <input type="number" id="itemTotal" class="form-control" readonly>
                         </div>
-                        <div class="form-group">
-                            <label>&nbsp;</label>
-                            <button type="button" id="addItemBtn" class="btn btn-primary btn-icon-only" title="Add Item">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 5v14M5 12h14"/>
-                                </svg>
-                            </button>
-                        </div>
+                    </div>
+                    <div class="form-row-hint">
+                        <small class="form-hint" data-translate="sales.customPriceHint">Leave empty to use default product price</small>
                     </div>
                 </div>
 

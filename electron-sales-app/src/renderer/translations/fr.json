@@ -296,7 +296,10 @@
     "filterInvoices": "Rechercher et filtrer les factures",
     "invoiceList": "Liste des factures",
     "allInvoices": "Toutes les factures enregistrées",
-    "selectDate": "Sélectionner la date"
+    "selectDate": "Sélectionner la date",
+    "customPrice": "Prix personnalisé",
+    "customPriceHint": "Laisser vide pour utiliser le prix par défaut du produit",
+    "custom": "Personnalisé"
   },
   "inventory": {
     "title": "Inventaire",

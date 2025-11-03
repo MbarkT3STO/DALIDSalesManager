@@ -50,6 +50,7 @@ export interface Sale {
   total: number;
   profit: number;
   currency?: string;
+  customUnitPrice?: number; // Custom price for this sale, if different from product default
 }
 
 export interface Invoice {

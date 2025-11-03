@@ -107,9 +107,14 @@ export class ExportHandler {
         doc.font('Helvetica');
         let yPosition = headerY + 20;
         invoice.items.forEach((item: Sale) => {
+          // Show custom price indicator if applicable
+          const priceText = item.customUnitPrice && item.customUnitPrice > 0 ? 
+            `${symbol}${item.unitPrice.toFixed(2)} (Custom)` : 
+            `${symbol}${item.unitPrice.toFixed(2)}`;
+          
           doc.text(item.productName, 50, yPosition, { width: 240 });
           doc.text(item.quantity.toString(), 300, yPosition);
-          doc.text(`${symbol}${item.unitPrice.toFixed(2)}`, 350, yPosition);
+          doc.text(priceText, 350, yPosition);
           doc.text(`${symbol}${item.total.toFixed(2)}`, 450, yPosition);
           yPosition += 20;
         });

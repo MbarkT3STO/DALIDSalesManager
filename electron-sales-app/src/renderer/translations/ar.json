@@ -296,7 +296,10 @@
     "filterInvoices": "البحث وتصفية الفواتير",
     "invoiceList": "قائمة الفواتير",
     "allInvoices": "جميع الفواتير المسجلة",
-    "selectDate": "اختر التاريخ"
+    "selectDate": "اختر التاريخ",
+    "customPrice": "سعر مخصص",
+    "customPriceHint": "اتركه فارغاً لاستخدام سعر المنتج الافتراضي",
+    "custom": "مخصص"
   },
   "inventory": {
     "title": "المخزون",

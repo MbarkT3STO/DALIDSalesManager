@@ -299,7 +299,10 @@
     "filterInvoices": "Search and filter invoices",
     "invoiceList": "Invoice List",
     "allInvoices": "All recorded invoices",
-    "selectDate": "Select date"
+    "selectDate": "Select date",
+    "customPrice": "Custom Price",
+    "customPriceHint": "Leave empty to use default product price",
+    "custom": "Custom"
   },
   "inventory": {
     "title": "Inventory",

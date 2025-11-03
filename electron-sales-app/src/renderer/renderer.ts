@@ -35,6 +35,7 @@ interface Sale {
   unitPrice: number;
   total: number;
   profit: number;
+  customUnitPrice?: number; // Custom price for this sale, if different from product default
 }
 
 interface Invoice {
@@ -1000,6 +1001,7 @@ function setupEventListeners() {
   document.getElementById('invoiceCustomer')?.addEventListener('input', handleCustomerAutocomplete);
   document.getElementById('itemProduct')?.addEventListener('input', handleProductAutocomplete);
   document.getElementById('itemQuantity')?.addEventListener('input', updateItemTotal);
+  document.getElementById('itemCustomPrice')?.addEventListener('input', updateItemTotal);
 
   // Modal close handlers
   document.querySelectorAll('.modal-close, .modal-cancel').forEach(btn => {
@@ -2825,22 +2827,34 @@ function handleProductAutocomplete(e: Event) {
 }
 
 function updateItemTotal() {
-  const quantity = parseFloat((document.getElementById('itemQuantity') as HTMLInputElement).value) || 0;
-  const unitPrice = parseFloat((document.getElementById('itemUnitPrice') as HTMLInputElement).value) || 0;
-  const total = quantity * unitPrice;
-  (document.getElementById('itemTotal') as HTMLInputElement).value = total.toFixed(2);
+  const quantityInput = document.getElementById('itemQuantity') as HTMLInputElement;
+  const unitPriceInput = document.getElementById('itemUnitPrice') as HTMLInputElement;
+  const totalInput = document.getElementById('itemTotal') as HTMLInputElement;
+  const customPriceInput = document.getElementById('itemCustomPrice') as HTMLInputElement;
+
+  const quantity = parseFloat(quantityInput.value) || 0;
+  const unitPrice = parseFloat(unitPriceInput.value) || 0;
+  const customPrice = parseFloat(customPriceInput.value) || 0;
+
+  // Use custom price if provided, otherwise use default unit price
+  const effectivePrice = customPrice > 0 ? customPrice : unitPrice;
+  const total = quantity * effectivePrice;
+
+  totalInput.value = total.toFixed(2);
 }
 
 function addInvoiceItem() {
   const productInput = document.getElementById('itemProduct') as HTMLInputElement;
   const quantityInput = document.getElementById('itemQuantity') as HTMLInputElement;
   const unitPriceInput = document.getElementById('itemUnitPrice') as HTMLInputElement;
+  const customPriceInput = document.getElementById('itemCustomPrice') as HTMLInputElement;
 
   const productName = productInput.value;
   const quantity = parseFloat(quantityInput.value);
   const unitPrice = parseFloat(unitPriceInput.value);
+  const customPrice = parseFloat(customPriceInput.value) || 0;
 
-  if (!productName || !quantity || !unitPrice) {
+  if (!productName || !quantity || (!unitPrice && !customPrice)) {
     showToast('Please fill all item fields', 'warning');
     return;
   }
@@ -2856,17 +2870,20 @@ function addInvoiceItem() {
     showToast(`Warning: Insufficient stock. Available: ${product.quantity}`, 'warning');
   }
 
-  const total = quantity * unitPrice;
-  const profit = (unitPrice - product.buyPrice) * quantity;
+  // Use custom price if provided, otherwise use default unit price
+  const effectivePrice = customPrice > 0 ? customPrice : unitPrice;
+  const total = quantity * effectivePrice;
+  const profit = (effectivePrice - product.buyPrice) * quantity;
 
   const item: Sale = {
     date: (document.getElementById('invoiceDate') as HTMLInputElement).value,
     invoiceId: '', // Will be set when saving
     productName,
     quantity,
-    unitPrice,
+    unitPrice: effectivePrice,
     total,
-    profit
+    profit,
+    customUnitPrice: customPrice > 0 ? customPrice : undefined
   };
 
   currentInvoiceItems.push(item);
@@ -2877,6 +2894,7 @@ function addInvoiceItem() {
   productInput.value = '';
   quantityInput.value = '1';
   unitPriceInput.value = '';
+  customPriceInput.value = '';
   (document.getElementById('itemTotal') as HTMLInputElement).value = '';
   selectedProductForItem = null;
 }
@@ -2890,18 +2908,25 @@ function renderInvoiceItems() {
     return;
   }
 
-  tbody.innerHTML = currentInvoiceItems.map((item, index) => `
-    <tr>
-      <td>${item.productName}</td>
-      <td>${item.quantity}</td>
-      <td>${formatCurrency(item.unitPrice)}</td>
-      <td>${formatCurrency(item.total)}</td>
-      <td>${formatCurrency(item.profit)}</td>
-      <td>
-        <button class="btn btn-small btn-danger" onclick="removeInvoiceItem(${index})">Remove</button>
-      </td>
-    </tr>
-  `).join('');
+  tbody.innerHTML = currentInvoiceItems.map((item, index) => {
+    const isCustomPrice = item.customUnitPrice && item.customUnitPrice > 0;
+    const displayPrice = isCustomPrice ? 
+      `${formatCurrency(item.unitPrice)} <span class="badge badge-warning" data-translate="sales.custom">Custom</span>` : 
+      formatCurrency(item.unitPrice);
+    
+    return `
+      <tr>
+        <td>${item.productName}</td>
+        <td>${item.quantity}</td>
+        <td>${displayPrice}</td>
+        <td>${formatCurrency(item.total)}</td>
+        <td>${formatCurrency(item.profit)}</td>
+        <td>
+          <button class="btn btn-small btn-danger" onclick="removeInvoiceItem(${index})">Remove</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
 }
 
 (window as any).removeInvoiceItem = function(index: number) {
@@ -3425,14 +3450,21 @@ function generateInvoiceHTML(invoice: Invoice, style: 'classical' | 'modern' | '
           </tr>
         </thead>
         <tbody>
-          ${invoice.items.map(item => `
-            <tr>
-              <td>${item.productName}</td>
-              <td>${item.quantity}</td>
-              <td>${formatCurrency(item.unitPrice)}</td>
-              <td>${formatCurrency(item.total)}</td>
-            </tr>
-          `).join('')}
+          ${invoice.items.map(item => {
+            const isCustomPrice = item.customUnitPrice && item.customUnitPrice > 0;
+            const displayPrice = isCustomPrice ? 
+              `${formatCurrency(item.unitPrice)} <span style="background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-left: 5px;">Custom</span>` : 
+              formatCurrency(item.unitPrice);
+            
+            return `
+              <tr>
+                <td>${item.productName}</td>
+                <td>${item.quantity}</td>
+                <td>${displayPrice}</td>
+                <td>${formatCurrency(item.total)}</td>
+              </tr>
+            `;
+          }).join('')}
         </tbody>
       </table>
 
