@@ -119,7 +119,9 @@
     "remaining": "restant",
     "ascending": "Croissant",
     "descending": "Décroissant",
-    "clearAll": "Tout effacer"
+    "clearAll": "Tout effacer",
+    "exportToPDF": "Exporter en PDF",
+    "exportToExcel": "Exporter en Excel"
   },
   "notifications": {
     "modalTitle": "Détails de la notification",

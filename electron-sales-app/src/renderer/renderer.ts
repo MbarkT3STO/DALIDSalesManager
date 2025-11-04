@@ -1097,6 +1097,9 @@ function setupEventListeners() {
   bindCustomToggle('soundNotificationsToggle');
   bindCustomToggle('autoRefreshToggle');
   bindCustomToggle('accountingEnabledToggle');
+  
+  // Initialize export dropdown functionality
+  initExportDropdown();
 }
 
 function bindCustomToggle(inputId: string) {
@@ -2651,6 +2654,27 @@ function renderCustomerInvoicesTable(invoices: Invoice[]) {
     showToast(error.message || t('customers.exportError'), 'error');
   }
 };
+
+// Export dropdown functionality
+function initExportDropdown() {
+  const exportBtn = document.getElementById('exportCustomerHistoryBtn');
+  const exportMenu = document.getElementById('exportCustomerHistoryMenu');
+  
+  if (!exportBtn || !exportMenu) return;
+  
+  // Toggle dropdown menu
+  exportBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    exportMenu.classList.toggle('show');
+  });
+  
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!exportBtn.contains(e.target as Node) && !exportMenu.contains(e.target as Node)) {
+      exportMenu.classList.remove('show');
+    }
+  });
+}
 
 // Customers rendering
 function renderCustomers() {

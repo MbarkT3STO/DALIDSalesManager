@@ -5164,6 +5164,76 @@ html[dir="rtl"] .metric-info {
 }
 
 /* ============================================
+   EXPORT DROPDOWN MENU
+   ============================================ */
+
+.export-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.export-dropdown-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    z-index: 1000;
+    min-width: 200px;
+    padding: 0.5rem;
+    margin: 0.5rem 0 0;
+    background: var(--bg-card);
+    border: 2px solid var(--primary-color);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
+    animation: slideDown 0.2s ease;
+}
+
+.export-dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: none;
+    border: none;
+    border-radius: var(--radius-lg);
+    text-align: left;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.dropdown-item:hover {
+    background: var(--primary-gradient);
+    color: var(--text-inverse);
+}
+
+.dropdown-item svg {
+    flex-shrink: 0;
+    transition: all var(--transition-base);
+}
+
+.dropdown-item:hover svg {
+    stroke: var(--text-inverse);
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================
    PRINT STYLES
    ============================================ */
 

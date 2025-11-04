@@ -119,7 +119,9 @@
     "remaining": "remaining",
     "ascending": "Ascending",
     "descending": "Descending",
-    "clearAll": "Clear all"
+    "clearAll": "Clear all",
+    "exportToPDF": "Export to PDF",
+    "exportToExcel": "Export to Excel"
   },
   "notifications": {
     "modalTitle": "Notification Details",

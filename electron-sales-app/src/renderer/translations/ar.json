@@ -119,7 +119,9 @@
     "remaining": "متبقي",
     "ascending": "تصاعدي",
     "descending": "تنازلي",
-    "clearAll": "مسح الكل"
+    "clearAll": "مسح الكل",
+    "exportToPDF": "تصدير إلى PDF",
+    "exportToExcel": "تصدير إلى Excel"
   },
   "notifications": {
     "modalTitle": "تفاصيل التنبيه",
