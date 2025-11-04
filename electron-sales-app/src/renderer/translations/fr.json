@@ -1,7 +1,15 @@
 {
   "app": {
-    "title": "Gestionnaire de Ventes",
     "subtitle": "Solution professionnelle de gestion des ventes pour les entreprises modernes"
+  },
+  "splash": {
+    "loading": "Chargement",
+    "initializing": "Initialisation des composants principaux...",
+    "loadingResources": "Chargement des ressources essentielles...",
+    "settingUp": "Configuration de l'espace de travail sécurisé...",
+    "preparing": "Préparation de l'interface du tableau de bord...",
+    "finalizing": "Finalisation du lancement de l'application...",
+    "launching": "Lancement de l'application..."
   },
   "navigation": {
     "dashboard": "Tableau de bord",

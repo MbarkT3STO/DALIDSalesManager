@@ -1,7 +1,15 @@
 {
   "app": {
-    "title": "Sales Manager",
     "subtitle": "Professional sales management solution for modern businesses"
+  },
+  "splash": {
+    "loading": "Loading",
+    "initializing": "Initializing core components...",
+    "loadingResources": "Loading essential resources...",
+    "settingUp": "Setting up secure workspace...",
+    "preparing": "Preparing dashboard interface...",
+    "finalizing": "Finalizing application launch...",
+    "launching": "Launching application..."
   },
   "navigation": {
     "dashboard": "Dashboard",
