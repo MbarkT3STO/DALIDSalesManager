@@ -1498,7 +1498,7 @@
                                         <th data-translate="common.quantity" class="sortable">Quantity</th>
                                         <th data-translate="inventory.reference" class="sortable">Reference</th>
                                         <th data-translate="inventory.balanceAfter" class="sortable">Balance After</th>
-                                        <th data-translate="inventory.notes">Notes</th>
+                                        <th data-translate="common.actions">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="inventoryTableBody">
@@ -2910,6 +2910,51 @@
                     <button type="submit" class="btn btn-primary" data-translate="users.saveUser">Save User</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Inventory Movement Details Modal -->
+    <div id="inventoryDetailsModal" class="modal">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h2 data-translate="inventory.stockMovementDetails">Stock Movement Details</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-form">
+                <div class="inventory-details-container">
+                    <div class="detail-row">
+                        <div class="detail-label" data-translate="common.date">Date</div>
+                        <div class="detail-value" id="inventoryDetailDate">-</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label" data-translate="common.product">Product</div>
+                        <div class="detail-value" id="inventoryDetailProduct">-</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label" data-translate="inventory.type">Type</div>
+                        <div class="detail-value" id="inventoryDetailType">-</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label" data-translate="common.quantity">Quantity</div>
+                        <div class="detail-value" id="inventoryDetailQuantity">-</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label" data-translate="inventory.reference">Reference</div>
+                        <div class="detail-value" id="inventoryDetailReference">-</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label" data-translate="inventory.balanceAfter">Balance After</div>
+                        <div class="detail-value" id="inventoryDetailBalance">-</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label" data-translate="inventory.notes">Notes</div>
+                        <div class="detail-value" id="inventoryDetailNotes">-</div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary modal-cancel" data-translate="common.close">Close</button>
+                </div>
+            </div>
         </div>
     </div>
 

@@ -347,7 +347,9 @@
     "lowStockDesc": "Items with stock below threshold",
     "mediumStockDesc": "Items with adequate stock levels",
     "highStockDesc": "Items with abundant stock levels",
-    "outOfStock": "Out of Stock"
+    "outOfStock": "Out of Stock",
+    "stockMovementDetails": "Stock Movement Details",
+    "view": "View"
   },
   "analytics": {
     "title": "Analytics & Statistics",

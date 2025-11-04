@@ -344,7 +344,9 @@
     "lowStockDesc": "Articles avec stock en dessous du seuil",
     "mediumStockDesc": "Articles avec des niveaux de stock adéquats",
     "highStockDesc": "Articles avec des niveaux de stock abondants",
-    "outOfStock": "Rupture de stock"
+    "outOfStock": "Rupture de stock",
+    "stockMovementDetails": "Détails du mouvement de stock",
+    "view": "Voir"
   },
   "analytics": {
     "title": "Analyses et statistiques",

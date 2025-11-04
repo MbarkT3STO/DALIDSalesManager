@@ -5404,7 +5404,7 @@ function renderInventory() {
   const paginatedMovements = getPaginatedData(workbookData.inventory, 'inventory');
 
   if (paginatedMovements.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">${t('inventory.noMovements')}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">${t('inventory.noMovements')}</td></tr>`;
     // Hide pagination controls if no data
     renderPaginationControls('inventory', 'inventoryPagination');
     return;
@@ -5419,15 +5419,33 @@ function renderInventory() {
                       movement.type === 'OUT' ? t('inventory.out', 'OUT') : 
                       t('inventory.adjustment', 'ADJUSTMENT');
     
+    // Escape HTML to prevent XSS
+    const escapedMovement = {
+      date: escapeHtml(movement.date),
+      productName: escapeHtml(movement.productName),
+      type: escapeHtml(movement.type),
+      quantity: escapeHtml(movement.quantity.toString()),
+      reference: escapeHtml(movement.reference || ''),
+      balanceAfter: escapeHtml(movement.balanceAfter.toString()),
+      notes: escapeHtml(movement.notes || '')
+    };
+    
     return `
       <tr>
-        <td>${movement.date}</td>
-        <td><strong>${movement.productName}</strong></td>
+        <td>${escapedMovement.date}</td>
+        <td><strong>${escapedMovement.productName}</strong></td>
         <td><span class="badge ${typeClass}">${typeLabel}</span></td>
-        <td>${movement.quantity}</td>
-        <td>${movement.reference || '-'}</td>
-        <td><strong>${movement.balanceAfter}</strong></td>
-        <td>${movement.notes || '-'}</td>
+        <td>${escapedMovement.quantity}</td>
+        <td>${escapedMovement.reference || '-'}</td>
+        <td><strong>${escapedMovement.balanceAfter}</strong></td>
+        <td>
+          <button class="btn-icon" onclick="showInventoryDetails('${escapedMovement.date}', '${escapedMovement.productName}', '${escapedMovement.type}', ${movement.quantity}, '${escapedMovement.reference}', ${movement.balanceAfter}, '${escapedMovement.notes}')" title="${t('common.view')}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </td>
       </tr>
     `;
   }).join('');
@@ -5559,6 +5577,35 @@ async function exportInventoryToPDF() {
     }
   }
 }
+
+// Show inventory movement details in modal
+(window as any).showInventoryDetails = function(date: string, productName: string, type: string, quantity: number, reference: string, balanceAfter: number, notes: string) {
+  // Update modal content with movement details
+  updateElement('inventoryDetailDate', date);
+  updateElement('inventoryDetailProduct', productName);
+  
+  // Format type with proper label and styling
+  const typeLabel = type === 'IN' ? t('inventory.in', 'IN') : 
+                    type === 'OUT' ? t('inventory.out', 'OUT') : 
+                    t('inventory.adjustment', 'ADJUSTMENT');
+  const typeClass = type === 'IN' ? 'badge-success' : type === 'OUT' ? 'badge-danger' : 'badge-warning';
+  
+  const typeElement = document.getElementById('inventoryDetailType');
+  if (typeElement) {
+    typeElement.innerHTML = `<span class="badge ${typeClass}">${typeLabel}</span>`;
+  }
+  
+  updateElement('inventoryDetailQuantity', quantity.toString());
+  updateElement('inventoryDetailReference', reference || '-');
+  updateElement('inventoryDetailBalance', balanceAfter.toString());
+  updateElement('inventoryDetailNotes', notes || '-');
+  
+  // Show modal
+  const modal = document.getElementById('inventoryDetailsModal');
+  if (modal) {
+    modal.classList.add('active');
+  }
+};
 
 // Add event listener for inventory export button
 const exportInventoryPdfBtn = document.getElementById('exportInventoryPdfBtn');
