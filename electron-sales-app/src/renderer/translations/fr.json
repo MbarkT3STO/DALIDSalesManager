@@ -131,6 +131,15 @@
     "exportToPDF": "Exporter en PDF",
     "exportToExcel": "Exporter en Excel"
   },
+  "pagination": {
+    "first": "Premier",
+    "last": "Dernier",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "page": "Page",
+    "of": "de",
+    "totalRecords": "enregistrements au total"
+  },
   "notifications": {
     "modalTitle": "Détails de la notification",
     "title": "Titre",

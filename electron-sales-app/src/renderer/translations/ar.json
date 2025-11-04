@@ -131,6 +131,15 @@
     "exportToPDF": "تصدير إلى PDF",
     "exportToExcel": "تصدير إلى Excel"
   },
+  "pagination": {
+    "first": "الأول",
+    "last": "الأخير",
+    "next": "التالي",
+    "previous": "السابق",
+    "page": "الصفحة",
+    "of": "من",
+    "totalRecords": "إجمالي السجلات"
+  },
   "notifications": {
     "modalTitle": "تفاصيل التنبيه",
     "title": "العنوان",

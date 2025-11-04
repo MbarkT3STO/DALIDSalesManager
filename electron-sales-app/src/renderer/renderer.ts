@@ -1791,26 +1791,26 @@ function renderPaginationControls(tableId: string, containerId: string) {
   const container = document.getElementById(containerId);
   if (!container) return;
   
-  // Create pagination controls
+  // Create pagination controls with translations
   let paginationHTML = `
     <div class="pagination-controls">
       <button class="btn btn-secondary btn-small pagination-btn" onclick="changePage('${tableId}', 1)" ${state.currentPage === 1 ? 'disabled' : ''}>
-        &laquo; First
+        &laquo; ${t('pagination.first')}
       </button>
       <button class="btn btn-secondary btn-small pagination-btn" onclick="changePage('${tableId}', ${state.currentPage - 1})" ${state.currentPage === 1 ? 'disabled' : ''}>
-        &lsaquo; Prev
+        &lsaquo; ${t('pagination.previous')}
       </button>
       
       <span class="pagination-info">
-        Page ${state.currentPage} of ${totalPages}
-        <span class="pagination-records">(${state.totalRecords} total records)</span>
+        ${t('pagination.page')} ${state.currentPage} ${t('pagination.of')} ${totalPages}
+        <span class="pagination-records">(${state.totalRecords} ${t('pagination.totalRecords')})</span>
       </span>
       
       <button class="btn btn-secondary btn-small pagination-btn" onclick="changePage('${tableId}', ${state.currentPage + 1})" ${state.currentPage === totalPages ? 'disabled' : ''}>
-        Next &rsaquo;
+        ${t('pagination.next')} &rsaquo;
       </button>
       <button class="btn btn-secondary btn-small pagination-btn" onclick="changePage('${tableId}', ${totalPages})" ${state.currentPage === totalPages ? 'disabled' : ''}>
-        Last &raquo;
+        ${t('pagination.last')} &raquo;
       </button>
     </div>
   `;
