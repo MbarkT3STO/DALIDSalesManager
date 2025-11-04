@@ -3,13 +3,14 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as crypto from 'crypto';
-import { ExcelHandler, Product, Customer, Invoice, Payment, User, Account, JournalEntry } from './excel-handler';
+import { ExcelHandler, Product, Customer, Invoice, Payment, User, Account, JournalEntry, Sale } from './excel-handler';
 import { ExportHandler } from './export-handler';
 import { GDPRHandler } from './gdpr-handler';
 
 let mainWindow: BrowserWindow | null = null;
 let excelHandler: ExcelHandler | null = null;
 let gdprHandler: GDPRHandler | null = null;
+let secretWindow: BrowserWindow | null = null;
 
 // Performance optimization: Cache for expensive operations
 const operationCache = new Map<string, { data: any; timestamp: number }>();
@@ -188,6 +189,11 @@ app.whenReady().then(() => {
   globalShortcut.register('CommandOrControl+Shift+A', () => {
     if (!mainWindow) return;
     mainWindow.webContents.send('open-activation-modal');
+  });
+
+  // NEW: Secret shortcut to open the secret data insertion window (Command/Ctrl+Shift+D)
+  globalShortcut.register('CommandOrControl+Shift+D', () => {
+    createSecretWindow();
   });
 
   app.on('activate', () => {
@@ -1353,3 +1359,163 @@ ipcMain.handle('audit-export-logs', async (event, startDate: string, endDate: st
     return { success: false, message: error.message };
   }
 });
+
+// Add this function to create the secret window
+function createSecretWindow(): void {
+  // Close existing secret window if it exists
+  if (secretWindow) {
+    secretWindow.close();
+  }
+
+  secretWindow = new BrowserWindow({
+    width: 700,
+    height: 600,
+    resizable: false,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'electron-preload.js')
+    },
+    title: 'Secret Data Insertion Tool',
+    backgroundColor: '#1e1e1e'
+  });
+
+  // Load the secret window HTML file
+  secretWindow.loadFile(path.join(__dirname, '../../src/renderer/secret-window.html'));
+
+  secretWindow.on('closed', () => {
+    secretWindow = null;
+  });
+}
+
+// Add this IPC handler for inserting sample data
+ipcMain.handle('insert-sample-data', async () => {
+  try {
+    if (!excelHandler) {
+      return { success: false, message: 'No workbook loaded' };
+    }
+
+    // Generate and insert sample data
+    const count = await insertSampleData(excelHandler);
+    return { success: true, count };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+// Helper function to generate and insert sample data
+async function insertSampleData(handler: ExcelHandler): Promise<number> {
+  let insertedCount = 0;
+  
+  // Sample products
+  const sampleProducts: Product[] = [
+    { name: 'Laptop Dell XPS 15', quantity: 12, buyPrice: 1200, salePrice: 1800, reorderLevel: 5 },
+    { name: 'iPhone 15 Pro', quantity: 20, buyPrice: 999, salePrice: 1399, reorderLevel: 5 },
+    { name: 'Samsung Galaxy S24', quantity: 18, buyPrice: 800, salePrice: 1199, reorderLevel: 5 },
+    { name: 'iPad Pro 12.9"', quantity: 15, buyPrice: 900, salePrice: 1299, reorderLevel: 5 },
+    { name: 'MacBook Air M2', quantity: 10, buyPrice: 1099, salePrice: 1599, reorderLevel: 3 },
+    { name: 'AirPods Max', quantity: 25, buyPrice: 450, salePrice: 649, reorderLevel: 8 },
+    { name: 'Sony WH-1000XM5', quantity: 30, buyPrice: 280, salePrice: 399, reorderLevel: 10 },
+    { name: 'Logitech MX Master 3S', quantity: 40, buyPrice: 70, salePrice: 99, reorderLevel: 15 },
+    { name: 'Dell UltraSharp Monitor', quantity: 8, buyPrice: 400, salePrice: 599, reorderLevel: 3 },
+    { name: 'Mechanical Gaming Keyboard', quantity: 35, buyPrice: 85, salePrice: 129, reorderLevel: 10 },
+    { name: 'Wireless Gaming Mouse', quantity: 50, buyPrice: 45, salePrice: 79, reorderLevel: 15 },
+    { name: 'External SSD 1TB', quantity: 22, buyPrice: 120, salePrice: 179, reorderLevel: 8 },
+    { name: '4K Webcam', quantity: 17, buyPrice: 150, salePrice: 229, reorderLevel: 5 },
+    { name: 'Noise Cancelling Headphones', quantity: 28, buyPrice: 180, salePrice: 279, reorderLevel: 8 },
+    { name: 'Smart Watch', quantity: 33, buyPrice: 250, salePrice: 379, reorderLevel: 10 }
+  ];
+
+  // Sample customers
+  const sampleCustomers: Customer[] = [
+    { name: 'John Smith', phone: '555-0101', email: 'john.smith@email.com', address: '123 Main St, New York, NY 10001' },
+    { name: 'Sarah Johnson', phone: '555-0102', email: 'sarah.j@email.com', address: '456 Oak Ave, Los Angeles, CA 90001' },
+    { name: 'Michael Brown', phone: '555-0103', email: 'mbrown@email.com', address: '789 Pine Rd, Chicago, IL 60601' },
+    { name: 'Emily Davis', phone: '555-0104', email: 'emily.davis@email.com', address: '321 Elm St, Houston, TX 77001' },
+    { name: 'David Wilson', phone: '555-0105', email: 'dwilson@email.com', address: '654 Maple Dr, Phoenix, AZ 85001' },
+    { name: 'Jennifer Martinez', phone: '555-0106', email: 'jmartinez@email.com', address: '987 Cedar Ln, Philadelphia, PA 19101' },
+    { name: 'Robert Taylor', phone: '555-0107', email: 'rtaylor@email.com', address: '147 Birch Ct, San Antonio, TX 78201' },
+    { name: 'Lisa Anderson', phone: '555-0108', email: 'landerson@email.com', address: '258 Spruce Way, San Diego, CA 92101' },
+    { name: 'James Thomas', phone: '555-0109', email: 'jthomas@email.com', address: '369 Willow St, Dallas, TX 75201' },
+    { name: 'Patricia Jackson', phone: '555-0110', email: 'pjackson@email.com', address: '741 Poplar Ave, San Jose, CA 95101' }
+  ];
+
+  // Insert products
+  for (const product of sampleProducts) {
+    try {
+      await handler.addProduct(product);
+      insertedCount++;
+    } catch (error) {
+      // Product might already exist, continue with others
+      console.warn(`Could not add product ${product.name}:`, error);
+    }
+  }
+
+  // Insert customers
+  for (const customer of sampleCustomers) {
+    try {
+      await handler.addCustomer(customer);
+      insertedCount++;
+    } catch (error) {
+      // Customer might already exist, continue with others
+      console.warn(`Could not add customer ${customer.name}:`, error);
+    }
+  }
+
+  // Generate sample invoices and sales
+  const invoicePrefix = 'INV-' + new Date().toISOString().slice(0, 7).replace('-', ''); // YYYYMM
+  let invoiceCounter = 1;
+  
+  // Generate 50 sample invoices
+  for (let i = 0; i < 50; i++) {
+    const randomCustomer = sampleCustomers[Math.floor(Math.random() * sampleCustomers.length)];
+    const invoiceDate = new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000);
+    const invoiceId = `${invoicePrefix}-${String(invoiceCounter++).padStart(3, '0')}`;
+    
+    // Random number of items per invoice (1-5)
+    const itemCount = Math.floor(Math.random() * 5) + 1;
+    const items: Sale[] = [];
+    let totalAmount = 0;
+    let totalProfit = 0;
+    
+    for (let j = 0; j < itemCount; j++) {
+      const randomProduct = sampleProducts[Math.floor(Math.random() * sampleProducts.length)];
+      const quantity = Math.floor(Math.random() * 3) + 1; // 1-3 items
+      const unitPrice = randomProduct.salePrice;
+      const total = quantity * unitPrice;
+      const profit = quantity * (unitPrice - randomProduct.buyPrice);
+      
+      items.push({
+        date: invoiceDate.toISOString().split('T')[0],
+        invoiceId,
+        productName: randomProduct.name,
+        quantity,
+        unitPrice,
+        total,
+        profit
+      });
+      
+      totalAmount += total;
+      totalProfit += profit;
+    }
+    
+    const invoice: Invoice = {
+      invoiceId,
+      date: invoiceDate.toISOString().split('T')[0],
+      customerName: randomCustomer.name,
+      totalAmount,
+      totalProfit,
+      status: Math.random() > 0.3 ? 'Paid' : (Math.random() > 0.5 ? 'Pending' : 'Partial'),
+      items
+    };
+    
+    try {
+      await handler.saveInvoice(invoice);
+      insertedCount += items.length + 1; // +1 for the invoice itself
+    } catch (error) {
+      console.warn(`Could not save invoice ${invoiceId}:`, error);
+    }
+  }
+  
+  return insertedCount;
+}

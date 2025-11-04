@@ -74,6 +74,8 @@ export interface ElectronAPI {
   activateApp: (key: string) => Promise<any>;
   onOpenActivationModal: (handler: () => void) => void;
   getActivationKey: () => Promise<any>;
+  // NEW: Add the insert sample data method
+  insertSampleData: () => Promise<any>;
 }
 
 // Expose protected methods that allow the renderer process to use
@@ -157,5 +159,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
       try { handler(); } catch {}
     });
   },
-  getActivationKey: () => ipcRenderer.invoke('get-activation-key')
+  getActivationKey: () => ipcRenderer.invoke('get-activation-key'),
+  // NEW: Add the insert sample data method
+  insertSampleData: () => ipcRenderer.invoke('insert-sample-data')
 } as ElectronAPI);
