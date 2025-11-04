@@ -1906,12 +1906,24 @@ function renderLowStockAlert() {
     return;
   }
 
-  container.innerHTML = lowStockProducts.map(p => `
+  // Show only first 3 low stock products in dashboard
+  const displayedProducts = lowStockProducts.slice(0, 3);
+  
+  container.innerHTML = displayedProducts.map(p => `
     <div class="alert-item">
       <strong>${p.name}</strong> - ${t('dashboard.only')} 
       <span class="quantity">${p.quantity}</span>
     </div>
   `).join('');
+  
+  // If there are more than 3 low stock products, show a message
+  if (lowStockProducts.length > 3) {
+    container.innerHTML += `
+      <div class="alert-item" style="text-align: center; margin-top: 10px;">
+        <span>+${lowStockProducts.length - 3} more low stock products</span>
+      </div>
+    `;
+  }
 }
 
 function openLowStockModal() {
