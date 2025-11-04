@@ -1196,9 +1196,9 @@ function updateNotificationDisplay() {
   notificationBadge.textContent = notifications.length.toString();
   
   notificationList.innerHTML = notifications.map((n, idx) => {
-    const isClickable = n.category === 'lowStock' || n.category === 'system';
-    const clickHandler = isClickable ? `onclick="showNotificationDetails(${idx})"` : '';
-    const cursor = isClickable ? 'style="cursor: pointer;"' : '';
+    // Make all notifications clickable to show details
+    const clickHandler = `onclick="showNotificationDetails(${idx})"`;
+    const cursor = 'style="cursor: pointer;"';
     const isLowStock = n.category === 'lowStock';
     const lowStockClass = isLowStock ? 'notification-item-important' : '';
     
@@ -1252,15 +1252,13 @@ function showNotificationDetails(index: number) {
   if (descEl) descEl.textContent = notification.desc;
   if (timeEl) timeEl.textContent = notification.time;
   
-  if (notification.details) {
+  // Always show details container and populate with description if no specific details
+  if (detailsContainerEl) {
+    detailsContainerEl.style.display = 'block';
     if (detailsEl) {
-      detailsEl.innerHTML = notification.details;
+      // If notification has specific details, show them, otherwise show the description
+      detailsEl.innerHTML = notification.details || notification.desc;
     }
-    if (detailsContainerEl) {
-      detailsContainerEl.style.display = 'block';
-    }
-  } else {
-    if (detailsContainerEl) detailsContainerEl.style.display = 'none';
   }
   
   // Show low stock table if this is a low stock alert
@@ -1682,6 +1680,7 @@ function renderAllData() {
   renderAnalytics();
   renderReports();
   renderUsers();
+  updateNotificationDisplay(); // Update notifications with new language
   // Initialize accounting visuals lazily when tab is opened
 }
 
