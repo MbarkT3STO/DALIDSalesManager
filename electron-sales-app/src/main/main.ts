@@ -8,6 +8,7 @@ import { ExportHandler } from './export-handler';
 import { GDPRHandler } from './gdpr-handler';
 
 let mainWindow: BrowserWindow | null = null;
+let splashWindow: BrowserWindow | null = null;
 let excelHandler: ExcelHandler | null = null;
 let gdprHandler: GDPRHandler | null = null;
 let secretWindow: BrowserWindow | null = null;
@@ -148,6 +149,26 @@ function saveActivation(key: string): boolean {
 }
 
 function createWindow(): void {
+  // Create the splash window first
+  splashWindow = new BrowserWindow({
+    width: 550,
+    height: 500,
+    transparent: false,
+    frame: false,
+    resizable: false,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'splash-preload.js')
+    },
+    title: 'Loading...',
+    backgroundColor: '#0f172a'
+  });
+
+  // Load splash screen
+  splashWindow.loadFile(path.join(__dirname, '../../src/renderer/splash.html'));
+  
+  // Create main window
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
@@ -159,23 +180,47 @@ function createWindow(): void {
       preload: path.join(__dirname, 'electron-preload.js')
     },
     title: 'Sales Manager',
-    backgroundColor: '#f5f5f5'
+    backgroundColor: '#f5f5f5',
+    show: false // Hide main window until splash is done
   });
 
   // Remove the default menu
   Menu.setApplicationMenu(null);
 
-  // Load activation or app based on activation status
-  if (isActivated()) {
-    mainWindow.loadFile(path.join(__dirname, '../../src/renderer/login.html'));
-  } else {
-    mainWindow.loadFile(path.join(__dirname, '../../src/renderer/activation.html'));
-  }
-
-  // DevTools disabled by default
+  // Show splash window
+  splashWindow.once('ready-to-show', () => {
+    splashWindow?.show();
+    
+    // After splash duration, notify splash and show main window
+    setTimeout(() => {
+      // Notify splash screen that app is ready
+      splashWindow?.webContents.send('app-ready');
+      
+      // Give splash screen time to show completion
+      setTimeout(() => {
+        // Close splash window
+        if (splashWindow) {
+          splashWindow.close();
+          splashWindow = null;
+        }
+        
+        // Show main window and load content
+        mainWindow?.show();
+        if (isActivated()) {
+          mainWindow?.loadFile(path.join(__dirname, '../../src/renderer/login.html'));
+        } else {
+          mainWindow?.loadFile(path.join(__dirname, '../../src/renderer/activation.html'));
+        }
+      }, 1500);
+    }, 4000); // Show splash for 4 seconds
+  });
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+  });
+  
+  splashWindow.on('closed', () => {
+    splashWindow = null;
   });
 }
 

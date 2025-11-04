@@ -76,6 +76,8 @@ export interface ElectronAPI {
   getActivationKey: () => Promise<any>;
   // NEW: Add the insert sample data method
   insertSampleData: () => Promise<any>;
+  // Splash screen communication
+  onAppReady: (handler: () => void) => void;
 }
 
 // Expose protected methods that allow the renderer process to use
@@ -161,5 +163,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   getActivationKey: () => ipcRenderer.invoke('get-activation-key'),
   // NEW: Add the insert sample data method
-  insertSampleData: () => ipcRenderer.invoke('insert-sample-data')
+  insertSampleData: () => ipcRenderer.invoke('insert-sample-data'),
+  // Splash screen communication
+  onAppReady: (handler: () => void) => {
+    ipcRenderer.removeAllListeners('app-ready');
+    ipcRenderer.on('app-ready', () => {
+      try { handler(); } catch {}
+    });
+  }
 } as ElectronAPI);

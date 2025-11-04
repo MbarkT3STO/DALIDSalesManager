@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading - DALID Sales Manager</title>
+    <link rel="stylesheet" href="splash-styles.css">
+</head>
+<body>
+    <div class="splash-container">
+        <!-- Particle Background -->
+        <div class="particles-container" id="particles-js"></div>
+        
+        <!-- Main Content -->
+        <div class="content-wrapper">
+            <div class="content">
+                <!-- Logo Section -->
+                <div class="logo-section">
+                    <div class="logo-circle">
+                        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="logo-svg">
+                            <defs>
+                                <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#8b5cf6" />
+                                    <stop offset="100%" stop-color="#ec4899" />
+                                </linearGradient>
+                                <filter id="glow">
+                                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                                    <feMerge> 
+                                        <feMergeNode in="coloredBlur"/>
+                                        <feMergeNode in="SourceGraphic"/>
+                                    </feMerge>
+                                </filter>
+                            </defs>
+                            <circle cx="50" cy="50" r="45" fill="none" stroke="url(#logoGradient)" stroke-width="2" filter="url(#glow)"/>
+                            <path d="M30 30 L30 70 L50 70 C60 70 65 65 65 55 C65 45 60 40 50 40 Z M35 45 L45 45 C52 45 55 48 55 55 C55 62 52 65 45 65 L35 65 Z" fill="url(#logoGradient)" filter="url(#glow)"/>
+                            <rect x="70" y="50" width="5" height="15" rx="2.5" fill="url(#logoGradient)" filter="url(#glow)"/>
+                            <rect x="78" y="42" width="5" height="23" rx="2.5" fill="url(#logoGradient)" filter="url(#glow)"/>
+                            <rect x="86" y="34" width="5" height="31" rx="2.5" fill="url(#logoGradient)" filter="url(#glow)"/>
+                        </svg>
+                    </div>
+                </div>
+                
+                <!-- Text Content -->
+                <div class="text-section">
+                    <h1 class="app-title">DALID</h1>
+                    <p class="app-subtitle">Sales Manager</p>
+                </div>
+                
+                <!-- Loading Section -->
+                <div class="loading-section">
+                    <div class="spinner">
+                        <div class="spinner-ring"></div>
+                        <div class="spinner-ring"></div>
+                        <div class="spinner-ring"></div>
+                    </div>
+                    <p class="loading-text">Initializing application...</p>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                </div>
+                
+                <!-- Version -->
+                <div class="version">Version 1.1.0</div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="splash.js"></script>
+</body>
+</html>
