@@ -1,19 +1,60 @@
-/* Modern Splash Screen Styles - Completely Redesigned */
+/* Modern Splash Screen Styles - Completely Redesigned with Theme Support */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+/* Light Theme (Default) */
+:root {
+    --splash-bg-primary: #f8fafc;
+    --splash-bg-secondary: #ffffff;
+    --splash-text-primary: #0f172a;
+    --splash-text-secondary: #64748b;
+    --splash-text-muted: #94a3b8;
+    --splash-border: rgba(0, 0, 0, 0.05);
+    --splash-shadow: rgba(0, 0, 0, 0.08);
+    --splash-shadow-lg: rgba(0, 0, 0, 0.15);
+    --splash-content-bg: rgba(255, 255, 255, 0.85);
+    --splash-progress-bg: rgba(0, 0, 0, 0.08);
+    --splash-particle-1: rgba(139, 92, 246, 0.2);
+    --splash-particle-2: rgba(236, 72, 153, 0.2);
+    --splash-particle-3: rgba(6, 182, 212, 0.2);
+    --splash-particle-glow-1: rgba(139, 92, 246, 0.4);
+    --splash-particle-glow-2: rgba(236, 72, 153, 0.4);
+    --splash-particle-glow-3: rgba(6, 182, 212, 0.4);
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+    --splash-bg-primary: #0f172a;
+    --splash-bg-secondary: #1e293b;
+    --splash-text-primary: #f1f5f9;
+    --splash-text-secondary: #cbd5e1;
+    --splash-text-muted: #94a3b8;
+    --splash-border: rgba(255, 255, 255, 0.1);
+    --splash-shadow: rgba(0, 0, 0, 0.3);
+    --splash-shadow-lg: rgba(0, 0, 0, 0.5);
+    --splash-content-bg: rgba(30, 41, 59, 0.85);
+    --splash-progress-bg: rgba(255, 255, 255, 0.1);
+    --splash-particle-1: rgba(139, 92, 246, 0.3);
+    --splash-particle-2: rgba(236, 72, 153, 0.3);
+    --splash-particle-3: rgba(6, 182, 212, 0.3);
+    --splash-particle-glow-1: rgba(139, 92, 246, 0.6);
+    --splash-particle-glow-2: rgba(236, 72, 153, 0.6);
+    --splash-particle-glow-3: rgba(6, 182, 212, 0.6);
+}
+
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    background: linear-gradient(135deg, var(--splash-bg-primary) 0%, var(--splash-bg-secondary) 100%);
     height: 100vh;
     overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
-    color: #f1f5f9;
+    color: var(--splash-text-primary);
+    transition: background 0.3s ease;
 }
 
 .splash-container {
@@ -39,19 +80,19 @@ body {
 .particle {
     position: absolute;
     border-radius: 50%;
-    background: rgba(139, 92, 246, 0.3);
-    box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+    background: var(--splash-particle-1);
+    box-shadow: 0 0 10px var(--splash-particle-glow-1);
     animation: float 15s infinite ease-in-out;
 }
 
 .particle:nth-child(2n) {
-    background: rgba(236, 72, 153, 0.3);
-    box-shadow: 0 0 10px rgba(236, 72, 153, 0.5);
+    background: var(--splash-particle-2);
+    box-shadow: 0 0 10px var(--splash-particle-glow-2);
 }
 
 .particle:nth-child(3n) {
-    background: rgba(6, 182, 212, 0.3);
-    box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+    background: var(--splash-particle-3);
+    box-shadow: 0 0 10px var(--splash-particle-glow-3);
 }
 
 @keyframes float {
@@ -79,15 +120,16 @@ body {
 }
 
 .content {
-    background: rgba(30, 41, 59, 0.7);
+    background: var(--splash-content-bg);
     backdrop-filter: blur(20px);
     border-radius: 24px;
     padding: 40px 30px;
     text-align: center;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px -12px var(--splash-shadow-lg);
+    border: 1px solid var(--splash-border);
     position: relative;
     overflow: hidden;
+    transition: all 0.3s ease;
 }
 
 .content::before {
@@ -97,9 +139,14 @@ body {
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+    background: radial-gradient(circle, var(--splash-particle-1) 0%, transparent 70%);
     z-index: -1;
     animation: rotate 20s linear infinite;
+    opacity: 0.3;
+}
+
+[data-theme="dark"] .content::before {
+    opacity: 0.2;
 }
 
 @keyframes rotate {
@@ -123,15 +170,16 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--splash-border);
     border-radius: 50%;
     position: relative;
     animation: pulse 3s infinite;
+    transition: all 0.3s ease;
 }
 
 @keyframes pulse {
     0%, 100% {
-        box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.3);
+        box-shadow: 0 0 0 0 var(--splash-particle-glow-1);
     }
     50% {
         box-shadow: 0 0 0 20px rgba(139, 92, 246, 0);
@@ -141,7 +189,8 @@ body {
 .logo-svg {
     width: 80px;
     height: 80px;
-    filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.3));
+    filter: drop-shadow(0 5px 15px var(--splash-shadow));
+    transition: filter 0.3s ease;
 }
 
 /* Text Section */
@@ -163,7 +212,7 @@ body {
 
 .app-subtitle {
     font-size: 1.25rem;
-    color: #cbd5e1;
+    color: var(--splash-text-secondary);
     font-weight: 500;
     margin: 0;
     letter-spacing: 1px;
@@ -216,7 +265,7 @@ body {
 
 .loading-text {
     font-size: 1rem;
-    color: #94a3b8;
+    color: var(--splash-text-muted);
     font-weight: 500;
     margin: 0;
     opacity: 0.9;
@@ -231,10 +280,11 @@ body {
 .progress-bar {
     width: 100%;
     height: 6px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--splash-progress-bg);
     border-radius: 3px;
     overflow: hidden;
     position: relative;
+    transition: background 0.3s ease;
 }
 
 .progress-fill {
@@ -253,7 +303,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
     animation: shimmer 2s infinite;
 }
 
@@ -269,7 +319,7 @@ body {
 /* Version */
 .version {
     font-size: 0.875rem;
-    color: #64748b;
+    color: var(--splash-text-muted);
     font-weight: 500;
 }
 

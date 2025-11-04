@@ -1,4 +1,4 @@
-// Modern Splash Screen JavaScript - Enhanced Version
+// Modern Splash Screen JavaScript - Enhanced Version with Theme Support
 document.addEventListener('DOMContentLoaded', () => {
     const progressFill = document.getElementById('progress-fill');
     const loadingText = document.querySelector('.loading-text');
@@ -89,6 +89,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function createParticles() {
         const particlesContainer = document.getElementById('particles-js');
         if (!particlesContainer) return;
+        
+        // Get current theme to determine particle colors
+        const theme = document.documentElement.getAttribute('data-theme') || 'light';
         
         // Create 30 particles
         for (let i = 0; i < 30; i++) {

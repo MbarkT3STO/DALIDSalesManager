@@ -5,6 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Loading - DALID Sales Manager</title>
     <link rel="stylesheet" href="splash-styles.css">
+    <script>
+        // Initialize theme on page load
+        function initTheme() {
+            try {
+                // First check for appSettings which contains the theme preference
+                const settings = localStorage.getItem('appSettings');
+                let theme = 'light';
+                
+                if (settings) {
+                    const parsed = JSON.parse(settings);
+                    theme = parsed.theme || 'light';
+                    
+                    // Handle auto theme
+                    if (theme === 'auto') {
+                        theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                    }
+                }
+                
+                // Apply theme
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (error) {
+                console.error('Failed to initialize theme:', error);
+                // Default to light theme on error
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        }
+        
+        // Run theme initialization immediately
+        initTheme();
+    </script>
 </head>
 <body>
     <div class="splash-container">
