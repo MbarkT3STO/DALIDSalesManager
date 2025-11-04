@@ -15,11 +15,33 @@
         
         // Theme Toggle Functionality - Enhanced with smooth transitions
         function initTheme() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            updateThemeIcon(savedTheme);
-            // Add transition class for smooth theme switching
-            document.documentElement.classList.add('theme-transition');
+            try {
+                // First check for appSettings which contains the theme preference
+                const settings = localStorage.getItem('appSettings');
+                let theme = 'light';
+                
+                if (settings) {
+                    const parsed = JSON.parse(settings);
+                    theme = parsed.theme || 'light';
+                    
+                    // Handle auto theme
+                    if (theme === 'auto') {
+                        theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                    }
+                }
+                
+                // Apply theme
+                document.documentElement.setAttribute('data-theme', theme);
+                updateThemeIcon(theme);
+                // Add transition class for smooth theme switching
+                document.documentElement.classList.add('theme-transition');
+            } catch (error) {
+                console.error('Failed to initialize theme:', error);
+                // Default to light theme on error
+                document.documentElement.setAttribute('data-theme', 'light');
+                updateThemeIcon('light');
+                document.documentElement.classList.add('theme-transition');
+            }
         }
 
         function updateThemeIcon(theme) {
@@ -47,7 +69,19 @@
             // Add transition effect
             document.documentElement.classList.add('theme-transition');
             document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
+            
+            // Update app settings
+            try {
+                const settings = localStorage.getItem('appSettings');
+                if (settings) {
+                    const parsed = JSON.parse(settings);
+                    parsed.theme = newTheme;
+                    localStorage.setItem('appSettings', JSON.stringify(parsed));
+                }
+            } catch (error) {
+                console.error('Failed to update appSettings:', error);
+            }
+            
             updateThemeIcon(newTheme);
             
             // Remove transition class after animation completes

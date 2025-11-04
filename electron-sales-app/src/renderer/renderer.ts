@@ -1299,13 +1299,32 @@ function toggleTheme() {
   const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
   html.setAttribute('data-theme', newTheme);
 
-  const themeIcon = document.querySelector('#themeToggle .icon');
-  if (themeIcon) {
-    themeIcon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+  // Update theme icon in the header button
+  const sunIcon = document.getElementById('sunIcon');
+  const moonIcon = document.getElementById('moonIcon');
+  
+  if (sunIcon && moonIcon) {
+    if (newTheme === 'dark') {
+      sunIcon.style.display = 'none';
+      moonIcon.style.display = 'block';
+      document.getElementById('themeToggleBtn')?.setAttribute('title', 'Switch to light mode');
+    } else {
+      sunIcon.style.display = 'block';
+      moonIcon.style.display = 'none';
+      document.getElementById('themeToggleBtn')?.setAttribute('title', 'Switch to dark mode');
+    }
   }
 
-  localStorage.setItem('theme', newTheme);
-  
+  // Also update the settings select if it exists
+  const themeSelect = document.getElementById('themeSelect') as HTMLSelectElement;
+  if (themeSelect) {
+    themeSelect.value = newTheme;
+  }
+
+  // Update app settings
+  appSettings.theme = newTheme;
+  saveSettings();
+
   // Re-render reports charts if on reports tab
   const reportsTab = document.getElementById('reportsTab');
   if (reportsTab && reportsTab.classList.contains('active')) {
@@ -6966,6 +6985,22 @@ function handleThemeChange() {
   appSettings.theme = newTheme;
   saveSettings();
   applySettings();
+  
+  // Sync the theme toggle button with the new theme
+  const sunIcon = document.getElementById('sunIcon');
+  const moonIcon = document.getElementById('moonIcon');
+  
+  if (sunIcon && moonIcon) {
+    if (newTheme === 'dark') {
+      sunIcon.style.display = 'none';
+      moonIcon.style.display = 'block';
+      document.getElementById('themeToggleBtn')?.setAttribute('title', 'Switch to light mode');
+    } else {
+      sunIcon.style.display = 'block';
+      moonIcon.style.display = 'none';
+      document.getElementById('themeToggleBtn')?.setAttribute('title', 'Switch to dark mode');
+    }
+  }
 }
 
 function handleFontSizeChange() {
