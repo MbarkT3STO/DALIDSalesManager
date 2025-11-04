@@ -155,7 +155,18 @@ export class ExcelHandler {
         password: 'admin123',
         fullName: 'Administrator',
         role: 'Admin',
-        email: 'admin@salesmanager.com',
+        email: '',
+        createdDate: new Date().toISOString().split('T')[0],
+        isActive: true
+      });
+
+      // Add Walid as a default user
+      newUsersSheet.addRow({
+        username: 'Walid',
+        password: '123',
+        fullName: 'Walid User',
+        role: 'Admin',
+        email: '',
         createdDate: new Date().toISOString().split('T')[0],
         isActive: true
       });
@@ -263,7 +274,18 @@ export class ExcelHandler {
       password: 'admin123',
       fullName: 'Administrator',
       role: 'Admin',
-      email: 'admin@salesmanager.com',
+      email: '',
+      createdDate: new Date().toISOString().split('T')[0],
+      isActive: true
+    });
+
+    // Add Walid as a default user
+    usersSheet.addRow({
+      username: 'Walid',
+      password: '123',
+      fullName: 'Walid User',
+      role: 'Admin',
+      email: '',
       createdDate: new Date().toISOString().split('T')[0],
       isActive: true
     });
