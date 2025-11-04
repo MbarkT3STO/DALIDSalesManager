@@ -67,6 +67,21 @@ interface WorkbookData {
   payments: Payment[];
 }
 
+// Pagination state
+interface PaginationState {
+  currentPage: number;
+  recordsPerPage: number;
+  totalRecords: number;
+}
+
+// Global pagination states
+const paginationStates: { [key: string]: PaginationState } = {
+  products: { currentPage: 1, recordsPerPage: 10, totalRecords: 0 },
+  customers: { currentPage: 1, recordsPerPage: 10, totalRecords: 0 },
+  invoices: { currentPage: 1, recordsPerPage: 10, totalRecords: 0 },
+  inventory: { currentPage: 1, recordsPerPage: 10, totalRecords: 0 }
+};
+
 // Global state
 let workbookData: WorkbookData = {
   products: [],
@@ -1725,6 +1740,98 @@ function memoize<T extends (...args: any[]) => any>(fn: T, keyFn?: (...args: Par
   }) as T;
 }
 
+// Pagination functions
+function updatePaginationState(tableId: string, totalRecords: number) {
+  if (!paginationStates[tableId]) {
+    paginationStates[tableId] = { currentPage: 1, recordsPerPage: 10, totalRecords: 0 };
+  }
+  paginationStates[tableId].totalRecords = totalRecords;
+  
+  // Ensure current page is valid
+  const totalPages = Math.ceil(totalRecords / paginationStates[tableId].recordsPerPage);
+  if (paginationStates[tableId].currentPage > totalPages && totalPages > 0) {
+    paginationStates[tableId].currentPage = totalPages;
+  } else if (paginationStates[tableId].currentPage < 1) {
+    paginationStates[tableId].currentPage = 1;
+  }
+}
+
+function renderPaginationControls(tableId: string, containerId: string) {
+  const state = paginationStates[tableId];
+  if (!state) return;
+  
+  const totalPages = Math.ceil(state.totalRecords / state.recordsPerPage);
+  if (totalPages <= 1) {
+    const container = document.getElementById(containerId);
+    if (container) container.innerHTML = '';
+    return;
+  }
+  
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  
+  // Create pagination controls
+  let paginationHTML = `
+    <div class="pagination-controls">
+      <button class="btn btn-secondary btn-small pagination-btn" onclick="changePage('${tableId}', 1)" ${state.currentPage === 1 ? 'disabled' : ''}>
+        &laquo; First
+      </button>
+      <button class="btn btn-secondary btn-small pagination-btn" onclick="changePage('${tableId}', ${state.currentPage - 1})" ${state.currentPage === 1 ? 'disabled' : ''}>
+        &lsaquo; Prev
+      </button>
+      
+      <span class="pagination-info">
+        Page ${state.currentPage} of ${totalPages}
+        <span class="pagination-records">(${state.totalRecords} total records)</span>
+      </span>
+      
+      <button class="btn btn-secondary btn-small pagination-btn" onclick="changePage('${tableId}', ${state.currentPage + 1})" ${state.currentPage === totalPages ? 'disabled' : ''}>
+        Next &rsaquo;
+      </button>
+      <button class="btn btn-secondary btn-small pagination-btn" onclick="changePage('${tableId}', ${totalPages})" ${state.currentPage === totalPages ? 'disabled' : ''}>
+        Last &raquo;
+      </button>
+    </div>
+  `;
+  
+  container.innerHTML = paginationHTML;
+}
+
+function changePage(tableId: string, newPage: number) {
+  const state = paginationStates[tableId];
+  if (!state) return;
+  
+  const totalPages = Math.ceil(state.totalRecords / state.recordsPerPage);
+  if (newPage < 1 || newPage > totalPages) return;
+  
+  state.currentPage = newPage;
+  
+  // Re-render the appropriate table
+  switch (tableId) {
+    case 'products':
+      renderProducts();
+      break;
+    case 'customers':
+      renderCustomers();
+      break;
+    case 'invoices':
+      renderInvoices();
+      break;
+    case 'inventory':
+      renderInventory();
+      break;
+  }
+}
+
+function getPaginatedData<T>(data: T[], tableId: string): T[] {
+  const state = paginationStates[tableId];
+  if (!state) return data;
+  
+  const start = (state.currentPage - 1) * state.recordsPerPage;
+  const end = start + state.recordsPerPage;
+  return data.slice(start, end);
+}
+
 // Helper function to format currency (memoized)
 const formatCurrencyMemoized = memoize(function formatCurrency(amount: number): string {
   const currencySymbols: { [key: string]: string } = {
@@ -1841,14 +1948,22 @@ function renderProducts() {
 
   // Filter to show only active products
   const activeProducts = workbookData.products.filter(p => p.isActive !== false);
+  
+  // Update pagination state
+  updatePaginationState('products', activeProducts.length);
+  
+  // Get paginated data
+  const paginatedProducts = getPaginatedData(activeProducts, 'products');
 
-  if (activeProducts.length === 0) {
+  if (paginatedProducts.length === 0) {
     tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No products found</td></tr>';
+    // Hide pagination controls if no data
+    renderPaginationControls('products', 'productsPagination');
     return;
   }
 
   const threshold = appSettings.lowStockThreshold ?? 5;
-  tbody.innerHTML = activeProducts.map(product => {
+  tbody.innerHTML = paginatedProducts.map(product => {
     const profitMargin = ((product.salePrice - product.buyPrice) / product.buyPrice * 100).toFixed(1);
     const isLow = product.quantity <= threshold;
     return '<tr class="' + (isLow ? 'low-stock-row' : '') + '">' +
@@ -1881,6 +1996,9 @@ function renderProducts() {
       '</td>' +
     '</tr>';
   }).join('');
+  
+  // Render pagination controls
+  renderPaginationControls('products', 'productsPagination');
   
   // Attach sorting functionality to table headers
   attachTableSorting('productsTable');
@@ -2124,12 +2242,20 @@ const filterCustomersDebounced = debounce(function() {
     c.phone.includes(searchTerm)
   );
 
-  if (filteredCustomers.length === 0) {
+  // Update pagination state
+  updatePaginationState('customers', filteredCustomers.length);
+  
+  // Get paginated data
+  const paginatedCustomers = getPaginatedData(filteredCustomers, 'customers');
+
+  if (paginatedCustomers.length === 0) {
     tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No customers found</td></tr>';
+    // Hide pagination controls if no data
+    renderPaginationControls('customers', 'customersPagination');
     return;
   }
 
-  tbody.innerHTML = filteredCustomers.map(customer => `
+  tbody.innerHTML = paginatedCustomers.map(customer => `
     <tr>
       <td><strong>${customer.name}</strong></td>
       <td>${customer.phone}</td>
@@ -2157,6 +2283,12 @@ const filterCustomersDebounced = debounce(function() {
       </td>
     </tr>
   `).join('');
+  
+  // Render pagination controls
+  renderPaginationControls('customers', 'customersPagination');
+  
+  // Attach sorting functionality to table headers
+  attachTableSorting('customersTable');
 }, 150);
 
 // Wrapper for event listener
@@ -2528,12 +2660,20 @@ function renderCustomers() {
   const tbody = document.getElementById('customersTableBody');
   if (!tbody) return;
 
-  if (workbookData.customers.length === 0) {
+  // Update pagination state
+  updatePaginationState('customers', workbookData.customers.length);
+  
+  // Get paginated data
+  const paginatedCustomers = getPaginatedData(workbookData.customers, 'customers');
+
+  if (paginatedCustomers.length === 0) {
     tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No customers found</td></tr>';
+    // Hide pagination controls if no data
+    renderPaginationControls('customers', 'customersPagination');
     return;
   }
 
-  tbody.innerHTML = workbookData.customers.map(customer => {
+  tbody.innerHTML = paginatedCustomers.map(customer => {
     return '<tr>' +
       '<td><strong>' + customer.name + '</strong></td>' +
       '<td>' + customer.phone + '</td>' +
@@ -2561,6 +2701,12 @@ function renderCustomers() {
       '</td>' +
     '</tr>';
   }).join('');
+  
+  // Render pagination controls
+  renderPaginationControls('customers', 'customersPagination');
+  
+  // Attach sorting functionality to table headers
+  attachTableSorting('customersTable');
 }
 
 function renderCustomerStats() {
@@ -2611,12 +2757,20 @@ function renderInvoices() {
     filteredInvoices = filteredInvoices.filter(inv => inv.date === currentDateFilter);
   }
 
-  if (filteredInvoices.length === 0) {
+  // Update pagination state
+  updatePaginationState('invoices', filteredInvoices.length);
+  
+  // Get paginated data
+  const paginatedInvoices = getPaginatedData(filteredInvoices, 'invoices');
+
+  if (paginatedInvoices.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No invoices found</td></tr>';
+    // Hide pagination controls if no data
+    renderPaginationControls('invoices', 'invoicesPagination');
     return;
   }
 
-  tbody.innerHTML = filteredInvoices.map(invoice => {
+  tbody.innerHTML = paginatedInvoices.map(invoice => {
     const statusClass = getStatusBadgeClass(invoice.status);
     const statusLabel = translateStatus(invoice.status);
     
@@ -2657,6 +2811,9 @@ function renderInvoices() {
       '</td>' +
     '</tr>';
   }).join('');
+  
+  // Render pagination controls
+  renderPaginationControls('invoices', 'invoicesPagination');
   
   // Attach sorting functionality to table headers
   attachTableSorting('invoicesTable');
@@ -5216,13 +5373,21 @@ function renderInventory() {
   const tbody = document.getElementById('inventoryTableBody');
   if (!tbody) return;
 
-  if (workbookData.inventory.length === 0) {
+  // Update pagination state
+  updatePaginationState('inventory', workbookData.inventory.length);
+  
+  // Get paginated data
+  const paginatedMovements = getPaginatedData(workbookData.inventory, 'inventory');
+
+  if (paginatedMovements.length === 0) {
     tbody.innerHTML = `<tr><td colspan="7" class="empty-state">${t('inventory.noMovements')}</td></tr>`;
+    // Hide pagination controls if no data
+    renderPaginationControls('inventory', 'inventoryPagination');
     return;
   }
 
-  // Show last 50 movements, most recent first
-  const recentMovements = [...workbookData.inventory].reverse().slice(0, 50);
+  // Show paginated movements, most recent first
+  const recentMovements = [...paginatedMovements].reverse();
 
   tbody.innerHTML = recentMovements.map(movement => {
     const typeClass = movement.type === 'IN' ? 'badge-success' : movement.type === 'OUT' ? 'badge-danger' : 'badge-warning';
@@ -5242,6 +5407,9 @@ function renderInventory() {
       </tr>
     `;
   }).join('');
+  
+  // Render pagination controls
+  renderPaginationControls('inventory', 'inventoryPagination');
   
   // Attach sorting functionality to table headers
   attachTableSorting('inventoryTable');
