@@ -123,6 +123,8 @@ interface AppSettings {
   invoiceStyle: 'classical' | 'modern' | 'blackwhite';
   // Invoice sizing settings
   invoiceSizing: 'full' | 'compact';
+  // Invoice language setting
+  invoiceLanguage: string;
 }
 
 let appSettings: AppSettings = {
@@ -150,7 +152,9 @@ let appSettings: AppSettings = {
   // Invoice style default
   invoiceStyle: 'classical',
   // Invoice sizing default
-  invoiceSizing: 'full'
+  invoiceSizing: 'full',
+  // Invoice language default
+  invoiceLanguage: 'en'
 };
 
 let currentEditingProduct: string | null = null;
@@ -576,6 +580,7 @@ function renderSettings() {
   (document.getElementById('printQualitySelect') as HTMLSelectElement).value = appSettings.printQuality;
   (document.getElementById('invoiceStyleSelect') as HTMLSelectElement).value = appSettings.invoiceStyle;
   (document.getElementById('invoiceSizingSelect') as HTMLSelectElement).value = appSettings.invoiceSizing;
+  (document.getElementById('invoiceLanguageSelect') as HTMLSelectElement).value = appSettings.invoiceLanguage;
   (document.getElementById('autoBackupToggle') as HTMLInputElement).checked = appSettings.autoBackup;
   (document.getElementById('backupRetentionSelect') as HTMLSelectElement).value = appSettings.backupRetention.toString();
   (document.getElementById('lowStockNotificationsToggle') as HTMLInputElement).checked = appSettings.lowStockNotifications;
@@ -1056,6 +1061,7 @@ function setupEventListeners() {
   document.getElementById('printOrientationSelect')?.addEventListener('change', handleSaveSettings);
   document.getElementById('printQualitySelect')?.addEventListener('change', handleSaveSettings);
   document.getElementById('invoiceSizingSelect')?.addEventListener('change', handleSaveSettings);
+  document.getElementById('invoiceLanguageSelect')?.addEventListener('change', handleSaveSettings);
   document.getElementById('autoBackupToggle')?.addEventListener('change', updateSettingsOverview);
   document.getElementById('lowStockNotificationsToggle')?.addEventListener('change', updateSettingsOverview);
   
@@ -3238,7 +3244,7 @@ async function saveInvoice() {
     return;
   }
 
-  const html = generateInvoiceHTML(invoice, appSettings.invoiceStyle);
+  const html = await generateInvoiceHTML(invoice, appSettings.invoiceStyle);
   
   try {
     const result = await api.exportHtmlToPDF(html, `invoice-${invoiceId}.pdf`);
@@ -3261,11 +3267,11 @@ function generateInvoiceId(): string {
   return `INV-${year}${month}${day}-${random}`;
 }
 
-(window as any).viewInvoice = function(invoiceId: string) {
+(window as any).viewInvoice = async function(invoiceId: string) {
   const invoice = workbookData.invoices.find(inv => inv.invoiceId === invoiceId);
   if (!invoice) return;
 
-  const html = generateInvoiceHTML(invoice, appSettings.invoiceStyle);
+  const html = await generateInvoiceHTML(invoice, appSettings.invoiceStyle);
   const printWindow = window.open('', '_blank');
   if (printWindow) {
     printWindow.document.write(html);
@@ -3277,7 +3283,7 @@ function generateInvoiceId(): string {
   const invoice = workbookData.invoices.find(inv => inv.invoiceId === invoiceId);
   if (!invoice) return;
 
-  const html = generateInvoiceHTML(invoice, appSettings.invoiceStyle);
+  const html = await generateInvoiceHTML(invoice, appSettings.invoiceStyle);
   
   try {
     const result = await api.printInvoice(html);
@@ -3293,10 +3299,43 @@ function generateInvoiceId(): string {
   }
 };
 
-function generateInvoiceHTML(invoice: Invoice, style: 'classical' | 'modern' | 'blackwhite' = appSettings.invoiceStyle): string {
+async function generateInvoiceHTML(invoice: Invoice, style: 'classical' | 'modern' | 'blackwhite' = appSettings.invoiceStyle): Promise<string> {
   const customer = workbookData.customers.find(c => c.name === invoice.customerName);
-  const isRTL = currentLanguage === 'ar';
+  const isRTL = appSettings.invoiceLanguage === 'ar';
   const dir = isRTL ? 'rtl' : 'ltr';
+  
+  // Load translations for the invoice language
+  let invoiceTranslations: any = {};
+  try {
+    const response = await fetch(`translations/${appSettings.invoiceLanguage}.json`);
+    invoiceTranslations = await response.json();
+  } catch (error) {
+    // Fallback to English if language file not found
+    const response = await fetch(`translations/en.json`);
+    invoiceTranslations = await response.json();
+  }
+  
+  // Helper function to translate keys for invoice language
+  function tInvoice(key: string, fallback?: string): string {
+    const keys = key.split('.');
+    let value = invoiceTranslations;
+    
+    for (const k of keys) {
+      value = value?.[k];
+    }
+    
+    return value || fallback || key;
+  }
+  
+  // Helper function to translate status for invoice language
+  function translateInvoiceStatus(status: string): string {
+    const statusMap: { [key: string]: string } = {
+      'Paid': tInvoice('sales.paid'),
+      'Pending': tInvoice('sales.pending'),
+      'Cancelled': tInvoice('sales.cancelled')
+    };
+    return statusMap[status] || status;
+  }
   
   // Check if compact sizing is selected
   const isCompact = appSettings.invoiceSizing === 'compact';
@@ -3645,21 +3684,21 @@ function generateInvoiceHTML(invoice: Invoice, style: 'classical' | 'modern' | '
     <html dir="${dir}">
     <head>
       <meta charset="UTF-8">
-      <title>${t('sales.invoice')} ${invoice.invoiceId}</title>
+      <title>${tInvoice('sales.invoice')} ${invoice.invoiceId}</title>
       <style>
         ${getInvoiceStyle()}
       </style>
     </head>
     <body>
       <div class="header">
-        <h1>${t('sales.invoice').toUpperCase()}</h1>
-        <p>${t('sales.invoiceId')}: ${invoice.invoiceId}</p>
-        <p>${t('common.date')}: ${formatDate(invoice.date)}</p>
+        <h1>${tInvoice('sales.invoice').toUpperCase()}</h1>
+        <p>${tInvoice('sales.invoiceId')}: ${invoice.invoiceId}</p>
+        <p>${tInvoice('common.date')}: ${formatDate(invoice.date)}</p>
       </div>
 
       <div class="info-section">
         <div class="info-box">
-          <h3>${t('sales.customerInformation')}</h3>
+          <h3>${tInvoice('sales.customerInformation')}</h3>
           <p><strong>${invoice.customerName}</strong></p>
           ${customer ? `
             <p>${customer.phone}</p>
@@ -3668,19 +3707,19 @@ function generateInvoiceHTML(invoice: Invoice, style: 'classical' | 'modern' | '
           ` : ''}
         </div>
         <div class="info-box">
-          <h3>${t('sales.invoiceDetails')}</h3>
-          <p><strong>${t('common.status')}:</strong> ${translateStatus(invoice.status)}</p>
-          <p><strong>${t('common.date')}:</strong> ${formatDate(invoice.date)}</p>
+          <h3>${tInvoice('sales.invoiceDetails')}</h3>
+          <p><strong>${tInvoice('common.status')}:</strong> ${translateInvoiceStatus(invoice.status)}</p>
+          <p><strong>${tInvoice('common.date')}:</strong> ${formatDate(invoice.date)}</p>
         </div>
       </div>
 
       <table>
         <thead>
           <tr>
-            <th>${t('common.product')}</th>
-            <th>${t('common.quantity')}</th>
-            <th>${t('sales.unitPrice')}</th>
-            <th>${t('common.total')}</th>
+            <th>${tInvoice('common.product')}</th>
+            <th>${tInvoice('common.quantity')}</th>
+            <th>${tInvoice('sales.unitPrice')}</th>
+            <th>${tInvoice('common.total')}</th>
           </tr>
         </thead>
         <tbody>
@@ -3704,13 +3743,13 @@ function generateInvoiceHTML(invoice: Invoice, style: 'classical' | 'modern' | '
 
       <div class="total-section">
         <div class="total-row grand-total">
-          <span>${t('sales.total').toUpperCase()}:</span>
+          <span>${tInvoice('sales.total').toUpperCase()}:</span>
           <span>${formatCurrency(invoice.totalAmount)}</span>
         </div>
       </div>
 
       <div class="footer">
-        <p>${t('sales.thankYou')}</p>
+        <p>${tInvoice('sales.thankYou')}</p>
       </div>
     </body>
     </html>
@@ -6920,6 +6959,7 @@ function handleSaveSettings() {
   appSettings.printQuality = (document.getElementById('printQualitySelect') as HTMLSelectElement).value;
   appSettings.invoiceStyle = (document.getElementById('invoiceStyleSelect') as HTMLSelectElement).value as 'classical' | 'modern' | 'blackwhite';
   appSettings.invoiceSizing = (document.getElementById('invoiceSizingSelect') as HTMLSelectElement).value as 'full' | 'compact';
+  appSettings.invoiceLanguage = (document.getElementById('invoiceLanguageSelect') as HTMLSelectElement).value;
   appSettings.autoBackup = (document.getElementById('autoBackupToggle') as HTMLInputElement).checked;
   appSettings.backupRetention = parseInt((document.getElementById('backupRetentionSelect') as HTMLSelectElement).value);
   appSettings.lowStockNotifications = (document.getElementById('lowStockNotificationsToggle') as HTMLInputElement).checked;
@@ -6966,7 +7006,9 @@ function handleResetSettings() {
     // Invoice style default
     invoiceStyle: 'classical',
     // Invoice sizing default
-    invoiceSizing: 'full'
+    invoiceSizing: 'full',
+    // Invoice language default
+    invoiceLanguage: 'en'
   };
 
   // Save and apply settings
