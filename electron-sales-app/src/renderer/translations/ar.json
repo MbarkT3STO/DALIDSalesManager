@@ -319,7 +319,8 @@
     "selectDate": "اختر التاريخ",
     "customPrice": "سعر مخصص",
     "customPriceHint": "اتركه فارغاً لاستخدام سعر المنتج الافتراضي",
-    "custom": "مخصص"
+    "custom": "مخصص",
+    "insufficientStock": "خطأ: مخزون غير كافٍ. المتاح: {0}، المطلوب: {1}"
   },
   "inventory": {
     "title": "المخزون",

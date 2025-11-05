@@ -315,6 +315,15 @@ async function loadTranslations(language: string) {
   }
 }
 
+// Helper function to format translation strings with parameters
+function formatTranslation(key: string, ...params: (string | number)[]): string {
+  let translation = t(key);
+  params.forEach((param, index) => {
+    translation = translation.replace(`{${index}}`, String(param));
+  });
+  return translation;
+}
+
 function t(key: string, fallback?: string): string {
   const keys = key.split('.');
   let value = translations;
@@ -3089,9 +3098,10 @@ function addInvoiceItem() {
     return;
   }
 
-  // Check stock
+  // Check stock - prevent adding item if quantity exceeds available stock
   if (quantity > product.quantity) {
-    showToast(`Warning: Insufficient stock. Available: ${product.quantity}`, 'warning');
+    showToast(formatTranslation('sales.insufficientStock', product.quantity, quantity), 'error');
+    return; // Prevent adding the item
   }
 
   // Use custom price if provided, otherwise use default unit price

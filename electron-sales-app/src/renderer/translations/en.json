@@ -322,7 +322,8 @@
     "selectDate": "Select date",
     "customPrice": "Custom Price",
     "customPriceHint": "Leave empty to use default product price",
-    "custom": "Custom"
+    "custom": "Custom",
+    "insufficientStock": "Error: Insufficient stock. Available: {0}, Requested: {1}"
   },
   "inventory": {
     "title": "Inventory",

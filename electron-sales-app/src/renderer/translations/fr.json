@@ -319,7 +319,8 @@
     "selectDate": "Sélectionner la date",
     "customPrice": "Prix personnalisé",
     "customPriceHint": "Laisser vide pour utiliser le prix par défaut du produit",
-    "custom": "Personnalisé"
+    "custom": "Personnalisé",
+    "insufficientStock": "Erreur : Stock insuffisant. Disponible : {0}, Demandé : {1}"
   },
   "inventory": {
     "title": "Inventaire",
