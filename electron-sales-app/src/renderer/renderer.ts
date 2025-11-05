@@ -1065,6 +1065,9 @@ function setupEventListeners() {
   document.getElementById('autoBackupToggle')?.addEventListener('change', updateSettingsOverview);
   document.getElementById('lowStockNotificationsToggle')?.addEventListener('change', updateSettingsOverview);
   
+  // Add event listener for preview invoice language button
+  document.getElementById('previewInvoiceLanguageBtn')?.addEventListener('click', previewInvoiceLanguage);
+  
   // GDPR & Audit
   document.getElementById('gdprExportBtn')?.addEventListener('click', handleGDPRExport);
   document.getElementById('gdprDeleteBtn')?.addEventListener('click', handleGDPRDelete);
@@ -3298,6 +3301,77 @@ function generateInvoiceId(): string {
     showToast(error.message || 'Error printing invoice', 'error');
   }
 };
+
+// Preview invoice in selected language
+async function previewInvoiceLanguage() {
+  try {
+    // Get selected invoice language
+    const invoiceLanguageSelect = document.getElementById('invoiceLanguageSelect') as HTMLSelectElement;
+    if (!invoiceLanguageSelect) {
+      showToast('Invoice language selector not found', 'error');
+      return;
+    }
+    
+    const selectedLanguage = invoiceLanguageSelect.value;
+    
+    // Validate selected language
+    const validLanguages = ['en', 'fr', 'ar'];
+    if (!validLanguages.includes(selectedLanguage)) {
+      showToast('Invalid invoice language selected', 'error');
+      return;
+    }
+    
+    // Create a sample invoice for preview
+    const sampleInvoice: Invoice = {
+      invoiceId: 'INV-PREVIEW-001',
+      date: new Date().toISOString().split('T')[0],
+      customerName: 'Sample Customer',
+      totalAmount: 100.00,
+      totalProfit: 25.00,
+      status: 'Paid',
+      items: [
+        {
+          date: new Date().toISOString().split('T')[0],
+          invoiceId: 'INV-PREVIEW-001',
+          productName: 'Sample Product',
+          quantity: 2,
+          unitPrice: 50.00,
+          total: 100.00,
+          profit: 25.00
+        }
+      ]
+    };
+    
+    // Temporarily set the invoice language for preview
+    const originalInvoiceLanguage = appSettings.invoiceLanguage;
+    appSettings.invoiceLanguage = selectedLanguage;
+    
+    try {
+      // Generate invoice HTML with selected language
+      const html = await generateInvoiceHTML(sampleInvoice, appSettings.invoiceStyle);
+      
+      // Open in new window for preview
+      const printWindow = window.open('', '_blank', 'width=800,height=600');
+      if (printWindow) {
+        printWindow.document.write(html);
+        printWindow.document.close();
+        printWindow.focus();
+      } else {
+        showToast('Unable to open preview window. Please check your browser popup settings.', 'error');
+      }
+    } catch (error: any) {
+      showToast(error.message || 'Error previewing invoice', 'error');
+    } finally {
+      // Restore original invoice language
+      appSettings.invoiceLanguage = originalInvoiceLanguage;
+    }
+  } catch (error: any) {
+    showToast(error.message || 'Error previewing invoice language', 'error');
+  }
+}
+
+// Reports rendering
+
 
 async function generateInvoiceHTML(invoice: Invoice, style: 'classical' | 'modern' | 'blackwhite' = appSettings.invoiceStyle): Promise<string> {
   const customer = workbookData.customers.find(c => c.name === invoice.customerName);

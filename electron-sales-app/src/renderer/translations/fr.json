@@ -573,6 +573,7 @@
     "invoiceSizingHint": "Sélectionnez la taille par défaut pour les factures dans l'aperçu, l'exportation et l'impression.",
     "invoiceLanguage": "Langue de facture",
     "invoiceLanguageHint": "Sélectionnez la langue des factures. Celle-ci peut être différente de la langue de l'interface de l'application.",
+    "previewInvoice": "Aperçu de la facture",
     "autoBackupHint": "Créer automatiquement des copies de sauvegarde lors de l'enregistrement des données.",
     "backupRetentionHint": "Nombre de fichiers de sauvegarde à conserver.",
     "lowStockHint": "Recevoir des notifications lorsque les produits sont en rupture de stock.",

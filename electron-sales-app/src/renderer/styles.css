@@ -3527,6 +3527,23 @@ select.form-control {
 }
 
 /* ============================================
+   SETTINGS PREVIEW BUTTONS
+   ============================================ */
+
+.settings-section .settings-preview-button {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+}
+
+.settings-section .settings-preview-button .btn {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+/* ============================================
    PRIVACY & COMPLIANCE BUTTONS
    ============================================ */
 
@@ -3597,6 +3614,15 @@ select.form-control {
     }
     
     .settings-section .audit-buttons .btn {
+        justify-content: center;
+    }
+    
+    .settings-section .settings-preview-button {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .settings-section .settings-preview-button .btn {
         justify-content: center;
     }
 }
