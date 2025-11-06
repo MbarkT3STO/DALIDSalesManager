@@ -79,6 +79,15 @@ export interface ElectronAPI {
   insertSampleData: () => Promise<any>;
   // Splash screen communication
   onAppReady: (handler: () => void) => void;
+  // GitHub Sync
+  githubTestConnection: (accessToken: string, repoOwner: string, repoName: string) => Promise<any>;
+  githubSaveConfig: (config: any) => Promise<any>;
+  githubLoadConfig: () => Promise<any>;
+  githubUploadWorkbook: () => Promise<any>;
+  githubDownloadWorkbook: () => Promise<any>;
+  githubUploadWorkbookWithConfig: (config: any) => Promise<any>;
+  githubDownloadWorkbookWithConfig: (config: any) => Promise<any>;
+  githubGetStatus: () => Promise<any>;
 }
 
 // Expose protected methods that allow the renderer process to use
@@ -172,5 +181,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('app-ready', () => {
       try { handler(); } catch {}
     });
-  }
+  },
+  // GitHub Sync
+  githubTestConnection: (accessToken: string, repoOwner: string, repoName: string) => ipcRenderer.invoke('github-test-connection', accessToken, repoOwner, repoName),
+  githubSaveConfig: (config: any) => ipcRenderer.invoke('github-save-config', config),
+  githubLoadConfig: () => ipcRenderer.invoke('github-load-config'),
+  githubUploadWorkbook: () => ipcRenderer.invoke('github-upload-workbook'),
+  githubDownloadWorkbook: () => ipcRenderer.invoke('github-download-workbook'),
+  githubUploadWorkbookWithConfig: (config: any) => ipcRenderer.invoke('github-upload-workbook-with-config', config),
+  githubDownloadWorkbookWithConfig: (config: any) => ipcRenderer.invoke('github-download-workbook-with-config', config),
+  githubGetStatus: () => ipcRenderer.invoke('github-get-status')
 } as ElectronAPI);

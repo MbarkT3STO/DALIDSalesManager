@@ -6,16 +6,47 @@ import * as crypto from 'crypto';
 import { ExcelHandler, Product, Customer, Invoice, Payment, User, Account, JournalEntry, Sale } from './excel-handler';
 import { ExportHandler } from './export-handler';
 import { GDPRHandler } from './gdpr-handler';
+import { GitHubHandler, GitHubSyncConfig } from './github-handler';
 
 let mainWindow: BrowserWindow | null = null;
 let splashWindow: BrowserWindow | null = null;
 let excelHandler: ExcelHandler | null = null;
 let gdprHandler: GDPRHandler | null = null;
+let githubHandler: GitHubHandler | null = null;
 let secretWindow: BrowserWindow | null = null;
 
 // Performance optimization: Cache for expensive operations
 const operationCache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_TTL = 30000; // 30 seconds
+
+// GitHub Sync Configuration
+const GITHUB_CONFIG_FILE = 'github-sync-config.json';
+
+function getGitHubConfigPath(): string {
+  return path.join(app.getPath('userData'), GITHUB_CONFIG_FILE);
+}
+
+function loadGitHubConfig(): GitHubSyncConfig | null {
+  try {
+    const configPath = getGitHubConfigPath();
+    if (fs.existsSync(configPath)) {
+      const raw = fs.readFileSync(configPath, 'utf-8');
+      return JSON.parse(raw);
+    }
+  } catch (error) {
+    console.error('Failed to load GitHub config:', error);
+  }
+  return null;
+}
+
+function saveGitHubConfig(config: GitHubSyncConfig): void {
+  try {
+    const configPath = getGitHubConfigPath();
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+  } catch (error) {
+    console.error('Failed to save GitHub config:', error);
+  }
+}
 
 function getCached<T>(key: string): T | null {
   const cached = operationCache.get(key);
@@ -257,6 +288,172 @@ app.on('window-all-closed', () => {
 });
 
 // IPC Handlers
+// GitHub Sync IPC
+ipcMain.handle('github-test-connection', async (event, accessToken: string, repoOwner: string, repoName: string) => {
+  try {
+    const githubHandler = new GitHubHandler(''); // Dummy path for testing
+    const result = await githubHandler.testConnection(accessToken, repoOwner, repoName);
+    return result;
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Helper function to initialize GitHub handler if needed
+async function ensureGitHubHandler() {
+  if (!githubHandler && excelHandler) {
+    const githubConfig = loadGitHubConfig();
+    if (githubConfig) {
+      const workbookPath = excelHandler.getWorkbookPath();
+      githubHandler = new GitHubHandler(workbookPath);
+      await githubHandler.init(githubConfig);
+    }
+  }
+}
+
+ipcMain.handle('github-save-config', async (event, config: GitHubSyncConfig) => {
+  try {
+    saveGitHubConfig(config);
+    
+    // If we have an excel handler, initialize/update github handler
+    if (excelHandler) {
+      const workbookPath = excelHandler.getWorkbookPath();
+      if (githubHandler) {
+        githubHandler.updateConfig(config);
+      } else {
+        githubHandler = new GitHubHandler(workbookPath);
+        await githubHandler.init(config);
+      }
+    }
+    
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('github-load-config', async () => {
+  try {
+    const config = loadGitHubConfig();
+    return { success: true, config };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('github-upload-workbook', async () => {
+  try {
+    // If GitHub handler doesn't exist but we have an excel handler and config, initialize it
+    if (!githubHandler && excelHandler) {
+      // First try to load saved config
+      let githubConfig = loadGitHubConfig();
+      
+      // If no saved config, try to use temporary config from renderer
+      if (!githubConfig) {
+        // We can't access the temporary config directly from renderer, so we'll need to pass it
+        // For now, we'll just return the error as before
+        return { success: false, error: 'GitHub sync not configured' };
+      }
+      
+      const workbookPath = excelHandler.getWorkbookPath();
+      githubHandler = new GitHubHandler(workbookPath);
+      await githubHandler.init(githubConfig);
+    }
+    
+    if (!githubHandler) {
+      return { success: false, error: 'GitHub sync not configured' };
+    }
+    
+    const result = await githubHandler.uploadWorkbook();
+    return result;
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('github-download-workbook', async () => {
+  try {
+    // If GitHub handler doesn't exist but we have an excel handler and config, initialize it
+    if (!githubHandler && excelHandler) {
+      const githubConfig = loadGitHubConfig();
+      if (githubConfig) {
+        const workbookPath = excelHandler.getWorkbookPath();
+        githubHandler = new GitHubHandler(workbookPath);
+        await githubHandler.init(githubConfig);
+      }
+    }
+    
+    if (!githubHandler) {
+      return { success: false, error: 'GitHub sync not configured' };
+    }
+    
+    const result = await githubHandler.downloadWorkbook();
+    return result;
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('github-get-status', async () => {
+  try {
+    // Ensure GitHub handler is initialized if possible
+    await ensureGitHubHandler();
+    
+    if (!githubHandler) {
+      return { success: true, status: { connected: false, lastSync: null, nextSync: null, error: null } };
+    }
+    
+    const status = githubHandler.getSyncStatus();
+    return { success: true, status };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('github-upload-workbook-with-config', async (event, config: GitHubSyncConfig) => {
+  try {
+    if (!excelHandler) {
+      return { success: false, error: 'No workbook loaded' };
+    }
+    
+    // Create a temporary GitHub handler with the provided config
+    const workbookPath = excelHandler.getWorkbookPath();
+    const tempGitHubHandler = new GitHubHandler(workbookPath);
+    await tempGitHubHandler.init(config);
+    
+    const result = await tempGitHubHandler.uploadWorkbook();
+    
+    // Clean up the temporary handler
+    tempGitHubHandler.destroy();
+    
+    return result;
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('github-download-workbook-with-config', async (event, config: GitHubSyncConfig) => {
+  try {
+    if (!excelHandler) {
+      return { success: false, error: 'No workbook loaded' };
+    }
+    
+    // Create a temporary GitHub handler with the provided config
+    const workbookPath = excelHandler.getWorkbookPath();
+    const tempGitHubHandler = new GitHubHandler(workbookPath);
+    await tempGitHubHandler.init(config);
+    
+    const result = await tempGitHubHandler.downloadWorkbook();
+    
+    // Clean up the temporary handler
+    tempGitHubHandler.destroy();
+    
+    return result;
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});
+
 // Activation IPC
 ipcMain.handle('get-activation-status', async () => {
   try {
@@ -334,6 +531,13 @@ ipcMain.handle('open-workbook', async () => {
     const filePath = result.filePaths[0];
     excelHandler = new ExcelHandler(filePath);
     await excelHandler.ensureWorkbook();
+    
+    // Initialize GitHub handler if config exists
+    const githubConfig = loadGitHubConfig();
+    if (githubConfig) {
+      githubHandler = new GitHubHandler(filePath);
+      await githubHandler.init(githubConfig);
+    }
 
     return { success: true, path: filePath };
   } catch (error: any) {
@@ -358,6 +562,13 @@ ipcMain.handle('create-workbook', async () => {
     const filePath = result.filePath;
     excelHandler = new ExcelHandler(filePath);
     await excelHandler.ensureWorkbook();
+    
+    // Initialize GitHub handler if config exists
+    const githubConfig = loadGitHubConfig();
+    if (githubConfig) {
+      githubHandler = new GitHubHandler(filePath);
+      await githubHandler.init(githubConfig);
+    }
 
     return { success: true, path: filePath };
   } catch (error: any) {
@@ -370,6 +581,13 @@ ipcMain.handle('use-default-workbook', async () => {
     const defaultPath = path.join(app.getPath('userData'), 'sales-data.xlsx');
     excelHandler = new ExcelHandler(defaultPath);
     await excelHandler.ensureWorkbook();
+    
+    // Initialize GitHub handler if config exists
+    const githubConfig = loadGitHubConfig();
+    if (githubConfig) {
+      githubHandler = new GitHubHandler(defaultPath);
+      await githubHandler.init(githubConfig);
+    }
 
     return { success: true, path: defaultPath };
   } catch (error: any) {
@@ -384,6 +602,13 @@ ipcMain.handle('use-workbook', async (event, filePath: string) => {
     }
     excelHandler = new ExcelHandler(filePath);
     await excelHandler.ensureWorkbook();
+    
+    // Initialize GitHub handler if config exists
+    const githubConfig = loadGitHubConfig();
+    if (githubConfig) {
+      githubHandler = new GitHubHandler(filePath);
+      await githubHandler.init(githubConfig);
+    }
     return { success: true, path: filePath };
   } catch (error: any) {
     return { success: false, message: error.message };

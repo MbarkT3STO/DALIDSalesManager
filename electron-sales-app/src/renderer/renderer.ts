@@ -125,6 +125,13 @@ interface AppSettings {
   invoiceSizing: 'full' | 'compact';
   // Invoice language setting
   invoiceLanguage: string;
+  // GitHub sync settings
+  githubEnabled?: boolean;
+  githubAccessToken?: string;
+  githubRepoOwner?: string;
+  githubRepoName?: string;
+  githubFilePath?: string;
+  githubAutoSyncInterval?: number;
 }
 
 let appSettings: AppSettings = {
@@ -154,7 +161,14 @@ let appSettings: AppSettings = {
   // Invoice sizing default
   invoiceSizing: 'full',
   // Invoice language default
-  invoiceLanguage: 'en'
+  invoiceLanguage: 'en',
+  // GitHub sync defaults
+  githubEnabled: false,
+  githubAccessToken: '',
+  githubRepoOwner: '',
+  githubRepoName: '',
+  githubFilePath: 'sales-data.xlsx',
+  githubAutoSyncInterval: 30
 };
 
 let currentEditingProduct: string | null = null;
@@ -595,6 +609,14 @@ function renderSettings() {
     customPathInput.value = appSettings.customWorkbookPath || '';
   }
   
+  // Populate GitHub sync settings
+  (document.getElementById('githubEnabledToggle') as HTMLInputElement).checked = appSettings.githubEnabled || false;
+  (document.getElementById('githubAccessToken') as HTMLInputElement).value = appSettings.githubAccessToken || '';
+  (document.getElementById('githubRepoOwner') as HTMLInputElement).value = appSettings.githubRepoOwner || '';
+  (document.getElementById('githubRepoName') as HTMLInputElement).value = appSettings.githubRepoName || '';
+  (document.getElementById('githubFilePath') as HTMLInputElement).value = appSettings.githubFilePath || 'sales-data.xlsx';
+  (document.getElementById('githubAutoSyncInterval') as HTMLInputElement).value = (appSettings.githubAutoSyncInterval || 30).toString();
+  
   // Populate GDPR customer dropdowns
   populateGDPRCustomerDropdowns();
   
@@ -870,6 +892,7 @@ async function initializeApp() {
   applySettings();
   setupEventListeners();
   initializeHeaderFeatures();
+  initGitHubSync();
   // Automatically use default workbook
   await autoLoadDefaultWorkbook();
 }
@@ -1212,6 +1235,201 @@ function bindCustomToggle(inputId: string) {
     e.preventDefault();
     input.checked = !input.checked;
   });
+}
+
+// GitHub Sync Event Listeners
+function initGitHubSync() {
+  document.getElementById('githubTestConnectionBtn')?.addEventListener('click', handleGitHubTestConnection);
+  document.getElementById('githubUploadBtn')?.addEventListener('click', handleGitHubUpload);
+  document.getElementById('githubDownloadBtn')?.addEventListener('click', handleGitHubDownload);
+  
+  // Update GitHub sync info when settings tab is shown
+  const settingsTab = document.getElementById('settingsTab');
+  if (settingsTab) {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          if (settingsTab.classList.contains('active')) {
+            updateGitHubSyncInfo();
+          }
+        }
+      });
+    });
+    
+    observer.observe(settingsTab, { attributes: true });
+  }
+}
+
+// GitHub Sync Functions
+async function handleGitHubTestConnection() {
+  const accessToken = (document.getElementById('githubAccessToken') as HTMLInputElement).value;
+  const repoOwner = (document.getElementById('githubRepoOwner') as HTMLInputElement).value;
+  const repoName = (document.getElementById('githubRepoName') as HTMLInputElement).value;
+  const filePath = (document.getElementById('githubFilePath') as HTMLInputElement).value || 'sales-data.xlsx';
+  const autoSyncInterval = parseInt((document.getElementById('githubAutoSyncInterval') as HTMLInputElement).value, 10) || 30;
+  
+  if (!accessToken || !repoOwner || !repoName) {
+    showToast('Please fill in all GitHub connection fields', 'error');
+    return;
+  }
+  
+  try {
+    const result = await api.githubTestConnection(accessToken, repoOwner, repoName);
+    
+    const statusEl = document.getElementById('githubConnectionStatus');
+    if (statusEl) {
+      if (result.success) {
+        statusEl.className = 'status-indicator status-connected';
+        statusEl.innerHTML = '<span class="status-dot"></span><span class="status-text">Connected</span>';
+        showToast('GitHub connection successful', 'success');
+        
+        // Store temporary GitHub config for use with upload/download
+        (window as any).tempGitHubConfig = {
+          accessToken,
+          repoOwner,
+          repoName,
+          filePath,
+          autoSyncInterval,
+          lastSync: null,
+          enabled: true
+        };
+      } else {
+        statusEl.className = 'status-indicator status-error';
+        statusEl.innerHTML = '<span class="status-dot"></span><span class="status-text">Connection failed: ' + (result.error || 'Unknown error') + '</span>';
+        showToast('GitHub connection failed: ' + (result.error || 'Unknown error'), 'error');
+        // Clear temporary config on failure
+        delete (window as any).tempGitHubConfig;
+      }
+    }
+  } catch (error: any) {
+    showToast('GitHub connection failed: ' + (error.message || 'Unknown error'), 'error');
+    // Clear temporary config on error
+    delete (window as any).tempGitHubConfig;
+  }
+}
+
+async function handleGitHubUpload() {
+  try {
+    // Show loading state
+    const uploadBtn = document.getElementById('githubUploadBtn') as HTMLButtonElement;
+    const originalText = uploadBtn.innerHTML;
+    uploadBtn.innerHTML = '<svg class="spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Uploading...';
+    uploadBtn.disabled = true;
+    
+    // Check if we have a temporary config from a successful test connection
+    const tempConfig = (window as any).tempGitHubConfig;
+    let result;
+    
+    if (tempConfig) {
+      // Use the temporary config for upload
+      result = await api.githubUploadWorkbookWithConfig(tempConfig);
+    } else {
+      // Use the regular upload method
+      result = await api.githubUploadWorkbook();
+    }
+    
+    // Restore button state
+    uploadBtn.innerHTML = originalText;
+    uploadBtn.disabled = false;
+    
+    if (result.success) {
+      showToast('Workbook uploaded to GitHub successfully', 'success');
+      // Update last sync time
+      updateGitHubSyncInfo();
+      // Clear temporary config after successful upload
+      delete (window as any).tempGitHubConfig;
+    } else {
+      showToast('Upload failed: ' + (result.error || 'Unknown error'), 'error');
+    }
+  } catch (error: any) {
+    // Restore button state on error
+    const uploadBtn = document.getElementById('githubUploadBtn') as HTMLButtonElement;
+    uploadBtn.innerHTML = 'Upload Now';
+    uploadBtn.disabled = false;
+    showToast('Upload failed: ' + (error.message || 'Unknown error'), 'error');
+  }
+}
+
+async function handleGitHubDownload() {
+  const confirmed = confirm('This will replace your current workbook with the version from GitHub. Are you sure?');
+  if (!confirmed) return;
+  
+  try {
+    // Show loading state
+    const downloadBtn = document.getElementById('githubDownloadBtn') as HTMLButtonElement;
+    const originalText = downloadBtn.innerHTML;
+    downloadBtn.innerHTML = '<svg class="spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Downloading...';
+    downloadBtn.disabled = true;
+    
+    // Check if we have a temporary config from a successful test connection
+    const tempConfig = (window as any).tempGitHubConfig;
+    let result;
+    
+    if (tempConfig) {
+      // Use the temporary config for download
+      result = await api.githubDownloadWorkbookWithConfig(tempConfig);
+    } else {
+      // Use the regular download method
+      result = await api.githubDownloadWorkbook();
+    }
+    
+    // Restore button state
+    downloadBtn.innerHTML = originalText;
+    downloadBtn.disabled = false;
+    
+    if (result.success) {
+      showToast('Workbook downloaded from GitHub successfully', 'success');
+      // Reload the workbook data
+      await loadWorkbookData();
+      // Update last sync time
+      updateGitHubSyncInfo();
+      // Clear temporary config after successful download
+      delete (window as any).tempGitHubConfig;
+    } else {
+      showToast('Download failed: ' + (result.error || 'Unknown error'), 'error');
+    }
+  } catch (error: any) {
+    // Restore button state on error
+    const downloadBtn = document.getElementById('githubDownloadBtn') as HTMLButtonElement;
+    downloadBtn.innerHTML = 'Download Now';
+    downloadBtn.disabled = false;
+    showToast('Download failed: ' + (error.message || 'Unknown error'), 'error');
+  }
+}
+
+async function updateGitHubSyncInfo() {
+  try {
+    const result = await api.githubGetStatus();
+    
+    if (result.success && result.status) {
+      const lastSyncEl = document.getElementById('githubLastSync');
+      const nextSyncEl = document.getElementById('githubNextSync');
+      
+      if (lastSyncEl) {
+        lastSyncEl.textContent = result.status.lastSync ? 
+          new Date(result.status.lastSync).toLocaleString() : 'Never';
+      }
+      
+      if (nextSyncEl) {
+        nextSyncEl.textContent = result.status.nextSync ? 
+          new Date(result.status.nextSync).toLocaleString() : 'Not scheduled';
+      }
+      
+      // Update connection status
+      const statusEl = document.getElementById('githubConnectionStatus');
+      if (statusEl) {
+        if (result.status.connected) {
+          statusEl.className = 'status-indicator status-connected';
+          statusEl.innerHTML = '<span class="status-dot"></span><span class="status-text">Connected</span>';
+        } else {
+          statusEl.className = 'status-indicator status-unknown';
+          statusEl.innerHTML = '<span class="status-dot"></span><span class="status-text">Not connected</span>';
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Failed to update GitHub sync info:', error);
+  }
 }
 
 // Tab switching
@@ -7124,6 +7342,15 @@ function handleSaveSettings() {
   appSettings.autoRefresh = (document.getElementById('autoRefreshToggle') as HTMLInputElement).checked;
   const accToggle = document.getElementById('accountingEnabledToggle') as HTMLInputElement | null;
   if (accToggle) appSettings.accountingEnabled = accToggle.checked;
+  
+  // Save GitHub sync settings
+  appSettings.githubEnabled = (document.getElementById('githubEnabledToggle') as HTMLInputElement).checked;
+  appSettings.githubAccessToken = (document.getElementById('githubAccessToken') as HTMLInputElement).value;
+  appSettings.githubRepoOwner = (document.getElementById('githubRepoOwner') as HTMLInputElement).value;
+  appSettings.githubRepoName = (document.getElementById('githubRepoName') as HTMLInputElement).value;
+  appSettings.githubFilePath = (document.getElementById('githubFilePath') as HTMLInputElement).value;
+  const autoSyncInterval = parseInt((document.getElementById('githubAutoSyncInterval') as HTMLInputElement).value, 10);
+  appSettings.githubAutoSyncInterval = isNaN(autoSyncInterval) ? 30 : Math.max(1, Math.min(1440, autoSyncInterval));
 
   // Save and apply settings
   saveSettings();
@@ -7162,7 +7389,14 @@ function handleResetSettings() {
     // Invoice sizing default
     invoiceSizing: 'full',
     // Invoice language default
-    invoiceLanguage: 'en'
+    invoiceLanguage: 'en',
+    // GitHub sync defaults
+    githubEnabled: false,
+    githubAccessToken: '',
+    githubRepoOwner: '',
+    githubRepoName: '',
+    githubFilePath: 'sales-data.xlsx',
+    githubAutoSyncInterval: 30
   };
 
   // Save and apply settings

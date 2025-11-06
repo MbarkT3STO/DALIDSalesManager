@@ -2642,6 +2642,66 @@
                         </div>
                     </div>
 
+                    <!-- GitHub Sync Settings -->
+                    <div class="settings-section">
+                        <div class="section-header">
+                            <h3 data-translate="settings.githubSync">GitHub Sync</h3>
+                            <p class="section-subtitle" data-translate="settings.githubSyncDescription">Synchronize your workbook with a private GitHub repository</p>
+                        </div>
+                        <div class="settings-group">
+                            <label for="githubEnabledToggle" data-translate="settings.githubEnabled">Enable GitHub Sync</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="githubEnabledToggle">
+                                <span class="toggle-slider"></span>
+                            </div>
+                            <p class="form-hint" data-translate="settings.githubEnabledHint">Enable synchronization with a GitHub repository</p>
+                        </div>
+                        <div class="settings-group">
+                            <label for="githubAccessToken" data-translate="settings.githubAccessToken">GitHub Access Token</label>
+                            <input type="password" id="githubAccessToken" class="form-control" data-translate-placeholder="settings.githubAccessTokenPlaceholder">
+                            <p class="form-hint" data-translate="settings.githubAccessTokenHint">Generate a personal access token with 'repo' permissions from GitHub settings</p>
+                        </div>
+                        <div class="settings-group">
+                            <label for="githubRepoOwner" data-translate="settings.githubRepoOwner">Repository Owner</label>
+                            <input type="text" id="githubRepoOwner" class="form-control" data-translate-placeholder="settings.githubRepoOwnerPlaceholder">
+                            <p class="form-hint" data-translate="settings.githubRepoOwnerHint">The GitHub username or organization that owns the repository</p>
+                        </div>
+                        <div class="settings-group">
+                            <label for="githubRepoName" data-translate="settings.githubRepoName">Repository Name</label>
+                            <input type="text" id="githubRepoName" class="form-control" data-translate-placeholder="settings.githubRepoNamePlaceholder">
+                            <p class="form-hint" data-translate="settings.githubRepoNameHint">The name of your private repository</p>
+                        </div>
+                        <div class="settings-group">
+                            <label for="githubFilePath" data-translate="settings.githubFilePath">File Path in Repository</label>
+                            <input type="text" id="githubFilePath" class="form-control" data-translate-placeholder="settings.githubFilePathPlaceholder" value="sales-data.xlsx">
+                            <p class="form-hint" data-translate="settings.githubFilePathHint">The path where the workbook will be stored in the repository</p>
+                        </div>
+                        <div class="settings-group">
+                            <label for="githubAutoSyncInterval" data-translate="settings.githubAutoSyncInterval">Auto-sync Interval (minutes)</label>
+                            <input type="number" id="githubAutoSyncInterval" class="form-control" min="1" max="1440" value="30">
+                            <p class="form-hint" data-translate="settings.githubAutoSyncIntervalHint">How often to automatically sync with GitHub (1-1440 minutes)</p>
+                        </div>
+                        <div class="settings-group">
+                            <label data-translate="settings.githubConnectionStatus">GitHub Connection Status</label>
+                            <div class="github-status-container">
+                                <div id="githubConnectionStatus" class="status-indicator status-unknown">
+                                    <span class="status-dot"></span>
+                                    <span class="status-text" data-translate="settings.githubNotConfigured">Not configured</span>
+                                </div>
+                                <button id="githubTestConnectionBtn" class="btn btn-secondary" data-translate="settings.githubTestConnection">Test Connection</button>
+                                <button id="githubUploadBtn" class="btn btn-primary" data-translate="settings.githubUploadNow">Upload Now</button>
+                                <button id="githubDownloadBtn" class="btn btn-secondary" data-translate="settings.githubDownloadNow">Download Now</button>
+                            </div>
+                            <p class="form-hint" data-translate="settings.githubConnectionStatusHint">Test your connection or manually sync your workbook</p>
+                        </div>
+                        <div class="settings-group">
+                            <div class="github-sync-info">
+                                <p data-translate="settings.githubLastSync">Last sync: <span id="githubLastSync" data-translate="settings.githubNever">Never</span></p>
+                                <p data-translate="settings.githubNextSync">Next sync: <span id="githubNextSync" data-translate="settings.githubNotScheduled">Not scheduled</span></p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Actions -->
                     <div class="settings-actions">
                         <button id="saveSettingsBtn" class="btn btn-primary">
