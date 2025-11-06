@@ -38,6 +38,7 @@ export interface ElectronAPI {
   exportWorkbookCopy: () => Promise<any>;
   authenticateUser: (username: string, password: string) => Promise<any>;
   getUsers: () => Promise<any>;
+  getFileStats: (filePath: string) => Promise<any>;
   addUser: (user: any) => Promise<any>;
   updateUser: (username: string, user: any) => Promise<any>;
   deleteUser: (username: string) => Promise<any>;
@@ -119,6 +120,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   exportWorkbookCopy: () => ipcRenderer.invoke('export-workbook-copy'),
   authenticateUser: (username: string, password: string) => ipcRenderer.invoke('authenticate-user', username, password),
   getUsers: () => ipcRenderer.invoke('get-users'),
+  getFileStats: (filePath: string) => ipcRenderer.invoke('get-file-stats', filePath),
   addUser: (user: any) => ipcRenderer.invoke('add-user', user),
   updateUser: (username: string, user: any) => ipcRenderer.invoke('update-user', username, user),
   deleteUser: (username: string) => ipcRenderer.invoke('delete-user', username),

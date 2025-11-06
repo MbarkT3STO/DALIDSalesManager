@@ -711,5 +711,16 @@
     "entityInvoice": "Facture",
     "entityUser": "Utilisateur",
     "entitySettings": "Paramètres"
+  },
+  "workbook": {
+    "detailsTitle": "Détails du classeur",
+    "fileName": "Nom du fichier",
+    "fullPath": "Chemin complet",
+    "fileSize": "Taille du fichier",
+    "lastModified": "Dernière modification",
+    "dataStatus": "Statut des données",
+    "dataStatusText": "Produits : {0}, Clients : {1}, Factures : {2}",
+    "detailsError": "Échec de l'obtention des détails du classeur",
+    "unknown": "Inconnu"
   }
 }

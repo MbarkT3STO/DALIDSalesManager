@@ -714,5 +714,16 @@
     "entityInvoice": "Invoice",
     "entityUser": "User",
     "entitySettings": "Settings"
+  },
+  "workbook": {
+    "detailsTitle": "Workbook Details",
+    "fileName": "File Name",
+    "fullPath": "Full Path",
+    "fileSize": "File Size",
+    "lastModified": "Last Modified",
+    "dataStatus": "Data Status",
+    "dataStatusText": "Products: {0}, Customers: {1}, Invoices: {2}",
+    "detailsError": "Failed to get workbook details",
+    "unknown": "Unknown"
   }
 }

@@ -711,5 +711,16 @@
     "entityInvoice": "فاتورة",
     "entityUser": "مستخدم",
     "entitySettings": "الإعدادات"
+  },
+  "workbook": {
+    "detailsTitle": "تفاصيل دفتر العمل",
+    "fileName": "اسم الملف",
+    "fullPath": "المسار الكامل",
+    "fileSize": "حجم الملف",
+    "lastModified": "آخر تعديل",
+    "dataStatus": "حالة البيانات",
+    "dataStatusText": "المنتجات: {0}، العملاء: {1}، الفواتير: {2}",
+    "detailsError": "فشل في الحصول على تفاصيل دفتر العمل",
+    "unknown": "غير معروف"
   }
 }

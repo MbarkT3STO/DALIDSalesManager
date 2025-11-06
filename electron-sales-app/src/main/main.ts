@@ -636,6 +636,24 @@ ipcMain.handle('get-workbook-path', async () => {
   }
 });
 
+ipcMain.handle('get-file-stats', async (event, filePath: string) => {
+  try {
+    if (!fs.existsSync(filePath)) {
+      return { success: false, message: 'File not found' };
+    }
+    
+    const stats = fs.statSync(filePath);
+    return { 
+      success: true, 
+      size: stats.size,
+      mtime: stats.mtime.toISOString(),
+      ctime: stats.ctime.toISOString()
+    };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
 ipcMain.handle('show-message', async (event, options: { type: string; title: string; message: string }) => {
   try {
     if (!mainWindow) {

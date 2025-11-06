@@ -932,6 +932,71 @@ async function updateWorkbookPath() {
   }
 }
 
+async function showWorkbookDetails() {
+  // Add click animation to workbook path
+  const pathElement = document.getElementById('workbookPath');
+  if (pathElement) {
+    pathElement.classList.add('workbook-path-clicked');
+    setTimeout(() => {
+      pathElement.classList.remove('workbook-path-clicked');
+    }, 300);
+  }
+  
+  const result = await api.getWorkbookPath();
+  if (!result.success) return;
+
+  const fullPath = result.path;
+  const fileName = fullPath.split('/').pop() || fullPath;
+  
+  // Get file stats
+  try {
+    const stats = await api.getFileStats(fullPath);
+    
+    // Update modal content
+    const fileNameEl = document.getElementById('workbookFileName');
+    const fullPathEl = document.getElementById('workbookFullPath');
+    const fileSizeEl = document.getElementById('workbookFileSize');
+    const lastModifiedEl = document.getElementById('workbookLastModified');
+    const dataStatusEl = document.getElementById('workbookDataStatus');
+    
+    if (fileNameEl) fileNameEl.textContent = fileName;
+    if (fullPathEl) fullPathEl.textContent = fullPath;
+    
+    if (fileSizeEl && stats.size !== undefined) {
+      const sizeInKB = Math.round(stats.size / 1024);
+      fileSizeEl.textContent = `${sizeInKB} KB`;
+    } else if (fileSizeEl) {
+      fileSizeEl.textContent = t('common.unknown', 'Unknown');
+    }
+    
+    if (lastModifiedEl && stats.mtime) {
+      const date = new Date(stats.mtime);
+      lastModifiedEl.textContent = date.toLocaleString();
+    } else if (lastModifiedEl) {
+      lastModifiedEl.textContent = t('common.unknown', 'Unknown');
+    }
+    
+    // Data status based on workbook data
+    if (dataStatusEl) {
+      const productCount = workbookData.products.length;
+      const customerCount = workbookData.customers.length;
+      const invoiceCount = workbookData.invoices.length;
+      dataStatusEl.textContent = formatTranslation('workbook.dataStatusText', productCount, customerCount, invoiceCount);
+    }
+    
+    // Show modal
+    const modal = document.getElementById('workbookDetailsModal');
+    if (modal) {
+      modal.classList.add('active');
+      // Apply translations to the modal
+      applyTranslations();
+    }
+  } catch (error: any) {
+    console.error('Error getting file stats:', error);
+    showToast(t('workbook.detailsError', 'Failed to get workbook details'), 'error');
+  }
+}
+
 // Setup Event Listeners
 function setupEventListeners() {
   // Navigation tabs
@@ -947,6 +1012,21 @@ function setupEventListeners() {
 
   // Refresh button
   document.getElementById('refreshBtn')?.addEventListener('click', loadWorkbookData);
+
+  // Workbook path click to show details
+  const workbookPathEl = document.getElementById('workbookPath');
+  if (workbookPathEl) {
+    workbookPathEl.addEventListener('click', showWorkbookDetails);
+    workbookPathEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        showWorkbookDetails();
+      }
+    });
+    workbookPathEl.setAttribute('tabindex', '0');
+    workbookPathEl.setAttribute('role', 'button');
+    workbookPathEl.setAttribute('aria-label', 'Show workbook details');
+  }
 
   // Settings header button
   document.getElementById('settingsHeaderBtn')?.addEventListener('click', () => {

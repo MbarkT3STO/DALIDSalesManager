@@ -314,6 +314,41 @@
             </div>
         </header>
 
+        <!-- Workbook Details Modal -->
+        <div id="workbookDetailsModal" class="modal">
+            <div class="modal-content modal-medium">
+                <div class="modal-header">
+                    <h2 data-translate="workbook.detailsTitle">Workbook Details</h2>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-form">
+                    <div class="form-group">
+                        <label data-translate="workbook.fileName">File Name</label>
+                        <div class="detail-value" id="workbookFileName">-</div>
+                    </div>
+                    <div class="form-group">
+                        <label data-translate="workbook.fullPath">Full Path</label>
+                        <div class="detail-value" id="workbookFullPath">-</div>
+                    </div>
+                    <div class="form-group">
+                        <label data-translate="workbook.fileSize">File Size</label>
+                        <div class="detail-value" id="workbookFileSize">-</div>
+                    </div>
+                    <div class="form-group">
+                        <label data-translate="workbook.lastModified">Last Modified</label>
+                        <div class="detail-value" id="workbookLastModified">-</div>
+                    </div>
+                    <div class="form-group">
+                        <label data-translate="workbook.dataStatus">Data Status</label>
+                        <div class="detail-value" id="workbookDataStatus">-</div>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary modal-cancel" data-translate="common.close">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Navigation Tabs -->
         <nav class="nav-tabs">
             <button class="nav-tab active" data-tab="dashboard">

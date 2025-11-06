@@ -333,6 +333,21 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.workbook-path::before {
+    content: '';
+    width: 16px;
+    height: 16px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z'%3E%3C/path%3E%3Cpolyline points='13 2 13 9 20 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .workbook-path:hover {
@@ -341,6 +356,40 @@ body {
     color: var(--text-secondary);
     transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
+}
+
+.workbook-path:hover::before {
+    filter: brightness(1.2);
+    transform: scale(1.1);
+}
+
+.workbook-path:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-md);
+}
+
+.workbook-path:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.workbook-path-clicked {
+    animation: workbookPathClick 0.3s ease;
+}
+
+@keyframes workbookPathClick {
+    0% {
+        transform: translateY(-2px) scale(1);
+        box-shadow: var(--shadow-lg);
+    }
+    50% {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: var(--shadow-xl);
+    }
+    100% {
+        transform: translateY(-2px) scale(1);
+        box-shadow: var(--shadow-lg);
+    }
 }
 
 .header-right {
@@ -1882,6 +1931,31 @@ body {
 
 .modal-medium {
     max-width: 600px;
+}
+
+/* Workbook Details Modal */
+#workbookDetailsModal .detail-value {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    font-weight: 500;
+    color: var(--text-primary);
+    word-break: break-all;
+    min-height: 2.5rem;
+    display: flex;
+    align-items: center;
+}
+
+#workbookDetailsModal .form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+#workbookDetailsModal .form-group label {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+    display: block;
 }
 
 /* Notification Details Modal */
