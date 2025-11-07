@@ -2,6 +2,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const progressFill = document.getElementById('progress-fill');
     const loadingText = document.querySelector('.loading-text');
+    const backgroundElementsContainer = document.getElementById('background-elements');
     
     // Get current language from localStorage
     let currentLanguage = 'en';
@@ -70,6 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function startLoadingProcess() {
         // Create particle background after translations are loaded
         createParticles();
+        
+        // Create background elements (names and icons)
+        createBackgroundElements();
         
         // Modern loading messages from translations
         const messages = [
@@ -177,6 +181,67 @@ document.addEventListener('DOMContentLoaded', () => {
                 particle.style.animationDuration = `${Math.random() * 10 + 10}s`;
                 
                 particlesContainer.appendChild(particle);
+            }
+        }
+        
+        // Create background elements (names and icons)
+        function createBackgroundElements() {
+            if (!backgroundElementsContainer) return;
+            
+            // Names to display
+            const names = ['DALID', 'Leroy', 'Nima', 'Siket', 'MBVRK'];
+            
+            // Improved Icon SVGs with better knife design
+            const icons = [
+                // Improved Knife icon
+                '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="40" height="40"><path d="M6.5 2C6.5 2 7 3 8 4C9 5 10 6 11 7C12 8 13 9 14 10C15 11 16 12 17 13C18 14 19 15 19.5 16C20 17 20 18 20 18L18 19L17 18L5 6L4 5L6.5 2ZM17.5 17L18.5 16L12.5 10L11.5 11L17.5 17Z" fill="currentColor"/></svg>',
+                // Shotgun icon
+                '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="40" height="40"><path d="M2 12H4V14H2V12M5 11H8V13H5V11M9 10H12V14H9V10M13 9H16V15H13V9M17 8H20V16H17V8M21 7H22V17H21V7Z" fill="currentColor"/></svg>',
+                // Riot Shield icon
+                '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="40" height="40"><path d="M12,2L2,7V10C2,16 6,20.5 12,22C18,20.5 22,16 22,10V7L12,2Z" fill="currentColor"/></svg>'
+            ];
+            
+            // Create 30 elements total with more knives
+            for (let i = 0; i < 30; i++) {
+                const element = document.createElement('div');
+                element.classList.add('background-element');
+                
+                // Random position
+                const left = Math.random() * 100;
+                const top = Math.random() * 100;
+                element.style.left = `${left}%`;
+                element.style.top = `${top}%`;
+                
+                // Random size
+                const size = Math.random() * 0.5 + 0.8; // 0.8 to 1.3 times original size
+                element.style.transform = `scale(${size})`;
+                
+                // Random rotation
+                const rotation = Math.random() * 360; // 0 to 360 degrees for more variation
+                element.style.transform += ` rotate(${rotation}deg)`;
+                
+                // Random animation delay and duration
+                element.style.animationDelay = `${Math.random() * 5}s`;
+                element.style.animationDuration = `${Math.random() * 10 + 15}s`;
+                
+                // Increase the number of knives - 50% chance for knife, 25% for other icons, 25% for names
+                const rand = Math.random();
+                if (rand < 0.5) { // Knife (50%)
+                    const knifeIcon = icons[0]; // Knife is the first icon
+                    element.innerHTML = knifeIcon;
+                    element.classList.add('icon-element');
+                } else if (rand < 0.75) { // Other icons (25%)
+                    // Randomly select between shotgun and shield
+                    const randomIcon = icons[Math.floor(Math.random() * 2) + 1]; // Index 1 or 2
+                    element.innerHTML = randomIcon;
+                    element.classList.add('icon-element');
+                } else { // Names (25%)
+                    const randomName = names[Math.floor(Math.random() * names.length)];
+                    element.textContent = randomName;
+                    element.style.fontSize = `${Math.random() * 10 + 20}px`; // 20px to 30px
+                }
+                
+                backgroundElementsContainer.appendChild(element);
             }
         }
         
