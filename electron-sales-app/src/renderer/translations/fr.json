@@ -634,15 +634,12 @@
     "githubAutoSyncInterval": "Intervalle de synchronisation automatique (minutes)",
     "githubConnectionStatus": "Statut de connexion GitHub",
     "githubTestConnection": "Tester la connexion",
-    "githubUploadNow": "Télécharger maintenant",
+    "githubSyncNow": "Synchroniser maintenant",
     "githubDownloadNow": "Télécharger maintenant",
-    "githubLastSync": "Dernière synchronisation",
-    "githubNextSync": "Prochaine synchronisation",
+    "githubViewHistory": "Voir l'historique",
     "githubNotConfigured": "Non configuré",
     "githubConnected": "Connecté",
     "githubConnectionFailed": "Échec de la connexion",
-    "githubNever": "Jamais",
-    "githubNotScheduled": "Non programmé",
     "githubAccessTokenPlaceholder": "Entrez votre jeton d'accès personnel GitHub",
     "githubRepoOwnerPlaceholder": "Entrez le nom d'utilisateur du propriétaire du dépôt",
     "githubRepoNamePlaceholder": "Entrez le nom du dépôt",
@@ -657,7 +654,20 @@
     "githubUploadFailed": "Échec du téléchargement",
     "githubDownloadSuccess": "Classeur téléchargé depuis GitHub avec succès",
     "githubDownloadFailed": "Échec du téléchargement",
-    "githubConfirmDownload": "Cela remplacera votre classeur actuel par la version de GitHub. Êtes-vous sûr ?"
+    "githubConfirmDownload": "Cela remplacera votre classeur actuel par la version de GitHub. Êtes-vous sûr ?",
+    "githubSyncHistory": "Historique de synchronisation",
+    "githubSyncHistoryHint": "Voir l'historique détaillé de toutes les opérations de synchronisation",
+    "githubNoSyncHistory": "Aucun historique de synchronisation disponible",
+    "githubClearHistory": "Effacer l'historique",
+    "githubSyncOperation": "Opération de synchronisation",
+    "githubSyncSuccess": "Succès",
+    "githubSyncError": "Erreur",
+    "githubUploadSuccessNotification": "Classeur téléchargé sur GitHub avec succès",
+    "githubUploadFailedNotification": "Échec du téléchargement : {0}",
+    "githubDownloadSuccessNotification": "Classeur téléchargé depuis GitHub avec succès",
+    "githubDownloadFailedNotification": "Échec du téléchargement : {0}",
+    "githubAutoSyncSuccessNotification": "Classeur synchronisé automatiquement avec GitHub",
+    "githubAutoSyncFailedNotification": "Échec de la synchronisation automatique : {0}"
   },
   "login": {
     "title": "DALID Gestionnaire de ventes",
@@ -755,6 +765,10 @@
     "dataStatus": "Statut des données",
     "dataStatusText": "Produits : {0}, Clients : {1}, Factures : {2}",
     "detailsError": "Échec de l'obtention des détails du classeur",
-    "unknown": "Inconnu"
+    "unknown": "Inconnu",
+    "cloudSyncStatus": "Statut de synchronisation cloud",
+    "syncedWithGitHub": "Synchronisé avec GitHub",
+    "lastSync": "Dernière synchronisation",
+    "neverSynced": "Jamais"
   }
 }

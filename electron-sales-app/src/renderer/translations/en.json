@@ -637,15 +637,12 @@
     "githubAutoSyncInterval": "Auto-sync Interval (minutes)",
     "githubConnectionStatus": "GitHub Connection Status",
     "githubTestConnection": "Test Connection",
-    "githubUploadNow": "Upload Now",
+    "githubSyncNow": "Sync Now",
     "githubDownloadNow": "Download Now",
-    "githubLastSync": "Last sync",
-    "githubNextSync": "Next sync",
+    "githubViewHistory": "View Sync History",
     "githubNotConfigured": "Not configured",
     "githubConnected": "Connected",
     "githubConnectionFailed": "Connection failed",
-    "githubNever": "Never",
-    "githubNotScheduled": "Not scheduled",
     "githubAccessTokenPlaceholder": "Enter your GitHub personal access token",
     "githubRepoOwnerPlaceholder": "Enter repository owner username",
     "githubRepoNamePlaceholder": "Enter repository name",
@@ -660,7 +657,20 @@
     "githubUploadFailed": "Upload failed",
     "githubDownloadSuccess": "Workbook downloaded from GitHub successfully",
     "githubDownloadFailed": "Download failed",
-    "githubConfirmDownload": "This will replace your current workbook with the version from GitHub. Are you sure?"
+    "githubConfirmDownload": "This will replace your current workbook with the version from GitHub. Are you sure?",
+    "githubSyncHistory": "Sync History",
+    "githubSyncHistoryHint": "View detailed history of all sync operations",
+    "githubNoSyncHistory": "No sync history available",
+    "githubClearHistory": "Clear History",
+    "githubSyncOperation": "Sync Operation",
+    "githubSyncSuccess": "Success",
+    "githubSyncError": "Error",
+    "githubUploadSuccessNotification": "Workbook successfully uploaded to GitHub",
+    "githubUploadFailedNotification": "Upload failed: {0}",
+    "githubDownloadSuccessNotification": "Workbook successfully downloaded from GitHub",
+    "githubDownloadFailedNotification": "Download failed: {0}",
+    "githubAutoSyncSuccessNotification": "Workbook automatically synced to GitHub",
+    "githubAutoSyncFailedNotification": "Auto-sync failed: {0}"
   },
   "login": {
     "title": "DALID Sales Manager",
@@ -758,6 +768,10 @@
     "dataStatus": "Data Status",
     "dataStatusText": "Products: {0}, Customers: {1}, Invoices: {2}",
     "detailsError": "Failed to get workbook details",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "cloudSyncStatus": "Cloud Sync Status",
+    "syncedWithGitHub": "Synced with GitHub",
+    "lastSync": "Last Sync",
+    "neverSynced": "Never"
   }
 }

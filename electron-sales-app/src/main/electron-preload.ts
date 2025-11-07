@@ -88,6 +88,8 @@ export interface ElectronAPI {
   githubUploadWorkbookWithConfig: (config: any) => Promise<any>;
   githubDownloadWorkbookWithConfig: (config: any) => Promise<any>;
   githubGetStatus: () => Promise<any>;
+  githubGetSyncHistory: () => Promise<any>;
+  githubClearSyncHistory: () => Promise<any>;
 }
 
 // Expose protected methods that allow the renderer process to use
@@ -182,6 +184,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
       try { handler(); } catch {}
     });
   },
+  // Notification listener
+  onAddNotification: (handler: (event: any, notification: any) => void) => {
+    ipcRenderer.removeAllListeners('add-notification');
+    ipcRenderer.on('add-notification', handler);
+  },
   // GitHub Sync
   githubTestConnection: (accessToken: string, repoOwner: string, repoName: string) => ipcRenderer.invoke('github-test-connection', accessToken, repoOwner, repoName),
   githubSaveConfig: (config: any) => ipcRenderer.invoke('github-save-config', config),
@@ -190,5 +197,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   githubDownloadWorkbook: () => ipcRenderer.invoke('github-download-workbook'),
   githubUploadWorkbookWithConfig: (config: any) => ipcRenderer.invoke('github-upload-workbook-with-config', config),
   githubDownloadWorkbookWithConfig: (config: any) => ipcRenderer.invoke('github-download-workbook-with-config', config),
-  githubGetStatus: () => ipcRenderer.invoke('github-get-status')
+  githubGetStatus: () => ipcRenderer.invoke('github-get-status'),
+  githubGetSyncHistory: () => ipcRenderer.invoke('github-get-sync-history'),
+  githubClearSyncHistory: () => ipcRenderer.invoke('github-clear-sync-history')
 } as ElectronAPI);

@@ -634,15 +634,12 @@
     "githubAutoSyncInterval": "الفاصل الزمني للمزامنة التلقائية (بالدقائق)",
     "githubConnectionStatus": "حالة اتصال جيتهب",
     "githubTestConnection": "اختبار الاتصال",
-    "githubUploadNow": "رفع الآن",
+    "githubSyncNow": "المزامنة الآن",
     "githubDownloadNow": "تنزيل الآن",
-    "githubLastSync": "آخر مزامنة",
-    "githubNextSync": "المزامنة التالية",
+    "githubViewHistory": "عرض السجل",
     "githubNotConfigured": "غير مكون",
     "githubConnected": "متصل",
     "githubConnectionFailed": "فشل الاتصال",
-    "githubNever": "أبداً",
-    "githubNotScheduled": "غير مجدول",
     "githubAccessTokenPlaceholder": "أدخل رمز الوصول الشخصي لجيثب",
     "githubRepoOwnerPlaceholder": "أدخل اسم مستخدم مالك المستودع",
     "githubRepoNamePlaceholder": "أدخل اسم المستودع",
@@ -657,7 +654,20 @@
     "githubUploadFailed": "فشل الرفع",
     "githubDownloadSuccess": "تم تنزيل المصنف من جيثب بنجاح",
     "githubDownloadFailed": "فشل التنزيل",
-    "githubConfirmDownload": "سيؤدي هذا إلى استبدال المصنف الحالي الخاص بك بإصدار جيثب. هل أنت متأكد؟"
+    "githubConfirmDownload": "سيؤدي هذا إلى استبدال المصنف الحالي الخاص بك بإصدار جيثب. هل أنت متأكد؟",
+    "githubSyncHistory": "سجل المزامنة",
+    "githubSyncHistoryHint": "عرض سجل تفصيلي لجميع عمليات المزامنة",
+    "githubNoSyncHistory": "لا يوجد سجل مزامنة متاح",
+    "githubClearHistory": "مسح السجل",
+    "githubSyncOperation": "عملية المزامنة",
+    "githubSyncSuccess": "نجاح",
+    "githubSyncError": "خطأ",
+    "githubUploadSuccessNotification": "تم رفع المصنف إلى جيثب بنجاح",
+    "githubUploadFailedNotification": "فشل الرفع: {0}",
+    "githubDownloadSuccessNotification": "تم تنزيل المصنف من جيثب بنجاح",
+    "githubDownloadFailedNotification": "فشل التنزيل: {0}",
+    "githubAutoSyncSuccessNotification": "تمت مزامنة المصنف تلقائيًا مع جيثب",
+    "githubAutoSyncFailedNotification": "فشلت المزامنة التلقائية: {0}"
   },
   "login": {
     "title": "مدير المبيعات DALID",
@@ -755,6 +765,10 @@
     "dataStatus": "حالة البيانات",
     "dataStatusText": "المنتجات: {0}، العملاء: {1}، الفواتير: {2}",
     "detailsError": "فشل في الحصول على تفاصيل دفتر العمل",
-    "unknown": "غير معروف"
+    "unknown": "غير معروف",
+    "cloudSyncStatus": "حالة مزامنة السحابة",
+    "syncedWithGitHub": "متزامن مع جيتهب",
+    "lastSync": "آخر مزامنة",
+    "neverSynced": "أبداً"
   }
 }

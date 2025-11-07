@@ -287,6 +287,13 @@ app.on('window-all-closed', () => {
   }
 });
 
+// Function to send notification to renderer
+function sendNotification(title: string, desc: string, type?: string, category?: string, details?: string) {
+  if (mainWindow) {
+    mainWindow.webContents.send('add-notification', { title, desc, type, category, details });
+  }
+}
+
 // IPC Handlers
 // GitHub Sync IPC
 ipcMain.handle('github-test-connection', async (event, accessToken: string, repoOwner: string, repoName: string) => {
@@ -303,7 +310,7 @@ ipcMain.handle('github-test-connection', async (event, accessToken: string, repo
 async function ensureGitHubHandler() {
   if (!githubHandler && excelHandler) {
     const githubConfig = loadGitHubConfig();
-    if (githubConfig) {
+    if (githubConfig && githubConfig.enabled) {
       const workbookPath = excelHandler.getWorkbookPath();
       githubHandler = new GitHubHandler(workbookPath);
       await githubHandler.init(githubConfig);
@@ -343,28 +350,24 @@ ipcMain.handle('github-load-config', async () => {
 
 ipcMain.handle('github-upload-workbook', async () => {
   try {
-    // If GitHub handler doesn't exist but we have an excel handler and config, initialize it
-    if (!githubHandler && excelHandler) {
-      // First try to load saved config
-      let githubConfig = loadGitHubConfig();
-      
-      // If no saved config, try to use temporary config from renderer
-      if (!githubConfig) {
-        // We can't access the temporary config directly from renderer, so we'll need to pass it
-        // For now, we'll just return the error as before
-        return { success: false, error: 'GitHub sync not configured' };
-      }
-      
-      const workbookPath = excelHandler.getWorkbookPath();
-      githubHandler = new GitHubHandler(workbookPath);
-      await githubHandler.init(githubConfig);
-    }
+    // Ensure GitHub handler is initialized if possible
+    await ensureGitHubHandler();
     
     if (!githubHandler) {
       return { success: false, error: 'GitHub sync not configured' };
     }
     
     const result = await githubHandler.uploadWorkbook();
+    
+    // Update the config file with the new lastSync time
+    if (result.success && githubHandler) {
+      const config = loadGitHubConfig();
+      if (config) {
+        config.lastSync = new Date().toISOString();
+        saveGitHubConfig(config);
+      }
+    }
+    
     return result;
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -373,21 +376,24 @@ ipcMain.handle('github-upload-workbook', async () => {
 
 ipcMain.handle('github-download-workbook', async () => {
   try {
-    // If GitHub handler doesn't exist but we have an excel handler and config, initialize it
-    if (!githubHandler && excelHandler) {
-      const githubConfig = loadGitHubConfig();
-      if (githubConfig) {
-        const workbookPath = excelHandler.getWorkbookPath();
-        githubHandler = new GitHubHandler(workbookPath);
-        await githubHandler.init(githubConfig);
-      }
-    }
+    // Ensure GitHub handler is initialized if possible
+    await ensureGitHubHandler();
     
     if (!githubHandler) {
       return { success: false, error: 'GitHub sync not configured' };
     }
     
     const result = await githubHandler.downloadWorkbook();
+    
+    // Update the config file with the new lastSync time
+    if (result.success && githubHandler) {
+      const config = loadGitHubConfig();
+      if (config) {
+        config.lastSync = new Date().toISOString();
+        saveGitHubConfig(config);
+      }
+    }
+    
     return result;
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -449,6 +455,38 @@ ipcMain.handle('github-download-workbook-with-config', async (event, config: Git
     tempGitHubHandler.destroy();
     
     return result;
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('github-get-sync-history', async () => {
+  try {
+    // Ensure GitHub handler is initialized if possible
+    await ensureGitHubHandler();
+    
+    if (!githubHandler) {
+      return { success: true, history: [] };
+    }
+    
+    const history = githubHandler.getSyncHistory();
+    return { success: true, history };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('github-clear-sync-history', async () => {
+  try {
+    // Ensure GitHub handler is initialized if possible
+    await ensureGitHubHandler();
+    
+    if (!githubHandler) {
+      return { success: false, error: 'GitHub sync not configured' };
+    }
+    
+    githubHandler.clearSyncHistory();
+    return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
   }

@@ -893,6 +893,14 @@ async function initializeApp() {
   setupEventListeners();
   initializeHeaderFeatures();
   initGitHubSync();
+  
+  // Check GitHub sync status on startup
+  updateGitHubSyncInfo();
+  
+  // Listen for notifications from main process
+  api.onAddNotification((event: any, notification: any) => {
+    addNotification(notification.title, notification.desc, notification.type, notification.category, notification.details);
+  });
   // Automatically use default workbook
   await autoLoadDefaultWorkbook();
 }
@@ -1005,6 +1013,36 @@ async function showWorkbookDetails() {
       const customerCount = workbookData.customers.length;
       const invoiceCount = workbookData.invoices.length;
       dataStatusEl.textContent = formatTranslation('workbook.dataStatusText', productCount, customerCount, invoiceCount);
+    }
+    
+    // Update GitHub sync info
+    const githubSyncInfoEl = document.getElementById('githubSyncInfo');
+    const githubLastSyncTimeEl = document.getElementById('githubLastSyncTime');
+    
+    if (githubSyncInfoEl && githubLastSyncTimeEl) {
+      try {
+        const githubStatus = await api.githubGetStatus();
+        
+        if (githubStatus.success && githubStatus.status && githubStatus.status.connected) {
+          // Show GitHub sync info
+          githubSyncInfoEl.style.display = 'block';
+          
+          // Update last sync time
+          if (githubStatus.status.lastSync) {
+            const lastSyncDate = new Date(githubStatus.status.lastSync);
+            githubLastSyncTimeEl.textContent = lastSyncDate.toLocaleString();
+          } else {
+            githubLastSyncTimeEl.textContent = t('workbook.neverSynced', 'Never');
+          }
+        } else {
+          // Hide GitHub sync info
+          githubSyncInfoEl.style.display = 'none';
+        }
+      } catch (error) {
+        // Hide GitHub sync info if there's an error
+        if (githubSyncInfoEl) githubSyncInfoEl.style.display = 'none';
+        console.error('Error getting GitHub status:', error);
+      }
     }
     
     // Show modal
@@ -1242,6 +1280,24 @@ function initGitHubSync() {
   document.getElementById('githubTestConnectionBtn')?.addEventListener('click', handleGitHubTestConnection);
   document.getElementById('githubUploadBtn')?.addEventListener('click', handleGitHubUpload);
   document.getElementById('githubDownloadBtn')?.addEventListener('click', handleGitHubDownload);
+  document.getElementById('githubViewHistoryBtn')?.addEventListener('click', viewGitHubSyncHistory);
+  document.getElementById('githubClearHistoryModalBtn')?.addEventListener('click', clearGitHubSyncHistory);
+  
+  // Close modal when close button is clicked
+  const modalCloseBtn = document.querySelector('#githubSyncHistoryModal .modal-close');
+  if (modalCloseBtn) {
+    modalCloseBtn.addEventListener('click', closeGitHubSyncHistoryModal);
+  }
+  
+  // Close modal when clicking outside
+  const modal = document.getElementById('githubSyncHistoryModal');
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeGitHubSyncHistoryModal();
+      }
+    });
+  }
   
   // Update GitHub sync info when settings tab is shown
   const settingsTab = document.getElementById('settingsTab');
@@ -1313,40 +1369,81 @@ async function handleGitHubUpload() {
     // Show loading state
     const uploadBtn = document.getElementById('githubUploadBtn') as HTMLButtonElement;
     const originalText = uploadBtn.innerHTML;
-    uploadBtn.innerHTML = '<svg class="spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Uploading...';
+    uploadBtn.innerHTML = '<svg class="spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Syncing...';
     uploadBtn.disabled = true;
     
-    // Check if we have a temporary config from a successful test connection
-    const tempConfig = (window as any).tempGitHubConfig;
-    let result;
+    // Get current form values
+    const accessToken = (document.getElementById('githubAccessToken') as HTMLInputElement).value;
+    const repoOwner = (document.getElementById('githubRepoOwner') as HTMLInputElement).value;
+    const repoName = (document.getElementById('githubRepoName') as HTMLInputElement).value;
+    const filePath = (document.getElementById('githubFilePath') as HTMLInputElement).value || 'sales-data.xlsx';
+    const autoSyncInterval = parseInt((document.getElementById('githubAutoSyncInterval') as HTMLInputElement).value, 10) || 30;
     
-    if (tempConfig) {
-      // Use the temporary config for upload
-      result = await api.githubUploadWorkbookWithConfig(tempConfig);
-    } else {
-      // Use the regular upload method
-      result = await api.githubUploadWorkbook();
+    // Validate required fields
+    if (!accessToken || !repoOwner || !repoName) {
+      // Restore button state
+      uploadBtn.innerHTML = originalText;
+      uploadBtn.disabled = false;
+      showToast('Please fill in all GitHub connection fields', 'error');
+      return;
     }
+    
+    // Create temporary config
+    const tempConfig = {
+      accessToken,
+      repoOwner,
+      repoName,
+      filePath,
+      autoSyncInterval,
+      lastSync: null,
+      enabled: true
+    };
+    
+    // Test connection first
+    const testResult = await api.githubTestConnection(accessToken, repoOwner, repoName);
+    
+    if (!testResult.success) {
+      // Restore button state
+      uploadBtn.innerHTML = originalText;
+      uploadBtn.disabled = false;
+      showToast('GitHub connection failed: ' + (testResult.error || 'Unknown error'), 'error');
+      return;
+    }
+    
+    // Connection successful, now upload
+    const result = await api.githubUploadWorkbookWithConfig(tempConfig);
     
     // Restore button state
     uploadBtn.innerHTML = originalText;
     uploadBtn.disabled = false;
     
     if (result.success) {
-      showToast('Workbook uploaded to GitHub successfully', 'success');
+      showToast('Workbook synced to GitHub successfully', 'success');
       // Update last sync time
       updateGitHubSyncInfo();
-      // Clear temporary config after successful upload
-      delete (window as any).tempGitHubConfig;
+      
+      // Update connection status UI to show connected
+      const statusEl = document.getElementById('githubConnectionStatus');
+      if (statusEl) {
+        statusEl.className = 'status-indicator status-connected';
+        statusEl.innerHTML = '<span class="status-dot"></span><span class="status-text" data-translate="settings.githubConnected">Connected</span>';
+        applyTranslations();
+      }
+      
+      // Show GitHub status indicator in header
+      const githubStatusIndicator = document.getElementById('githubStatusIndicator');
+      if (githubStatusIndicator) {
+        githubStatusIndicator.style.display = 'block';
+      }
     } else {
-      showToast('Upload failed: ' + (result.error || 'Unknown error'), 'error');
+      showToast('Sync failed: ' + (result.error || 'Unknown error'), 'error');
     }
   } catch (error: any) {
     // Restore button state on error
     const uploadBtn = document.getElementById('githubUploadBtn') as HTMLButtonElement;
-    uploadBtn.innerHTML = 'Upload Now';
+    uploadBtn.innerHTML = 'Sync Now';
     uploadBtn.disabled = false;
-    showToast('Upload failed: ' + (error.message || 'Unknown error'), 'error');
+    showToast('Sync failed: ' + (error.message || 'Unknown error'), 'error');
   }
 }
 
@@ -1385,6 +1482,12 @@ async function handleGitHubDownload() {
       updateGitHubSyncInfo();
       // Clear temporary config after successful download
       delete (window as any).tempGitHubConfig;
+      
+      // Show GitHub status indicator in header
+      const githubStatusIndicator = document.getElementById('githubStatusIndicator');
+      if (githubStatusIndicator) {
+        githubStatusIndicator.style.display = 'block';
+      }
     } else {
       showToast('Download failed: ' + (result.error || 'Unknown error'), 'error');
     }
@@ -1402,33 +1505,120 @@ async function updateGitHubSyncInfo() {
     const result = await api.githubGetStatus();
     
     if (result.success && result.status) {
-      const lastSyncEl = document.getElementById('githubLastSync');
-      const nextSyncEl = document.getElementById('githubNextSync');
-      
-      if (lastSyncEl) {
-        lastSyncEl.textContent = result.status.lastSync ? 
-          new Date(result.status.lastSync).toLocaleString() : 'Never';
-      }
-      
-      if (nextSyncEl) {
-        nextSyncEl.textContent = result.status.nextSync ? 
-          new Date(result.status.nextSync).toLocaleString() : 'Not scheduled';
-      }
-      
       // Update connection status
       const statusEl = document.getElementById('githubConnectionStatus');
       if (statusEl) {
         if (result.status.connected) {
           statusEl.className = 'status-indicator status-connected';
-          statusEl.innerHTML = '<span class="status-dot"></span><span class="status-text">Connected</span>';
+          statusEl.innerHTML = '<span class="status-dot"></span><span class="status-text" data-translate="settings.githubConnected">Connected</span>';
+          applyTranslations();
         } else {
           statusEl.className = 'status-indicator status-unknown';
           statusEl.innerHTML = '<span class="status-dot"></span><span class="status-text">Not connected</span>';
         }
       }
+      
+      // Update GitHub status indicator in header
+      const githubStatusIndicator = document.getElementById('githubStatusIndicator');
+      if (githubStatusIndicator) {
+        if (result.status.connected) {
+          githubStatusIndicator.style.display = 'block';
+        } else {
+          githubStatusIndicator.style.display = 'none';
+        }
+      }
     }
+    
+    // Update sync history
+    await updateGitHubSyncHistory();
   } catch (error) {
     console.error('Failed to update GitHub sync info:', error);
+  }
+}
+
+// Update GitHub sync history display
+async function updateGitHubSyncHistory() {
+  try {
+    const result = await api.githubGetSyncHistory();
+    
+    if (result.success && result.history) {
+      // Update both the settings page and modal
+      const historyListEl = document.getElementById('githubSyncHistoryList');
+      const modalHistoryListEl = document.getElementById('githubSyncHistoryModalList');
+      
+      const historyHtml = result.history.length === 0 
+        ? '<p class="sync-history-empty" data-translate="settings.githubNoSyncHistory">No sync history available</p>'
+        : result.history.map((item: any) => {
+            const operationText = item.operation === 'upload' ? 'Upload' : 
+                                 item.operation === 'download' ? 'Download' : 'Auto-sync';
+            const statusClass = item.success ? 'success' : 'error';
+            const statusText = item.success ? 'Success' : 'Error';
+            
+            return `
+              <div class="sync-history-item">
+                <div class="sync-history-item-header">
+                  <span class="sync-history-timestamp">${new Date(item.timestamp).toLocaleString()}</span>
+                  <span class="sync-history-status ${statusClass}">${statusText}</span>
+                </div>
+                <div class="sync-history-details">
+                  <strong data-translate="settings.githubSyncOperation">Sync Operation</strong>: ${operationText}
+                  ${item.message ? `<br><em>${item.message}</em>` : ''}
+                </div>
+              </div>
+            `;
+          }).join('');
+      
+      if (historyListEl) {
+        historyListEl.innerHTML = historyHtml;
+      }
+      
+      if (modalHistoryListEl) {
+        modalHistoryListEl.innerHTML = historyHtml;
+      }
+      
+      // Apply translations
+      applyTranslations();
+    }
+  } catch (error) {
+    console.error('Failed to update GitHub sync history:', error);
+  }
+}
+
+// Clear GitHub sync history
+async function clearGitHubSyncHistory() {
+  try {
+    const confirmed = confirm('Are you sure you want to clear the sync history?');
+    if (!confirmed) return;
+    
+    const result = await api.githubClearSyncHistory();
+    
+    if (result.success) {
+      // Update the display
+      updateGitHubSyncHistory();
+      showToast('Sync history cleared successfully', 'success');
+    } else {
+      showToast('Failed to clear sync history: ' + (result.error || 'Unknown error'), 'error');
+    }
+  } catch (error: any) {
+    showToast('Failed to clear sync history: ' + (error.message || 'Unknown error'), 'error');
+  }
+}
+
+// View GitHub sync history in modal
+function viewGitHubSyncHistory() {
+  const modal = document.getElementById('githubSyncHistoryModal');
+  if (modal) {
+    modal.classList.add('active');
+    // Update the history when modal is opened
+    updateGitHubSyncHistory();
+  }
+}
+
+// Close GitHub sync history modal
+function closeGitHubSyncHistoryModal() {
+  const modal = document.getElementById('githubSyncHistoryModal');
+  if (modal) {
+    modal.classList.remove('active');
   }
 }
 
@@ -7355,6 +7545,22 @@ function handleSaveSettings() {
   // Save and apply settings
   saveSettings();
   applySettings();
+  
+  // Send GitHub config to main process if enabled
+  if (appSettings.githubEnabled && appSettings.githubAccessToken && appSettings.githubRepoOwner && appSettings.githubRepoName) {
+    const githubConfig = {
+      accessToken: appSettings.githubAccessToken,
+      repoOwner: appSettings.githubRepoOwner,
+      repoName: appSettings.githubRepoName,
+      filePath: appSettings.githubFilePath || 'sales-data.xlsx',
+      autoSyncInterval: appSettings.githubAutoSyncInterval || 30,
+      lastSync: null, // Will be updated by the handler
+      enabled: appSettings.githubEnabled
+    };
+    
+    // Send config to main process
+    api.githubSaveConfig(githubConfig);
+  }
   
   showToast(t('settings.settingsSaved', 'Settings saved successfully'), 'success');
   addNotification(t('notifications.systemEvent'), t('notifications.settingsSaved'), undefined, 'system', t('notifications.settingsSavedDetails'));

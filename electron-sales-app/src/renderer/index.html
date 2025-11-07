@@ -242,7 +242,12 @@
                     </svg>
                     <span>DALID Sales Manager</span>
                 </h1>
-                <span id="workbookPath" class="workbook-path" data-translate="common.noWorkbook">No workbook loaded</span>
+                <div class="workbook-status-container">
+                    <span id="workbookPath" class="workbook-path" data-translate="common.noWorkbook">No workbook loaded</span>
+                    <div id="githubStatusIndicator" class="github-status-indicator" style="display: none;">
+                        <div class="status-dot-connected"></div>
+                    </div>
+                </div>
             </div>
             <div class="header-right">
                 <!-- Notification Bell -->
@@ -341,6 +346,24 @@
                     <div class="form-group">
                         <label data-translate="workbook.dataStatus">Data Status</label>
                         <div class="detail-value" id="workbookDataStatus">-</div>
+                    </div>
+                    <div class="form-group github-sync-info" id="githubSyncInfo" style="display: none;">
+                        <div class="github-sync-header">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                            </svg>
+                            <span data-translate="workbook.cloudSyncStatus">Cloud Sync Status</span>
+                        </div>
+                        <div class="github-sync-details">
+                            <div class="sync-status">
+                                <span class="status-dot-connected"></span>
+                                <span data-translate="workbook.syncedWithGitHub">Synced with GitHub</span>
+                            </div>
+                            <div class="last-sync-time">
+                                <span data-translate="workbook.lastSync">Last Sync</span>: 
+                                <span id="githubLastSyncTime">-</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-actions">
                         <button type="button" class="btn btn-secondary modal-cancel" data-translate="common.close">Close</button>
@@ -2688,17 +2711,34 @@
                                     <span class="status-dot"></span>
                                     <span class="status-text" data-translate="settings.githubNotConfigured">Not configured</span>
                                 </div>
-                                <button id="githubTestConnectionBtn" class="btn btn-secondary" data-translate="settings.githubTestConnection">Test Connection</button>
-                                <button id="githubUploadBtn" class="btn btn-primary" data-translate="settings.githubUploadNow">Upload Now</button>
-                                <button id="githubDownloadBtn" class="btn btn-secondary" data-translate="settings.githubDownloadNow">Download Now</button>
+                                <button id="githubTestConnectionBtn" class="btn btn-secondary btn-icon-only" data-translate-title="settings.githubTestConnection">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                        <polyline points="22,4 12,14.01 9,11.01"/>
+                                    </svg>
+                                </button>
+                                <button id="githubUploadBtn" class="btn btn-primary btn-icon-only" data-translate-title="settings.githubSyncNow">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M23 4v6h-6"/>
+                                        <path d="M1 20v-6h6"/>
+                                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                                    </svg>
+                                </button>
+                                <button id="githubDownloadBtn" class="btn btn-secondary btn-icon-only" data-translate-title="settings.githubDownloadNow">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="7,10 12,15 17,10"/>
+                                        <line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
+                                </button>
+                                <button id="githubViewHistoryBtn" class="btn btn-secondary btn-icon-only" data-translate-title="settings.githubViewHistory">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                        <circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                </button>
                             </div>
                             <p class="form-hint" data-translate="settings.githubConnectionStatusHint">Test your connection or manually sync your workbook</p>
-                        </div>
-                        <div class="settings-group">
-                            <div class="github-sync-info">
-                                <p data-translate="settings.githubLastSync">Last sync: <span id="githubLastSync" data-translate="settings.githubNever">Never</span></p>
-                                <p data-translate="settings.githubNextSync">Next sync: <span id="githubNextSync" data-translate="settings.githubNotScheduled">Not scheduled</span></p>
-                            </div>
                         </div>
                     </div>
 
@@ -3256,6 +3296,26 @@
                 
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary modal-cancel" data-translate="common.close">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GitHub Sync History Modal -->
+    <div id="githubSyncHistoryModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 data-translate="settings.githubSyncHistory">Sync History</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-form">
+                <div class="sync-history-header">
+                    <p class="form-hint" data-translate="settings.githubSyncHistoryHint">View detailed history of all sync operations</p>
+                    <button id="githubClearHistoryModalBtn" class="btn btn-secondary" data-translate="settings.githubClearHistory">Clear History</button>
+                </div>
+                
+                <div id="githubSyncHistoryModalList" class="sync-history-list">
+                    <p class="sync-history-empty" data-translate="settings.githubNoSyncHistory">No sync history available</p>
                 </div>
             </div>
         </div>

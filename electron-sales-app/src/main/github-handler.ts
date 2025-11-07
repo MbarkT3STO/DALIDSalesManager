@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { Octokit } from '@octokit/rest';
+import { app, BrowserWindow } from 'electron';
 
 export interface GitHubSyncConfig {
   accessToken: string;
@@ -10,6 +11,13 @@ export interface GitHubSyncConfig {
   autoSyncInterval: number; // in minutes
   lastSync: string; // ISO date string
   enabled: boolean;
+}
+
+export interface GitHubSyncHistoryItem {
+  timestamp: string; // ISO date string
+  operation: 'upload' | 'download' | 'auto-sync';
+  success: boolean;
+  message?: string;
 }
 
 export interface GitHubSyncStatus {
@@ -24,9 +32,129 @@ export class GitHubHandler {
   private config: GitHubSyncConfig | null = null;
   private syncInterval: NodeJS.Timeout | null = null;
   private workbookPath: string;
+  private syncHistory: GitHubSyncHistoryItem[] = [];
 
   constructor(workbookPath: string) {
     this.workbookPath = workbookPath;
+    // Load sync history from file if it exists
+    this.loadSyncHistory();
+  }
+
+  /**
+   * Get sync history file path
+   */
+  private getSyncHistoryPath(): string {
+    if (!app) return '';
+    return path.join(app.getPath('userData'), 'github-sync-history.json');
+  }
+
+  /**
+   * Load sync history from file
+   */
+  private loadSyncHistory(): void {
+    try {
+      const historyPath = this.getSyncHistoryPath();
+      if (fs.existsSync(historyPath)) {
+        const raw = fs.readFileSync(historyPath, 'utf-8');
+        this.syncHistory = JSON.parse(raw);
+        // Keep only the last 50 entries
+        if (this.syncHistory.length > 50) {
+          this.syncHistory = this.syncHistory.slice(-50);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load sync history:', error);
+      this.syncHistory = [];
+    }
+  }
+
+  /**
+   * Save sync history to file
+   */
+  private saveSyncHistory(): void {
+    try {
+      const historyPath = this.getSyncHistoryPath();
+      fs.writeFileSync(historyPath, JSON.stringify(this.syncHistory, null, 2));
+    } catch (error) {
+      console.error('Failed to save sync history:', error);
+    }
+  }
+
+  /**
+   * Add an entry to sync history
+   */
+  private addSyncHistory(operation: 'upload' | 'download' | 'auto-sync', success: boolean, message?: string): void {
+    const entry: GitHubSyncHistoryItem = {
+      timestamp: new Date().toISOString(),
+      operation,
+      success,
+      message
+    };
+    
+    this.syncHistory.unshift(entry);
+    
+    // Keep only the last 50 entries
+    if (this.syncHistory.length > 50) {
+      this.syncHistory = this.syncHistory.slice(0, 50);
+    }
+    
+    // Save to file
+    this.saveSyncHistory();
+    
+    // Send notification
+    this.sendSyncNotification(operation, success, message);
+  }
+  
+  /**
+   * Send sync notification to renderer
+   */
+  private sendSyncNotification(operation: 'upload' | 'download' | 'auto-sync', success: boolean, message?: string): void {
+    try {
+      // Get the main window
+      const windows = BrowserWindow.getAllWindows();
+      const mainWindow = windows.length > 0 ? windows[0] : null;
+      
+      if (mainWindow) {
+        let title = '';
+        let desc = '';
+        let type = success ? 'success' : 'error';
+        
+        if (operation === 'upload') {
+          title = success ? 'GitHub Upload' : 'GitHub Upload Failed';
+          desc = success ? 'Workbook uploaded to GitHub' : `Upload failed: ${message || 'Unknown error'}`;
+        } else if (operation === 'download') {
+          title = success ? 'GitHub Download' : 'GitHub Download Failed';
+          desc = success ? 'Workbook downloaded from GitHub' : `Download failed: ${message || 'Unknown error'}`;
+        } else if (operation === 'auto-sync') {
+          title = success ? 'GitHub Auto-Sync' : 'GitHub Auto-Sync Failed';
+          desc = success ? 'Workbook synced to GitHub' : `Auto-sync failed: ${message || 'Unknown error'}`;
+        }
+        
+        mainWindow.webContents.send('add-notification', {
+          title,
+          desc,
+          type,
+          category: 'github'
+        });
+      }
+    } catch (error) {
+      console.error('Failed to send sync notification:', error);
+    }
+  }
+
+  /**
+   * Get sync history
+   */
+  public getSyncHistory(): GitHubSyncHistoryItem[] {
+    return [...this.syncHistory];
+  }
+
+  /**
+   * Clear sync history
+   */
+  public clearSyncHistory(): void {
+    this.syncHistory = [];
+    this.saveSyncHistory();
   }
 
   /**
@@ -63,6 +191,7 @@ export class GitHubHandler {
    */
   async uploadWorkbook(): Promise<{ success: boolean; error?: string }> {
     if (!this.octokit || !this.config) {
+      this.addSyncHistory('upload', false, 'GitHub handler not initialized');
       return { success: false, error: 'GitHub handler not initialized' };
     }
 
@@ -101,8 +230,13 @@ export class GitHubHandler {
       // Update last sync time
       this.config.lastSync = new Date().toISOString();
       
+      // Add to sync history
+      this.addSyncHistory('upload', true);
+      
       return { success: true };
     } catch (error: any) {
+      // Add to sync history
+      this.addSyncHistory('upload', false, error.message);
       return { success: false, error: error.message };
     }
   }
@@ -112,6 +246,7 @@ export class GitHubHandler {
    */
   async downloadWorkbook(): Promise<{ success: boolean; error?: string }> {
     if (!this.octokit || !this.config) {
+      this.addSyncHistory('download', false, 'GitHub handler not initialized');
       return { success: false, error: 'GitHub handler not initialized' };
     }
 
@@ -123,6 +258,7 @@ export class GitHubHandler {
       });
 
       if (!('content' in response.data)) {
+        this.addSyncHistory('download', false, 'Invalid file content');
         return { success: false, error: 'Invalid file content' };
       }
 
@@ -139,8 +275,13 @@ export class GitHubHandler {
       // Update last sync time
       this.config.lastSync = new Date().toISOString();
       
+      // Add to sync history
+      this.addSyncHistory('download', true);
+      
       return { success: true };
     } catch (error: any) {
+      // Add to sync history
+      this.addSyncHistory('download', false, error.message);
       return { success: false, error: error.message };
     }
   }
@@ -164,9 +305,13 @@ export class GitHubHandler {
     // Start new interval
     this.syncInterval = setInterval(async () => {
       try {
-        await this.uploadWorkbook();
-      } catch (error) {
+        const result = await this.uploadWorkbook();
+        if (!result.success) {
+          this.addSyncHistory('auto-sync', false, result.error);
+        }
+      } catch (error: any) {
         console.error('Auto-sync failed:', error);
+        this.addSyncHistory('auto-sync', false, error.message);
       }
     }, intervalMs);
   }
@@ -192,7 +337,7 @@ export class GitHubHandler {
       error: null
     };
 
-    if (this.config && this.config.enabled && this.config.autoSyncInterval > 0 && this.syncInterval) {
+    if (this.config && this.config.enabled && this.config.autoSyncInterval > 0) {
       const lastSyncTime = this.config.lastSync ? new Date(this.config.lastSync).getTime() : Date.now();
       const nextSyncTime = lastSyncTime + (this.config.autoSyncInterval * 60 * 1000);
       status.nextSync = new Date(nextSyncTime).toISOString();
