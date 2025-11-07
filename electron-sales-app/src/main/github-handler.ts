@@ -200,7 +200,7 @@ export class GitHubHandler {
       const fileContent = fs.readFileSync(this.workbookPath);
       const base64Content = fileContent.toString('base64');
 
-      // Check if file already exists
+      // Check if file already exists and get its SHA
       let sha: string | undefined;
       try {
         const response = await this.octokit.rest.repos.getContent({
@@ -212,28 +212,74 @@ export class GitHubHandler {
         if ('sha' in response.data) {
           sha = response.data.sha;
         }
-      } catch (error) {
+      } catch (error: any) {
         // File doesn't exist, which is fine
+        // We'll create it without a SHA
         sha = undefined;
       }
 
       // Upload/Update the file
-      await this.octokit.rest.repos.createOrUpdateFileContents({
-        owner: this.config.repoOwner,
-        repo: this.config.repoName,
-        path: this.config.filePath,
-        message: `Update sales workbook ${new Date().toISOString()}`,
-        content: base64Content,
-        sha: sha
-      });
+      try {
+        await this.octokit.rest.repos.createOrUpdateFileContents({
+          owner: this.config.repoOwner,
+          repo: this.config.repoName,
+          path: this.config.filePath,
+          message: `Update sales workbook ${new Date().toISOString()}`,
+          content: base64Content,
+          sha: sha
+        });
 
-      // Update last sync time
-      this.config.lastSync = new Date().toISOString();
-      
-      // Add to sync history
-      this.addSyncHistory('upload', true);
-      
-      return { success: true };
+        // Update last sync time
+        this.config.lastSync = new Date().toISOString();
+        
+        // Add to sync history
+        this.addSyncHistory('upload', true);
+        
+        return { success: true };
+      } catch (uploadError: any) {
+        // Handle specific GitHub conflict errors
+        if (uploadError.status === 422 && uploadError.message && uploadError.message.includes('does not match')) {
+          // This is a conflict error - the file has been modified on GitHub
+          // Let's try to get the latest SHA and retry
+          try {
+            const response = await this.octokit.rest.repos.getContent({
+              owner: this.config.repoOwner,
+              repo: this.config.repoName,
+              path: this.config.filePath
+            });
+            
+            if ('sha' in response.data) {
+              const newSha = response.data.sha;
+              
+              // Retry with the correct SHA
+              await this.octokit.rest.repos.createOrUpdateFileContents({
+                owner: this.config.repoOwner,
+                repo: this.config.repoName,
+                path: this.config.filePath,
+                message: `Update sales workbook ${new Date().toISOString()}`,
+                content: base64Content,
+                sha: newSha
+              });
+              
+              // Update last sync time
+              this.config.lastSync = new Date().toISOString();
+              
+              // Add to sync history
+              this.addSyncHistory('upload', true, 'Successfully resolved conflict and uploaded');
+              
+              return { success: true };
+            }
+          } catch (retryError: any) {
+            // If retry also fails, report the original error
+            this.addSyncHistory('upload', false, `Conflict resolution failed: ${uploadError.message}`);
+            return { success: false, error: `Conflict resolution failed: ${uploadError.message}` };
+          }
+        }
+        
+        // For all other errors, just report them
+        this.addSyncHistory('upload', false, uploadError.message);
+        return { success: false, error: uploadError.message };
+      }
     } catch (error: any) {
       // Add to sync history
       this.addSyncHistory('upload', false, error.message);

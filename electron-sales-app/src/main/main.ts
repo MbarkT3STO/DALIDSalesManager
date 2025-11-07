@@ -434,6 +434,7 @@ ipcMain.handle('github-upload-workbook-with-config', async (event, config: GitHu
     
     return result;
   } catch (error: any) {
+    console.error('GitHub upload with config failed:', error);
     return { success: false, error: error.message };
   }
 });
