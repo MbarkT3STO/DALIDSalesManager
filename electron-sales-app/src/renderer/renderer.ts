@@ -963,6 +963,96 @@ async function updateWorkbookPath() {
   }
 }
 
+// Show GitHub Sync Status Modal
+async function displayGitHubSyncStatusModal() {
+  try {
+    // Get GitHub status
+    const githubStatus = await api.githubGetStatus();
+    const githubConfig = await api.githubLoadConfig();
+    
+    // Update modal elements
+    const modalConnectionStatus = document.getElementById('modalConnectionStatus');
+    const modalRepoInfo = document.getElementById('modalRepoInfo');
+    const modalFilePath = document.getElementById('modalFilePath');
+    const modalLastSync = document.getElementById('modalLastSync');
+    const modalNextSync = document.getElementById('modalNextSync');
+    const modalAutoSync = document.getElementById('modalAutoSync');
+    
+    if (modalConnectionStatus && modalRepoInfo && modalFilePath && 
+        modalLastSync && modalNextSync && modalAutoSync) {
+      
+      // Update connection status
+      if (githubStatus.success && githubStatus.status && githubStatus.status.connected) {
+        modalConnectionStatus.className = 'status-indicator status-connected';
+        modalConnectionStatus.innerHTML = '<span class="status-dot"></span><span class="status-text" data-translate="settings.githubConnected">' + t('settings.githubConnected') + '</span>';
+      } else {
+        modalConnectionStatus.className = 'status-indicator status-error';
+        modalConnectionStatus.innerHTML = '<span class="status-dot"></span><span class="status-text" data-translate="settings.githubConnectionFailed">' + t('settings.githubConnectionFailed') + '</span>';
+      }
+      
+      // Update repository info
+      if (githubConfig && githubConfig.success && githubConfig.config && 
+          githubConfig.config.repoOwner && githubConfig.config.repoName) {
+        modalRepoInfo.textContent = `${githubConfig.config.repoOwner}/${githubConfig.config.repoName}`;
+      } else {
+        modalRepoInfo.textContent = t('settings.githubNotConfigured');
+      }
+      
+      // Update file path
+      if (githubConfig && githubConfig.success && githubConfig.config && githubConfig.config.filePath) {
+        modalFilePath.textContent = githubConfig.config.filePath;
+      } else {
+        modalFilePath.textContent = t('settings.githubNotConfigured');
+      }
+      
+      // Update last sync time
+      if (githubStatus.success && githubStatus.status && githubStatus.status.lastSync) {
+        const lastSyncDate = new Date(githubStatus.status.lastSync);
+        // Check if it's a valid date
+        if (lastSyncDate.toString() !== 'Invalid Date') {
+          modalLastSync.textContent = lastSyncDate.toLocaleString();
+        } else {
+          modalLastSync.textContent = t('common.never');
+        }
+      } else {
+        modalLastSync.textContent = 'Never';
+      }
+      
+      // Update next sync time
+      if (githubStatus.success && githubStatus.status && githubStatus.status.nextSync) {
+        const nextSyncDate = new Date(githubStatus.status.nextSync);
+        // Check if it's a valid date
+        if (nextSyncDate.toString() !== 'Invalid Date') {
+          modalNextSync.textContent = nextSyncDate.toLocaleString();
+        } else {
+          modalNextSync.textContent = t('common.notScheduled');
+        }
+      } else {
+        modalNextSync.textContent = 'Not scheduled';
+      }
+      
+      // Update auto-sync status
+      if (githubConfig && githubConfig.success && githubConfig.config && 
+          githubConfig.config.enabled && githubConfig.config.autoSyncInterval > 0) {
+        modalAutoSync.textContent = `Every ${githubConfig.config.autoSyncInterval} minutes`;
+      } else {
+        modalAutoSync.textContent = t('settings.disabled');
+      }
+    }
+    
+    // Show modal
+    const modal = document.getElementById('githubSyncStatusModal');
+    if (modal) {
+      modal.classList.add('active');
+      // Apply translations to the modal
+      applyTranslations();
+    }
+  } catch (error) {
+    console.error('Error showing GitHub sync status modal:', error);
+    showToast('Failed to load sync status', 'error');
+  }
+}
+
 async function showWorkbookDetails() {
   // Add click animation to workbook path
   const pathElement = document.getElementById('workbookPath');
@@ -1087,6 +1177,21 @@ function setupEventListeners() {
     workbookPathEl.setAttribute('tabindex', '0');
     workbookPathEl.setAttribute('role', 'button');
     workbookPathEl.setAttribute('aria-label', 'Show workbook details');
+  }
+
+  // GitHub status indicator click to show sync status modal
+  const githubStatusIndicator = document.getElementById('githubStatusIndicator');
+  if (githubStatusIndicator) {
+    githubStatusIndicator.addEventListener('click', displayGitHubSyncStatusModal);
+    githubStatusIndicator.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        displayGitHubSyncStatusModal();
+      }
+    });
+    githubStatusIndicator.setAttribute('tabindex', '0');
+    githubStatusIndicator.setAttribute('role', 'button');
+    githubStatusIndicator.setAttribute('aria-label', 'Show GitHub sync status');
   }
 
   // Settings header button
@@ -1299,6 +1404,30 @@ function initGitHubSync() {
     });
   }
   
+  // GitHub Sync Status Modal buttons
+  document.getElementById('modalSyncNowBtn')?.addEventListener('click', handleGitHubUpload);
+  document.getElementById('modalViewHistoryBtn')?.addEventListener('click', viewGitHubSyncHistory);
+  
+  // Close GitHub Sync Status Modal
+  const syncStatusModal = document.getElementById('githubSyncStatusModal');
+  const syncStatusModalCloseBtn = document.querySelector('#githubSyncStatusModal .modal-close');
+  
+  if (syncStatusModalCloseBtn) {
+    syncStatusModalCloseBtn.addEventListener('click', () => {
+      if (syncStatusModal) {
+        syncStatusModal.classList.remove('active');
+      }
+    });
+  }
+  
+  if (syncStatusModal) {
+    syncStatusModal.addEventListener('click', (e) => {
+      if (e.target === syncStatusModal) {
+        syncStatusModal.classList.remove('active');
+      }
+    });
+  }
+  
   // Update GitHub sync info when settings tab is shown
   const settingsTab = document.getElementById('settingsTab');
   if (settingsTab) {
@@ -1418,7 +1547,7 @@ async function handleGitHubUpload() {
     uploadBtn.disabled = false;
     
     if (result.success) {
-      showToast('Workbook synced to GitHub successfully', 'success');
+      // Notification is handled by the main process, no need to show toast here
       // Update last sync time
       updateGitHubSyncInfo();
       
@@ -1475,7 +1604,7 @@ async function handleGitHubDownload() {
     downloadBtn.disabled = false;
     
     if (result.success) {
-      showToast('Workbook downloaded from GitHub successfully', 'success');
+      // Notification is handled by the main process, no need to show toast here
       // Reload the workbook data
       await loadWorkbookData();
       // Update last sync time

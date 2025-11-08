@@ -319,6 +319,75 @@
             </div>
         </header>
 
+        <!-- GitHub Sync Status Modal -->
+        <div id="githubSyncStatusModal" class="modal modal-fullscreen">
+            <div class="modal-content modal-medium">
+                <div class="modal-header">
+                    <h2 data-translate="settings.modalCloudSyncStatus">Cloud Sync Status</h2>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-form">
+                    <div class="github-sync-status-container">
+                        <div class="sync-status-header">
+                            <div class="sync-status-icon">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="GitHub">
+                                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                                </svg>
+                            </div>
+                            <div class="sync-status-info">
+                                <h3 data-translate="settings.modalGithubConnection">GitHub Connection</h3>
+                                <div class="status-indicator status-connected" id="modalConnectionStatus">
+                                    <span class="status-dot"></span>
+                                    <span class="status-text" data-translate="settings.githubConnected">Connected</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="sync-details">
+                            <div class="detail-item">
+                                <span class="detail-label" data-translate="settings.repository">Repository:</span>
+                                <span class="detail-value" id="modalRepoInfo">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label" data-translate="settings.filePath">File Path:</span>
+                                <span class="detail-value" id="modalFilePath">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label" data-translate="settings.lastSync">Last Sync:</span>
+                                <span class="detail-value" id="modalLastSync">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label" data-translate="settings.nextSync">Next Sync:</span>
+                                <span class="detail-value" id="modalNextSync">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label" data-translate="settings.autoSync">Auto-sync:</span>
+                                <span class="detail-value" id="modalAutoSync" data-translate="settings.disabled">Disabled</span>
+                            </div>
+                        </div>
+                        
+                        <div class="sync-actions">
+                            <button id="modalSyncNowBtn" class="btn btn-primary">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M23 4v6h-6"/>
+                                    <path d="M1 20v-6h6"/>
+                                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                                </svg>
+                                <span data-translate="settings.syncNow">Sync Now</span>
+                            </button>
+                            <button id="modalViewHistoryBtn" class="btn btn-secondary">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12,6 12,12 16,14"/>
+                                </svg>
+                                <span data-translate="settings.viewHistory">View History</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Workbook Details Modal -->
         <div id="workbookDetailsModal" class="modal">
             <div class="modal-content modal-medium">

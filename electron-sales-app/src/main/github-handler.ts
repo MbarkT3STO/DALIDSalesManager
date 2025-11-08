@@ -351,9 +351,94 @@ export class GitHubHandler {
     // Start new interval
     this.syncInterval = setInterval(async () => {
       try {
-        const result = await this.uploadWorkbook();
-        if (!result.success) {
-          this.addSyncHistory('auto-sync', false, result.error);
+        // For auto-sync, we want to show "auto-sync" notifications rather than "upload" notifications
+        // So we'll handle the upload process directly without calling uploadWorkbook()
+        if (!this.octokit || !this.config) {
+          this.sendSyncNotification('auto-sync', false, 'GitHub handler not initialized');
+          return;
+        }
+
+        // Read the workbook file
+        const fileContent = fs.readFileSync(this.workbookPath);
+        const base64Content = fileContent.toString('base64');
+
+        // Check if file already exists and get its SHA
+        let sha: string | undefined;
+        try {
+          const response = await this.octokit.rest.repos.getContent({
+            owner: this.config.repoOwner,
+            repo: this.config.repoName,
+            path: this.config.filePath
+          });
+          
+          if ('sha' in response.data) {
+            sha = response.data.sha;
+          }
+        } catch (error: any) {
+          // File doesn't exist, which is fine
+          sha = undefined;
+        }
+
+        // Upload/Update the file
+        try {
+          await this.octokit.rest.repos.createOrUpdateFileContents({
+            owner: this.config.repoOwner,
+            repo: this.config.repoName,
+            path: this.config.filePath,
+            message: `Auto-sync sales workbook ${new Date().toISOString()}`,
+            content: base64Content,
+            sha: sha
+          });
+
+          // Update last sync time
+          this.config.lastSync = new Date().toISOString();
+          
+          // Add to sync history with auto-sync operation type
+          this.addSyncHistory('auto-sync', true);
+        } catch (uploadError: any) {
+          // Handle specific GitHub conflict errors (both 409 and 422)
+          if ((uploadError.status === 409 || uploadError.status === 422) && 
+              uploadError.message && 
+              (uploadError.message.includes('does not match') || uploadError.message.includes('SHA'))) {
+            // This is a conflict error - the file has been modified on GitHub
+            // Let's try to get the latest SHA and retry
+            try {
+              const response = await this.octokit.rest.repos.getContent({
+                owner: this.config.repoOwner,
+                repo: this.config.repoName,
+                path: this.config.filePath
+              });
+              
+              if ('sha' in response.data) {
+                const newSha = response.data.sha;
+                
+                // Retry with the correct SHA
+                await this.octokit.rest.repos.createOrUpdateFileContents({
+                  owner: this.config.repoOwner,
+                  repo: this.config.repoName,
+                  path: this.config.filePath,
+                  message: `Auto-sync sales workbook ${new Date().toISOString()}`,
+                  content: base64Content,
+                  sha: newSha
+                });
+                
+                // Update last sync time
+                this.config.lastSync = new Date().toISOString();
+                
+                // Add to sync history
+                this.addSyncHistory('auto-sync', true, 'Successfully resolved conflict and auto-synced');
+                
+                return;
+              }
+            } catch (retryError: any) {
+              // If retry also fails, report the original error
+              this.addSyncHistory('auto-sync', false, `Conflict resolution failed: ${uploadError.message}`);
+              return;
+            }
+          }
+          
+          // For all other errors, just report them
+          this.addSyncHistory('auto-sync', false, uploadError.message);
         }
       } catch (error: any) {
         console.error('Auto-sync failed:', error);
@@ -378,13 +463,32 @@ export class GitHubHandler {
   getSyncStatus(): GitHubSyncStatus {
     const status: GitHubSyncStatus = {
       connected: this.octokit !== null,
-      lastSync: this.config?.lastSync || null,
+      lastSync: null,
       nextSync: null,
       error: null
     };
 
+    // Set lastSync to the timestamp of the most recent successful sync from history
+    if (this.syncHistory.length > 0) {
+      // Find the most recent successful sync
+      const lastSuccessfulSync = this.syncHistory.find(item => item.success);
+      if (lastSuccessfulSync) {
+        status.lastSync = lastSuccessfulSync.timestamp;
+      }
+    }
+
     if (this.config && this.config.enabled && this.config.autoSyncInterval > 0) {
-      const lastSyncTime = this.config.lastSync ? new Date(this.config.lastSync).getTime() : Date.now();
+      let lastSyncTime: number;
+      
+      // Use the actual last sync time from history, or fallback to config or current time
+      if (status.lastSync) {
+        lastSyncTime = new Date(status.lastSync).getTime();
+      } else if (this.config.lastSync) {
+        lastSyncTime = new Date(this.config.lastSync).getTime();
+      } else {
+        lastSyncTime = Date.now();
+      }
+      
       const nextSyncTime = lastSyncTime + (this.config.autoSyncInterval * 60 * 1000);
       status.nextSync = new Date(nextSyncTime).toISOString();
     }

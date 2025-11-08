@@ -667,7 +667,17 @@
     "githubDownloadSuccessNotification": "تم تنزيل المصنف من جيثب بنجاح",
     "githubDownloadFailedNotification": "فشل التنزيل: {0}",
     "githubAutoSyncSuccessNotification": "تمت مزامنة المصنف تلقائيًا مع جيثب",
-    "githubAutoSyncFailedNotification": "فشلت المزامنة التلقائية: {0}"
+    "githubAutoSyncFailedNotification": "فشلت المزامنة التلقائية: {0}",
+    "modalCloudSyncStatus": "حالة مزامنة السحابة",
+    "modalGithubConnection": "اتصال جيتهب",
+    "repository": "المستودع:",
+    "filePath": "مسار الملف:",
+    "lastSync": "آخر مزامنة:",
+    "nextSync": "المزامنة التالية:",
+    "autoSync": "المزامنة التلقائية:",
+    "syncNow": "مزامنة الآن",
+    "viewHistory": "عرض السجل",
+    "disabled": "معطل"
   },
   "login": {
     "title": "مدير المبيعات DALID",

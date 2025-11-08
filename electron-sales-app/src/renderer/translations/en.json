@@ -670,7 +670,17 @@
     "githubDownloadSuccessNotification": "Workbook successfully downloaded from GitHub",
     "githubDownloadFailedNotification": "Download failed: {0}",
     "githubAutoSyncSuccessNotification": "Workbook automatically synced to GitHub",
-    "githubAutoSyncFailedNotification": "Auto-sync failed: {0}"
+    "githubAutoSyncFailedNotification": "Auto-sync failed: {0}",
+    "modalCloudSyncStatus": "Cloud Sync Status",
+    "modalGithubConnection": "GitHub Connection",
+    "repository": "Repository:",
+    "filePath": "File Path:",
+    "lastSync": "Last Sync:",
+    "nextSync": "Next Sync:",
+    "autoSync": "Auto-sync:",
+    "syncNow": "Sync Now",
+    "viewHistory": "View History",
+    "disabled": "Disabled"
   },
   "login": {
     "title": "DALID Sales Manager",

@@ -667,7 +667,17 @@
     "githubDownloadSuccessNotification": "Classeur téléchargé depuis GitHub avec succès",
     "githubDownloadFailedNotification": "Échec du téléchargement : {0}",
     "githubAutoSyncSuccessNotification": "Classeur synchronisé automatiquement avec GitHub",
-    "githubAutoSyncFailedNotification": "Échec de la synchronisation automatique : {0}"
+    "githubAutoSyncFailedNotification": "Échec de la synchronisation automatique : {0}",
+    "modalCloudSyncStatus": "Statut de synchronisation cloud",
+    "modalGithubConnection": "Connexion GitHub",
+    "repository": "Dépôt :",
+    "filePath": "Chemin du fichier :",
+    "lastSync": "Dernière synchronisation :",
+    "nextSync": "Prochaine synchronisation :",
+    "autoSync": "Synchronisation automatique :",
+    "syncNow": "Synchroniser maintenant",
+    "viewHistory": "Voir l'historique",
+    "disabled": "Désactivé"
   },
   "login": {
     "title": "DALID Gestionnaire de ventes",
