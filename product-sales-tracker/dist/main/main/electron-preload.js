@@ -1,0 +1,19 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.api = void 0;
+const electron_1 = require("electron");
+// Create the API object
+const api = {
+    openWorkbook: () => electron_1.ipcRenderer.invoke('open-workbook'),
+    createWorkbook: () => electron_1.ipcRenderer.invoke('create-workbook'),
+    useDefaultWorkbook: () => electron_1.ipcRenderer.invoke('use-default-workbook'),
+    readWorkbook: () => electron_1.ipcRenderer.invoke('read-workbook'),
+    addSale: (sale) => electron_1.ipcRenderer.invoke('add-sale', sale),
+    deleteSale: (saleId) => electron_1.ipcRenderer.invoke('delete-sale', saleId),
+    getDailySalesReport: (date) => electron_1.ipcRenderer.invoke('get-daily-sales-report', date),
+    getWorkbookPath: () => electron_1.ipcRenderer.invoke('get-workbook-path')
+};
+exports.api = api;
+// Expose the API to the renderer process
+electron_1.contextBridge.exposeInMainWorld('electronAPI', api);
+//# sourceMappingURL=electron-preload.js.map

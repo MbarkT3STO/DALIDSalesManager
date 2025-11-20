@@ -1,0 +1,46 @@
+import { Sale, DailySalesReport } from '../shared/types';
+export interface IElectronAPI {
+    openWorkbook: () => Promise<{
+        success: boolean;
+        path?: string;
+        message?: string;
+    }>;
+    createWorkbook: () => Promise<{
+        success: boolean;
+        path?: string;
+        message?: string;
+    }>;
+    useDefaultWorkbook: () => Promise<{
+        success: boolean;
+        path?: string;
+        message?: string;
+    }>;
+    readWorkbook: () => Promise<{
+        success: boolean;
+        data?: {
+            sales: Sale[];
+        };
+        message?: string;
+    }>;
+    addSale: (sale: Sale) => Promise<{
+        success: boolean;
+        message?: string;
+    }>;
+    deleteSale: (saleId: string) => Promise<{
+        success: boolean;
+        message?: string;
+    }>;
+    getDailySalesReport: (date: string) => Promise<{
+        success: boolean;
+        report?: DailySalesReport;
+        message?: string;
+    }>;
+    getWorkbookPath: () => Promise<{
+        success: boolean;
+        path?: string;
+        message?: string;
+    }>;
+}
+declare const api: IElectronAPI;
+export { api };
+//# sourceMappingURL=electron-preload.d.ts.map
