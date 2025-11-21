@@ -899,11 +899,11 @@ async function loadDailyReport(): Promise<void> {
     if (result.success && result.report) {
       renderDailyReport(result.report);
     } else {
-      window.showError('Report Error', result.message || 'Failed to load report');
+      window.showError(t('notifications.error'), result.message || t('reports.loadFailed'));
     }
   } catch (error) {
     console.error('Error loading daily report:', error);
-    window.showError('Report Error', (error as Error).message);
+    window.showError(t('notifications.error'), (error as Error).message);
   }
 }
 
@@ -917,35 +917,35 @@ function renderDailyReport(report: DailySalesReport): void {
     }
     
     if (report.productDetails.length === 0) {
-      reportContent.innerHTML = '<div class="empty-state">No sales for this date</div>';
+      reportContent.innerHTML = `<div class="empty-state" data-translate="reports.selectDateMessage">${t('reports.selectDateMessage')}</div>`;
       return;
     }
     
     reportContent.innerHTML = `
       <div class="report-summary">
-        <h3>Daily Summary for ${report.date}</h3>
+        <h3>${t('reports.title')} for ${report.date}</h3>
         <div class="kpi-grid">
           <div class="kpi-card">
             <div class="kpi-content">
-              <h4>Total Sales</h4>
+              <h4 data-translate="sales.totalAmount">${t('sales.totalAmount')}</h4>
               <p class="kpi-value">${formatCurrency(report.totalSales)}</p>
             </div>
           </div>
           <div class="kpi-card">
             <div class="kpi-content">
-              <h4>Total Profit</h4>
+              <h4 data-translate="dashboard.totalProfit">${t('dashboard.totalProfit')}</h4>
               <p class="kpi-value">${formatCurrency(report.totalProfit)}</p>
             </div>
           </div>
           <div class="kpi-card">
             <div class="kpi-content">
-              <h4>Sales Count</h4>
+              <h4 data-translate="dashboard.salesCount">${t('dashboard.salesCount')}</h4>
               <p class="kpi-value">${report.salesCount}</p>
             </div>
           </div>
           <div class="kpi-card">
             <div class="kpi-content">
-              <h4>Sold Units</h4>
+              <h4 data-translate="reports.soldUnits">${t('reports.soldUnits')}</h4>
               <p class="kpi-value">${report.totalUnitsSold}</p>
             </div>
           </div>
@@ -956,10 +956,10 @@ function renderDailyReport(report: DailySalesReport): void {
         <table class="data-table">
           <thead>
             <tr>
-              <th>Product</th>
-              <th>Units Sold</th>
-              <th>Sales Value</th>
-              <th>Profit</th>
+              <th data-translate="sales.product">${t('sales.product')}</th>
+              <th data-translate="reports.unitsSold">${t('reports.unitsSold')}</th>
+              <th data-translate="reports.salesValue">${t('reports.salesValue')}</th>
+              <th data-translate="dashboard.totalProfit">${t('dashboard.totalProfit')}</th>
             </tr>
           </thead>
           <tbody>
@@ -975,6 +975,15 @@ function renderDailyReport(report: DailySalesReport): void {
         </table>
       </div>
     `;
+    
+    // Apply translations to the newly generated content
+    const translateElements = reportContent.querySelectorAll('[data-translate]');
+    translateElements.forEach(element => {
+      const key = element.getAttribute('data-translate');
+      if (key) {
+        element.textContent = t(key);
+      }
+    });
   } catch (error) {
     console.error('Error rendering daily report:', error);
   }

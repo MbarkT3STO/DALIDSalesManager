@@ -36,7 +36,11 @@
     "title": "Rapport de ventes quotidien",
     "subtitle": "Voir les performances de ventes par jour",
     "selectDate": "Sélectionner une date",
-    "selectDateMessage": "Sélectionnez une date pour voir le rapport de ventes"
+    "selectDateMessage": "Sélectionnez une date pour voir le rapport de ventes",
+    "soldUnits": "Unités vendues",
+    "unitsSold": "Unités vendues",
+    "salesValue": "Valeur des ventes",
+    "loadFailed": "Échec du chargement du rapport"
   },
   "settings": {
     "title": "Paramètres de l'application",

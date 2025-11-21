@@ -36,7 +36,11 @@
     "title": "Daily Sales Report",
     "subtitle": "View sales performance by day",
     "selectDate": "Select Date",
-    "selectDateMessage": "Select a date to view the sales report"
+    "selectDateMessage": "Select a date to view the sales report",
+    "soldUnits": "Sold Units",
+    "unitsSold": "Units Sold",
+    "salesValue": "Sales Value",
+    "loadFailed": "Failed to load report"
   },
   "settings": {
     "title": "Application Settings",
