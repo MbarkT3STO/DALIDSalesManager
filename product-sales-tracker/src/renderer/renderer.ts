@@ -423,6 +423,12 @@ function showView(viewName: string): void {
           currentWorkbookPathElement.value = currentWorkbookPath;
         }
       }
+      
+      // Special handling for reports view - load today's report
+      if (viewName === 'reports') {
+        // Load the report for the currently selected date
+        loadDailyReport(1); // Load first page
+      }
     } else {
       console.warn(`View ${viewName} not found`);
     }
@@ -752,21 +758,34 @@ function updateSaleTotals(): void {
   }
 }
 
-// Render sales table
-function renderSales(): void {
+// Render sales table with pagination
+function renderSales(page = 1): void {
   try {
     const tbody = document.getElementById('salesBody');
-    if (!tbody) {
-      console.warn('Sales tbody not found');
+    const salesTable = document.getElementById('salesTable');
+    if (!tbody || !salesTable) {
+      console.warn('Sales tbody or table not found');
       return;
     }
+    
+    // Pagination settings
+    const itemsPerPage = 10;
+    const totalPages = Math.ceil(sales.length / itemsPerPage);
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, sales.length);
+    const paginatedSales = sales.slice(startIndex, endIndex);
     
     if (sales.length === 0) {
       tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No sales yet</td></tr>';
+      // Remove existing pagination if any
+      const existingPagination = salesTable.parentNode?.querySelector('.pagination');
+      if (existingPagination) {
+        existingPagination.remove();
+      }
       return;
     }
     
-    tbody.innerHTML = sales.map(sale => `
+    tbody.innerHTML = paginatedSales.map(sale => `
       <tr>
         <td>${sale.saleId}</td>
         <td>${sale.date}</td>
@@ -798,9 +817,87 @@ function renderSales(): void {
         }
       });
     });
+    
+    // Remove existing pagination if any
+    const existingPagination = salesTable.parentNode?.querySelector('.pagination');
+    if (existingPagination) {
+      existingPagination.remove();
+    }
+    
+    // Add pagination controls if needed
+    if (totalPages > 1) {
+      const paginationHTML = createPaginationHTML(page, totalPages, 'sales');
+      const parentNode = salesTable.parentNode as HTMLElement | null;
+      if (parentNode) {
+        parentNode.insertAdjacentHTML('beforeend', paginationHTML);
+      }
+      
+      // Add event listeners to pagination buttons
+      const paginationContainer = parentNode?.querySelector('.pagination');
+      if (paginationContainer) {
+        const paginationButtons = paginationContainer.querySelectorAll('button');
+        paginationButtons.forEach(button => {
+          button.addEventListener('click', function(this: HTMLElement) {
+            const pageAttr = this.getAttribute('data-page');
+            const goToPage = this.getAttribute('data-go-to');
+            let newPage = page;
+            
+            if (pageAttr) {
+              newPage = parseInt(pageAttr);
+            } else if (goToPage === 'first') {
+              newPage = 1;
+            } else if (goToPage === 'prev') {
+              newPage = Math.max(1, page - 1);
+            } else if (goToPage === 'next') {
+              newPage = Math.min(totalPages, page + 1);
+            } else if (goToPage === 'last') {
+              newPage = totalPages;
+            }
+            
+            renderSales(newPage);
+          });
+        });
+      }
+    }
   } catch (error) {
     console.error('Error rendering sales:', error);
   }
+}
+
+// Create pagination HTML
+function createPaginationHTML(currentPage: number, totalPages: number, tableType: string): string {
+  let paginationHTML = `<div class="pagination">`;
+  
+  // First button
+  paginationHTML += `<button class="btn btn-secondary" data-go-to="first" ${currentPage === 1 ? 'disabled' : ''}>First</button>`;
+  
+  // Previous button
+  paginationHTML += `<button class="btn btn-secondary" data-go-to="prev" ${currentPage === 1 ? 'disabled' : ''}>Prev</button>`;
+  
+  // Page numbers (show current page and nearby pages)
+  const startPage = Math.max(1, currentPage - 2);
+  const endPage = Math.min(totalPages, currentPage + 2);
+  
+  for (let i = startPage; i <= endPage; i++) {
+    if (i === currentPage) {
+      paginationHTML += `<button class="btn btn-primary" disabled>${i}</button>`;
+    } else {
+      paginationHTML += `<button class="btn btn-secondary" data-page="${i}">${i}</button>`;
+    }
+  }
+  
+  // Next button
+  paginationHTML += `<button class="btn btn-secondary" data-go-to="next" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>`;
+  
+  // Last button
+  paginationHTML += `<button class="btn btn-secondary" data-go-to="last" ${currentPage === totalPages ? 'disabled' : ''}>Last</button>`;
+  
+  // Page info
+  paginationHTML += `<span class="pagination-info">Page ${currentPage} of ${totalPages}</span>`;
+  
+  paginationHTML += `</div>`;
+  
+  return paginationHTML;
 }
 
 // Show delete confirmation modal
@@ -887,7 +984,7 @@ function updateDashboard(): void {
 }
 
 // Load daily report
-async function loadDailyReport(): Promise<void> {
+async function loadDailyReport(page = 1): Promise<void> {
   try {
     const date = (document.getElementById('reportDate') as HTMLInputElement).value;
     if (!date) {
@@ -897,7 +994,7 @@ async function loadDailyReport(): Promise<void> {
     const result = await window.electronAPI.getDailySalesReport(date);
     
     if (result.success && result.report) {
-      renderDailyReport(result.report);
+      renderDailyReport(result.report, page);
     } else {
       window.showError(t('notifications.error'), result.message || t('reports.loadFailed'));
     }
@@ -907,8 +1004,8 @@ async function loadDailyReport(): Promise<void> {
   }
 }
 
-// Render daily report
-function renderDailyReport(report: DailySalesReport): void {
+// Render daily report with pagination
+function renderDailyReport(report: DailySalesReport, page = 1): void {
   try {
     const reportContent = document.getElementById('reportContent');
     if (!reportContent) {
@@ -916,12 +1013,19 @@ function renderDailyReport(report: DailySalesReport): void {
       return;
     }
     
+    // Pagination settings
+    const itemsPerPage = 10;
+    const totalPages = Math.ceil(report.productDetails.length / itemsPerPage);
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, report.productDetails.length);
+    const paginatedProducts = report.productDetails.slice(startIndex, endIndex);
+    
     if (report.productDetails.length === 0) {
       reportContent.innerHTML = `<div class="empty-state" data-translate="reports.selectDateMessage">${t('reports.selectDateMessage')}</div>`;
       return;
     }
     
-    reportContent.innerHTML = `
+    let reportHTML = `
       <div class="report-summary">
         <h3>${t('reports.title')} for ${report.date}</h3>
         <div class="kpi-grid">
@@ -963,7 +1067,7 @@ function renderDailyReport(report: DailySalesReport): void {
             </tr>
           </thead>
           <tbody>
-            ${report.productDetails.map(sale => `
+            ${paginatedProducts.map(sale => `
               <tr>
                 <td>${sale.productName}</td>
                 <td>${sale.unitsSold}</td>
@@ -976,6 +1080,13 @@ function renderDailyReport(report: DailySalesReport): void {
       </div>
     `;
     
+    // Add pagination controls if needed
+    if (totalPages > 1) {
+      reportHTML += createPaginationHTML(page, totalPages, 'reports');
+    }
+    
+    reportContent.innerHTML = reportHTML;
+    
     // Apply translations to the newly generated content
     const translateElements = reportContent.querySelectorAll('[data-translate]');
     translateElements.forEach(element => {
@@ -984,6 +1095,32 @@ function renderDailyReport(report: DailySalesReport): void {
         element.textContent = t(key);
       }
     });
+    
+    // Add event listeners to pagination buttons if pagination exists
+    if (totalPages > 1) {
+      const paginationButtons = reportContent.querySelectorAll('.pagination button');
+      paginationButtons.forEach(button => {
+        button.addEventListener('click', function(this: HTMLElement) {
+          const pageAttr = this.getAttribute('data-page');
+          const goToPage = this.getAttribute('data-go-to');
+          let newPage = page;
+          
+          if (pageAttr) {
+            newPage = parseInt(pageAttr);
+          } else if (goToPage === 'first') {
+            newPage = 1;
+          } else if (goToPage === 'prev') {
+            newPage = Math.max(1, page - 1);
+          } else if (goToPage === 'next') {
+            newPage = Math.min(totalPages, page + 1);
+          } else if (goToPage === 'last') {
+            newPage = totalPages;
+          }
+          
+          renderDailyReport(report, newPage);
+        });
+      });
+    }
   } catch (error) {
     console.error('Error rendering daily report:', error);
   }
@@ -1100,7 +1237,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const reportDateInput = document.getElementById('reportDate') as HTMLInputElement;
     if (reportDateInput) {
       reportDateInput.value = today;
-      reportDateInput.addEventListener('change', loadDailyReport);
+      reportDateInput.addEventListener('change', () => loadDailyReport(1)); // Load first page when date changes
     }
 
     // Set up sale date to today by default
@@ -1167,6 +1304,7 @@ document.addEventListener('click', (e) => {
   if (target.classList.contains('modal-close') || target.classList.contains('modal-close-btn')) {
     closeModal();
   }
+  
   
   // Close modal when clicking outside modal content
   if (target.classList.contains('modal')) {
