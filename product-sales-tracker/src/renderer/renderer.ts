@@ -98,6 +98,16 @@ async function initAppSettings(): Promise<void> {
     // Load translations
     await loadTranslations(currentLanguage);
     
+    // Set RTL for Arabic
+    const html = document.documentElement;
+    if (currentLanguage === 'ar') {
+      html.setAttribute('dir', 'rtl');
+      html.setAttribute('lang', 'ar');
+    } else {
+      html.setAttribute('dir', 'ltr');
+      html.setAttribute('lang', currentLanguage);
+    }
+    
     // Apply theme
     setTheme(settings.theme);
     
@@ -335,6 +345,16 @@ function setupEventListeners(): void {
         // Update dashboard and sales to reflect the new language
         updateDashboard();
         renderSales();
+        
+        // Set RTL for Arabic
+        const html = document.documentElement;
+        if (newLanguage === 'ar') {
+          html.setAttribute('dir', 'rtl');
+          html.setAttribute('lang', 'ar');
+        } else {
+          html.setAttribute('dir', 'ltr');
+          html.setAttribute('lang', newLanguage);
+        }
       });
       console.log('languageSelect event listener added');
     }

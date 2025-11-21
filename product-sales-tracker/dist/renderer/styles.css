@@ -912,6 +912,115 @@ body {
   border-bottom: 1px solid var(--border-primary);
 }
 
+/* RTL Support for Arabic */
+[dir="rtl"] {
+  /* General RTL adjustments */
+  text-align: right;
+}
+
+[dir="rtl"] .app-header {
+  flex-direction: row-reverse;
+}
+
+/* Swap positions of logo/path area and settings/theme toggle buttons in RTL */
+[dir="rtl"] .header-left {
+  /* In RTL, header-left becomes the right side */
+  order: 2;
+  text-align: right;
+}
+
+[dir="rtl"] .header-right {
+  /* In RTL, header-right becomes the left side */
+  order: 1;
+  text-align: left;
+}
+
+[dir="rtl"] .nav-group {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .nav-link {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .nav-link svg {
+  margin-right: 0;
+  margin-left: var(--spacing-sm);
+}
+
+[dir="rtl"] .form-row {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .form-group label {
+  text-align: right;
+}
+
+[dir="rtl"] .actions-bar {
+  justify-content: flex-end;
+}
+
+[dir="rtl"] .modal-actions {
+  justify-content: flex-end;
+}
+
+[dir="rtl"] .data-table th,
+[dir="rtl"] .data-table td {
+  text-align: right;
+}
+
+[dir="rtl"] .kpi-grid {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .settings-section {
+  text-align: right;
+}
+
+[dir="rtl"] .input-group {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .input-group .btn {
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+
+[dir="rtl"] .input-group input {
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+[dir="rtl"] .toast-container {
+  left: var(--spacing-md);
+  right: auto;
+}
+
+/* RTL specific adjustments for better Arabic display */
+[dir="rtl"] .app-title {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .app-title span {
+  margin-right: var(--spacing-md);
+  margin-left: 0;
+}
+
+[dir="rtl"] .workbook-status-container {
+  text-align: right;
+}
+
+[dir="rtl"] .section-header {
+  text-align: right;
+}
+
+[dir="rtl"] .modal-header {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .modal-close {
+  margin-right: auto;
+  margin-left: 0;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .app-header {

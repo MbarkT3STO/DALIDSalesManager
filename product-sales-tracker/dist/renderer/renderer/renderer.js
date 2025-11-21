@@ -62,6 +62,16 @@ async function initAppSettings() {
         currentLanguage = settings.language || 'en';
         // Load translations
         await loadTranslations(currentLanguage);
+        // Set RTL for Arabic
+        const html = document.documentElement;
+        if (currentLanguage === 'ar') {
+            html.setAttribute('dir', 'rtl');
+            html.setAttribute('lang', 'ar');
+        }
+        else {
+            html.setAttribute('dir', 'ltr');
+            html.setAttribute('lang', currentLanguage);
+        }
         // Apply theme
         setTheme(settings.theme);
         // Initialize other settings as needed
@@ -269,6 +279,16 @@ function setupEventListeners() {
                 // Update dashboard and sales to reflect the new language
                 updateDashboard();
                 renderSales();
+                // Set RTL for Arabic
+                const html = document.documentElement;
+                if (newLanguage === 'ar') {
+                    html.setAttribute('dir', 'rtl');
+                    html.setAttribute('lang', 'ar');
+                }
+                else {
+                    html.setAttribute('dir', 'ltr');
+                    html.setAttribute('lang', newLanguage);
+                }
             });
             console.log('languageSelect event listener added');
         }
