@@ -9,7 +9,9 @@ const api = {
     addSale: (sale) => ipcRenderer.invoke('add-sale', sale),
     deleteSale: (saleId) => ipcRenderer.invoke('delete-sale', saleId),
     getDailySalesReport: (date) => ipcRenderer.invoke('get-daily-sales-report', date),
-    getWorkbookPath: () => ipcRenderer.invoke('get-workbook-path')
+    getWorkbookPath: () => ipcRenderer.invoke('get-workbook-path'),
+    navigateToMainApp: () => ipcRenderer.invoke('navigate-to-main-app'),
+    getAppSettings: () => ipcRenderer.invoke('get-app-settings')
 };
 // Expose the API to the renderer process
 contextBridge.exposeInMainWorld('electronAPI', api);

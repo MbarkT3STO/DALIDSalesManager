@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="login.title">Daily Sales Tracker - Login</title>
+    <link rel="stylesheet" href="login-styles.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-left">
+            <div class="branding">
+                <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#ec4899;stop-opacity:1" />
+                        </linearGradient>
+                        <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#06b6d4;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    
+                    <!-- Rounded square background -->
+                    <rect x="10" y="10" width="100" height="100" rx="28" fill="url(#logoGradient)" opacity="0.15"/>
+                    
+                    <!-- Letter D with modern style -->
+                    <path d="M 30 35 L 30 85 L 55 85 C 67 85 75 77 75 60 C 75 43 67 35 55 35 Z M 38 43 L 53 43 C 62 43 67 48 67 60 C 67 72 62 77 53 77 L 38 77 Z" 
+                          fill="url(#logoGradient)" stroke="none"/>
+                    
+                    <!-- Modern chart bars with gradient -->
+                    <rect x="82" y="60" width="7" height="20" rx="3.5" fill="url(#accentGradient)"/>
+                    <rect x="92" y="48" width="7" height="32" rx="3.5" fill="url(#accentGradient)"/>
+                    <rect x="102" y="36" width="7" height="44" rx="3.5" fill="url(#accentGradient)"/>
+                    
+                    <!-- Sparkle effect -->
+                    <circle cx="88" cy="28" r="3" fill="#fbbf24"/>
+                    <path d="M 88 22 L 88 34 M 82 28 L 94 28" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <h1 data-translate="app.title">Daily Sales Tracker</h1>
+                <p class="tagline" data-translate="login.tagline">Track your sales performance with ease</p>
+            </div>
+            
+            <div class="features">
+                <div class="feature">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22,4 12,14.01 9,11.01"></polyline>
+                    </svg>
+                    <div>
+                        <h3 data-translate="login.features.realTime">Real-time Tracking</h3>
+                        <p data-translate="login.features.realTimeDesc">Monitor your sales as they happen</p>
+                    </div>
+                </div>
+                
+                <div class="feature">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                    <div>
+                        <h3 data-translate="login.features.reports">Detailed Reports</h3>
+                        <p data-translate="login.features.reportsDesc">Generate comprehensive sales reports</p>
+                    </div>
+                </div>
+                
+                <div class="feature">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 6v6l4 2"></path>
+                    </svg>
+                    <div>
+                        <h3 data-translate="login.features.analytics">Smart Analytics</h3>
+                        <p data-translate="login.features.analyticsDesc">Get insights to boost your sales</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="login-right">
+            <div class="login-form">
+                <h2 data-translate="login.signIn">Sign In to Your Account</h2>
+                <p class="subtitle" data-translate="login.subtitle">Enter your credentials to continue</p>
+                
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="username" data-translate="login.username">Username</label>
+                        <input type="text" id="username" name="username" required autocomplete="username">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password" data-translate="login.password">Password</label>
+                        <input type="password" id="password" name="password" required autocomplete="current-password">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" data-translate="login.signInButton">Sign In</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div id="toast" class="toast"></div>
+    
+    <script src="login.js"></script>
+</body>
+</html>

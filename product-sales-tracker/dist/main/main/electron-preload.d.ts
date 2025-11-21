@@ -45,6 +45,15 @@ export interface IElectronAPI {
         path?: string;
         message?: string;
     }>;
+    navigateToMainApp: () => Promise<{
+        success: boolean;
+        message?: string;
+    }>;
+    getAppSettings: () => Promise<{
+        success: boolean;
+        settings?: any;
+        message?: string;
+    }>;
 }
 declare const api: IElectronAPI;
 export { api };

@@ -12,7 +12,9 @@ const api = {
     addSale: (sale) => electron_1.ipcRenderer.invoke('add-sale', sale),
     deleteSale: (saleId) => electron_1.ipcRenderer.invoke('delete-sale', saleId),
     getDailySalesReport: (date) => electron_1.ipcRenderer.invoke('get-daily-sales-report', date),
-    getWorkbookPath: () => electron_1.ipcRenderer.invoke('get-workbook-path')
+    getWorkbookPath: () => electron_1.ipcRenderer.invoke('get-workbook-path'),
+    navigateToMainApp: () => electron_1.ipcRenderer.invoke('navigate-to-main-app'),
+    getAppSettings: () => electron_1.ipcRenderer.invoke('get-app-settings')
 };
 exports.api = api;
 // Expose the API to the renderer process

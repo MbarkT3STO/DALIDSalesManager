@@ -35,6 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 const path = __importStar(require("path"));
+const fs = __importStar(require("fs"));
 const excel_handler_1 = require("./excel-handler");
 let mainWindow = null;
 let excelHandler = null;
@@ -55,8 +56,8 @@ function createWindow() {
     });
     // Remove the default menu
     electron_1.Menu.setApplicationMenu(null);
-    // Load main application
-    mainWindow.loadFile(path.join(__dirname, '../../renderer/index.html'));
+    // Load login page first
+    mainWindow.loadFile(path.join(__dirname, '../../renderer/login.html'));
     mainWindow.on('closed', () => {
         mainWindow = null;
     });
@@ -197,6 +198,29 @@ electron_1.ipcMain.handle('get-workbook-path', async () => {
             return { success: false, message: 'No workbook loaded' };
         }
         return { success: true, path: excelHandler.getWorkbookPath() };
+    }
+    catch (error) {
+        return { success: false, message: error.message };
+    }
+});
+// New IPC handler to navigate to main app after login
+electron_1.ipcMain.handle('navigate-to-main-app', async () => {
+    if (mainWindow) {
+        mainWindow.loadFile(path.join(__dirname, '../../renderer/index.html'));
+        return { success: true };
+    }
+    return { success: false, message: 'Main window not available' };
+});
+// IPC handler to get app settings
+electron_1.ipcMain.handle('get-app-settings', async () => {
+    try {
+        const settingsPath = path.join(electron_1.app.getPath('userData'), 'settings.json');
+        if (fs.existsSync(settingsPath)) {
+            const settingsData = fs.readFileSync(settingsPath, 'utf8');
+            const settings = JSON.parse(settingsData);
+            return { success: true, settings };
+        }
+        return { success: false, message: 'No settings file found' };
     }
     catch (error) {
         return { success: false, message: error.message };

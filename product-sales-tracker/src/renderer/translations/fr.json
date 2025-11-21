@@ -2,6 +2,27 @@
   "app": {
     "title": "Suivi des Ventes Quotidiennes"
   },
+  "login": {
+    "title": "Suivi des Ventes Quotidiennes - Connexion",
+    "tagline": "Suivez facilement vos performances de vente",
+    "features": {
+      "realTime": "Suivi en temps réel",
+      "realTimeDesc": "Surveillez vos ventes en temps réel",
+      "reports": "Rapports détaillés",
+      "reportsDesc": "Générez des rapports de vente complets",
+      "analytics": "Analyses intelligentes",
+      "analyticsDesc": "Obtenez des informations pour booster vos ventes"
+    },
+    "signIn": "Connectez-vous à votre compte",
+    "subtitle": "Entrez vos identifiants pour continuer",
+    "username": "Nom d'utilisateur",
+    "password": "Mot de passe",
+    "rememberMe": "Se souvenir de moi",
+    "signInButton": "Se connecter",
+    "footer": "© 2023 Suivi des Ventes Quotidiennes. Tous droits réservés.",
+    "successMessage": "Connexion réussie ! Redirection...",
+    "invalidCredentials": "Nom d'utilisateur ou mot de passe invalide"
+  },
   "navigation": {
     "dashboard": "Tableau de bord",
     "sales": "Ventes",

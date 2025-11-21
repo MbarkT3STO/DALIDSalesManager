@@ -2,6 +2,27 @@
   "app": {
     "title": "Daily Sales Tracker"
   },
+  "login": {
+    "title": "Daily Sales Tracker - Login",
+    "tagline": "Track your sales performance with ease",
+    "features": {
+      "realTime": "Real-time Tracking",
+      "realTimeDesc": "Monitor your sales as they happen",
+      "reports": "Detailed Reports",
+      "reportsDesc": "Generate comprehensive sales reports",
+      "analytics": "Smart Analytics",
+      "analyticsDesc": "Get insights to boost your sales"
+    },
+    "signIn": "Sign In to Your Account",
+    "subtitle": "Enter your credentials to continue",
+    "username": "Username",
+    "password": "Password",
+    "rememberMe": "Remember me",
+    "signInButton": "Sign In",
+    "footer": "© 2023 Daily Sales Tracker. All rights reserved.",
+    "successMessage": "Login successful! Redirecting...",
+    "invalidCredentials": "Invalid username or password"
+  },
   "navigation": {
     "dashboard": "Dashboard",
     "sales": "Sales",

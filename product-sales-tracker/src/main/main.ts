@@ -25,8 +25,8 @@ function createWindow(): void {
   // Remove the default menu
   Menu.setApplicationMenu(null);
 
-  // Load main application
-  mainWindow.loadFile(path.join(__dirname, '../../renderer/index.html'));
+  // Load login page first
+  mainWindow.loadFile(path.join(__dirname, '../../renderer/login.html'));
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -187,6 +187,30 @@ ipcMain.handle('get-workbook-path', async () => {
     }
 
     return { success: true, path: excelHandler.getWorkbookPath() };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
+// New IPC handler to navigate to main app after login
+ipcMain.handle('navigate-to-main-app', async () => {
+  if (mainWindow) {
+    mainWindow.loadFile(path.join(__dirname, '../../renderer/index.html'));
+    return { success: true };
+  }
+  return { success: false, message: 'Main window not available' };
+});
+
+// IPC handler to get app settings
+ipcMain.handle('get-app-settings', async () => {
+  try {
+    const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+    if (fs.existsSync(settingsPath)) {
+      const settingsData = fs.readFileSync(settingsPath, 'utf8');
+      const settings = JSON.parse(settingsData);
+      return { success: true, settings };
+    }
+    return { success: false, message: 'No settings file found' };
   } catch (error: any) {
     return { success: false, message: error.message };
   }

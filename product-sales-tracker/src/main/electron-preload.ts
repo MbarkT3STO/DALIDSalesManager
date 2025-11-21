@@ -12,6 +12,8 @@ export interface IElectronAPI {
   deleteSale: (saleId: string) => Promise<{ success: boolean; message?: string }>;
   getDailySalesReport: (date: string) => Promise<{ success: boolean; report?: DailySalesReport; message?: string }>;
   getWorkbookPath: () => Promise<{ success: boolean; path?: string; message?: string }>;
+  navigateToMainApp: () => Promise<{ success: boolean; message?: string }>;
+  getAppSettings: () => Promise<{ success: boolean; settings?: any; message?: string }>;
 }
 
 // Create the API object
@@ -24,7 +26,9 @@ const api: IElectronAPI = {
   addSale: (sale: Sale) => ipcRenderer.invoke('add-sale', sale),
   deleteSale: (saleId: string) => ipcRenderer.invoke('delete-sale', saleId),
   getDailySalesReport: (date: string) => ipcRenderer.invoke('get-daily-sales-report', date),
-  getWorkbookPath: () => ipcRenderer.invoke('get-workbook-path')
+  getWorkbookPath: () => ipcRenderer.invoke('get-workbook-path'),
+  navigateToMainApp: () => ipcRenderer.invoke('navigate-to-main-app'),
+  getAppSettings: () => ipcRenderer.invoke('get-app-settings')
 };
 
 // Expose the API to the renderer process
