@@ -4,6 +4,7 @@ const api = {
     openWorkbook: () => ipcRenderer.invoke('open-workbook'),
     createWorkbook: () => ipcRenderer.invoke('create-workbook'),
     useDefaultWorkbook: () => ipcRenderer.invoke('use-default-workbook'),
+    loadWorkbook: (path) => ipcRenderer.invoke('load-workbook', path),
     readWorkbook: () => ipcRenderer.invoke('read-workbook'),
     addSale: (sale) => ipcRenderer.invoke('add-sale', sale),
     deleteSale: (saleId) => ipcRenderer.invoke('delete-sale', saleId),

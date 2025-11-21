@@ -6,6 +6,7 @@ export interface IElectronAPI {
   openWorkbook: () => Promise<{ success: boolean; path?: string; message?: string }>;
   createWorkbook: () => Promise<{ success: boolean; path?: string; message?: string }>;
   useDefaultWorkbook: () => Promise<{ success: boolean; path?: string; message?: string }>;
+  loadWorkbook: (path: string) => Promise<{ success: boolean; path?: string; message?: string }>;
   readWorkbook: () => Promise<{ success: boolean; data?: { sales: Sale[] }; message?: string }>;
   addSale: (sale: Sale) => Promise<{ success: boolean; message?: string }>;
   deleteSale: (saleId: string) => Promise<{ success: boolean; message?: string }>;
@@ -18,6 +19,7 @@ const api: IElectronAPI = {
   openWorkbook: () => ipcRenderer.invoke('open-workbook'),
   createWorkbook: () => ipcRenderer.invoke('create-workbook'),
   useDefaultWorkbook: () => ipcRenderer.invoke('use-default-workbook'),
+  loadWorkbook: (path: string) => ipcRenderer.invoke('load-workbook', path),
   readWorkbook: () => ipcRenderer.invoke('read-workbook'),
   addSale: (sale: Sale) => ipcRenderer.invoke('add-sale', sale),
   deleteSale: (saleId: string) => ipcRenderer.invoke('delete-sale', saleId),

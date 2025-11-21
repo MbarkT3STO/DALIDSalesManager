@@ -30,11 +30,13 @@ interface AppSettings {
   // Add other settings here as needed
   workbookPath?: string;
   lastOpenedDate?: string;
+  currency?: string;
 }
 
 // Default settings
 const DEFAULT_SETTINGS: AppSettings = {
-  theme: 'auto'
+  theme: 'auto',
+  currency: 'USD'
 };
 
 // Load settings from localStorage
@@ -74,13 +76,19 @@ function initAppSettings(): void {
       themeSelect.value = settings.theme;
     }
     
+    // Set currency select value
+    const currencySelect = document.getElementById('currencySelect') as HTMLSelectElement;
+    if (currencySelect) {
+      currencySelect.value = settings.currency || 'USD';
+    }
+    
     // Apply theme
     setTheme(settings.theme);
     
     // Initialize other settings as needed
     if (settings.workbookPath) {
       currentWorkbookPath = settings.workbookPath;
-      updateWorkbookPathDisplay(settings.workbookPath);
+      // We'll update the display later when the DOM is ready
     }
     
     console.log('App settings initialized');
@@ -105,6 +113,7 @@ function toggleTheme(): void {
     } else {
       setTheme('dark');
     }
+    
     
     // Update theme select
     const themeSelect = document.getElementById('themeSelect') as HTMLSelectElement;
@@ -274,6 +283,21 @@ function setupEventListeners(): void {
       console.log('themeSelect event listener added');
     }
     
+    // Currency select in settings
+    const currencySelect = document.getElementById('currencySelect');
+    if (currencySelect) {
+      currencySelect.addEventListener('change', (e) => {
+        const target = e.target as HTMLSelectElement;
+        const settings = loadSettings();
+        settings.currency = target.value;
+        saveSettings(settings);
+        // Update UI to reflect the new currency
+        updateDashboard();
+        renderSales();
+      });
+      console.log('currencySelect event listener added');
+    }
+    
     // Settings header button for collapsible behavior
     const settingsViewHeaderBtn = document.querySelector('#settings-view .section-header');
     if (settingsViewHeaderBtn) {
@@ -330,6 +354,14 @@ function showView(viewName: string): void {
     if (viewToShow) {
       viewToShow.style.display = 'block';
       console.log(`View ${viewName} displayed`);
+      
+      // Special handling for settings view - update workbook path display
+      if (viewName === 'settings') {
+        const currentWorkbookPathElement = document.getElementById('currentWorkbookPath') as HTMLInputElement;
+        if (currentWorkbookPathElement) {
+          currentWorkbookPathElement.value = currentWorkbookPath;
+        }
+      }
     } else {
       console.warn(`View ${viewName} not found`);
     }
@@ -493,9 +525,16 @@ async function useDefaultWorkbook(): Promise<void> {
 // Update workbook path display
 function updateWorkbookPathDisplay(path: string): void {
   try {
+    // Update the workbook path in the header
     const workbookPathElement = document.getElementById('workbookPath');
     if (workbookPathElement) {
       workbookPathElement.textContent = path;
+    }
+    
+    // Update the current workbook path in settings
+    const currentWorkbookPathElement = document.getElementById('currentWorkbookPath') as HTMLInputElement;
+    if (currentWorkbookPathElement) {
+      currentWorkbookPathElement.value = path;
     }
     
     // Save workbook path to settings
@@ -672,9 +711,9 @@ function renderSales(): void {
         <td>${sale.date}</td>
         <td>${sale.productName}</td>
         <td>${sale.quantity}</td>
-        <td>$${sale.unitPrice.toFixed(2)}</td>
-        <td>$${sale.total.toFixed(2)}</td>
-        <td>$${sale.profit.toFixed(2)}</td>
+        <td>${formatCurrency(sale.unitPrice)}</td>
+        <td>${formatCurrency(sale.total)}</td>
+        <td>${formatCurrency(sale.profit)}</td>
         <td>
           <button class="btn btn-icon delete-sale-btn" data-sale-id="${sale.saleId}" title="Delete sale">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -763,8 +802,8 @@ function updateDashboard(): void {
     const totalProfitElement = document.getElementById('totalProfit');
     const totalSalesCountElement = document.getElementById('totalSalesCount');
     
-    if (totalSalesElement) totalSalesElement.textContent = `$${totalSales.toFixed(2)}`;
-    if (totalProfitElement) totalProfitElement.textContent = `$${totalProfit.toFixed(2)}`;
+    if (totalSalesElement) totalSalesElement.textContent = formatCurrency(totalSales);
+    if (totalProfitElement) totalProfitElement.textContent = formatCurrency(totalProfit);
     if (totalSalesCountElement) totalSalesCountElement.textContent = totalSalesCount.toString();
     
     // Update recent sales
@@ -783,8 +822,8 @@ function updateDashboard(): void {
             <td>${sale.date}</td>
             <td>${sale.productName}</td>
             <td>${sale.quantity}</td>
-            <td>$${sale.total.toFixed(2)}</td>
-            <td>$${sale.profit.toFixed(2)}</td>
+            <td>${formatCurrency(sale.total)}</td>
+            <td>${formatCurrency(sale.profit)}</td>
           </tr>
         `).join('');
       }
@@ -836,13 +875,13 @@ function renderDailyReport(report: DailySalesReport): void {
           <div class="kpi-card">
             <div class="kpi-content">
               <h4>Total Sales</h4>
-              <p class="kpi-value">$${report.totalSales.toFixed(2)}</p>
+              <p class="kpi-value">${formatCurrency(report.totalSales)}</p>
             </div>
           </div>
           <div class="kpi-card">
             <div class="kpi-content">
               <h4>Total Profit</h4>
-              <p class="kpi-value">$${report.totalProfit.toFixed(2)}</p>
+              <p class="kpi-value">${formatCurrency(report.totalProfit)}</p>
             </div>
           </div>
           <div class="kpi-card">
@@ -875,8 +914,8 @@ function renderDailyReport(report: DailySalesReport): void {
               <tr>
                 <td>${sale.productName}</td>
                 <td>${sale.unitsSold}</td>
-                <td>$${sale.salesValue.toFixed(2)}</td>
-                <td>$${sale.profit.toFixed(2)}</td>
+                <td>${formatCurrency(sale.salesValue)}</td>
+                <td>${formatCurrency(sale.profit)}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -885,6 +924,26 @@ function renderDailyReport(report: DailySalesReport): void {
     `;
   } catch (error) {
     console.error('Error rendering daily report:', error);
+  }
+}
+
+// Format currency value based on selected currency
+function formatCurrency(value: number): string {
+  try {
+    const settings = loadSettings();
+    const currency = settings.currency || 'USD';
+    
+    // Format the value with the selected currency
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(value);
+  } catch (error) {
+    console.error('Error formatting currency:', error);
+    // Fallback to USD format
+    return `$${value.toFixed(2)}`;
   }
 }
 
@@ -927,12 +986,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Initialize all application settings
     initAppSettings();
-
-    // Try to load default workbook
-    await loadDefaultWorkbook();
-
-    // Load initial data
-    await loadData();
+    
+    // Check if we have a saved workbook path and load it, otherwise load default
+    const settings = loadSettings();
+    if (settings.workbookPath) {
+      // Load the saved workbook
+      try {
+        const result = await window.electronAPI.loadWorkbook(settings.workbookPath);
+        if (result.success && result.path) {
+          currentWorkbookPath = result.path;
+          updateWorkbookPathDisplay(result.path);
+          // Load data from the workbook
+          await loadData();
+        } else {
+          // Fall back to default workbook
+          await loadDefaultWorkbook();
+        }
+      } catch (error) {
+        console.error('Error loading saved workbook:', error);
+        // Fall back to default workbook
+        await loadDefaultWorkbook();
+      }
+    } else {
+      // Load default workbook
+      await loadDefaultWorkbook();
+    }
 
     // Set up all event listeners
     setupEventListeners();

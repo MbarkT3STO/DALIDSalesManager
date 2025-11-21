@@ -7,6 +7,7 @@ const api = {
     openWorkbook: () => electron_1.ipcRenderer.invoke('open-workbook'),
     createWorkbook: () => electron_1.ipcRenderer.invoke('create-workbook'),
     useDefaultWorkbook: () => electron_1.ipcRenderer.invoke('use-default-workbook'),
+    loadWorkbook: (path) => electron_1.ipcRenderer.invoke('load-workbook', path),
     readWorkbook: () => electron_1.ipcRenderer.invoke('read-workbook'),
     addSale: (sale) => electron_1.ipcRenderer.invoke('add-sale', sale),
     deleteSale: (saleId) => electron_1.ipcRenderer.invoke('delete-sale', saleId),

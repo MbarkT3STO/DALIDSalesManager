@@ -15,6 +15,11 @@ export interface IElectronAPI {
         path?: string;
         message?: string;
     }>;
+    loadWorkbook: (path: string) => Promise<{
+        success: boolean;
+        path?: string;
+        message?: string;
+    }>;
     readWorkbook: () => Promise<{
         success: boolean;
         data?: {

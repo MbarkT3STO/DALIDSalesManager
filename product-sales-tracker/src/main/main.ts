@@ -113,6 +113,21 @@ ipcMain.handle('use-default-workbook', async () => {
   }
 });
 
+ipcMain.handle('load-workbook', async (event, workbookPath: string) => {
+  try {
+    if (!workbookPath) {
+      return { success: false, message: 'No workbook path provided' };
+    }
+
+    excelHandler = new ExcelHandler(workbookPath);
+    await excelHandler.ensureWorkbook();
+
+    return { success: true, path: workbookPath };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
 ipcMain.handle('read-workbook', async () => {
   try {
     if (!excelHandler) {
