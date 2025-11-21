@@ -102,11 +102,35 @@
             return toastContainer;
         }
 
+        // Get translated text (this will be replaced by the renderer when translations are loaded)
+        function t(key, fallback) {
+            // If we have the renderer translation function, use it
+            if (typeof window.t === 'function') {
+                return window.t(key, fallback);
+            }
+            
+            // Otherwise use fallback translations
+            const translations = {
+                'notifications.success': 'Success',
+                'notifications.error': 'Error',
+                'notifications.warning': 'Warning',
+                'notifications.info': 'Info'
+            };
+            return translations[key] || fallback || key;
+        }
+
         function showNotification(title, message, type = 'info', duration = 4000) {
             const container = createToastContainer();
             
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
+            
+            // Translate the title if it matches a notification type
+            let translatedTitle = title;
+            if (title === 'Success' || title === 'Error' || title === 'Warning' || title === 'Info') {
+                const translationKey = `notifications.${title.toLowerCase()}`;
+                translatedTitle = t(translationKey, title);
+            }
             
             const icons = {
                 success: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
@@ -118,7 +142,7 @@
             toast.innerHTML = `
                 <div class="toast-icon">${icons[type] || icons.info}</div>
                 <div class="toast-content">
-                    <div class="toast-title">${title}</div>
+                    <div class="toast-title">${translatedTitle}</div>
                     <div class="toast-message">${message}</div>
                 </div>
                 <button class="toast-close" onclick="this.parentElement.remove()">
@@ -231,7 +255,7 @@
                         <rect x="14" y="14" width="7" height="7"/>
                         <rect x="3" y="14" width="7" height="7"/>
                     </svg>
-                    <span data-translate="dashboard">Dashboard</span>
+                    <span data-translate="navigation.dashboard">Dashboard</span>
                 </button>
                 <button class="nav-link" data-view="sales">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -239,7 +263,7 @@
                         <circle cx="20" cy="21" r="1"/>
                         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
                     </svg>
-                    <span data-translate="sales">Sales</span>
+                    <span data-translate="navigation.sales">Sales</span>
                 </button>
                 <button class="nav-link" data-view="reports">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -247,7 +271,7 @@
                         <line x1="12" y1="20" x2="12" y2="4"/>
                         <line x1="6" y1="20" x2="6" y2="14"/>
                     </svg>
-                    <span data-translate="reports">Reports</span>
+                    <span data-translate="navigation.reports">Reports</span>
                 </button>
                 <!-- Hidden settings tab - accessible only through header button -->
                 <button class="nav-link hidden" data-view="settings">
@@ -255,7 +279,7 @@
                         <circle cx="12" cy="12" r="3"/>
                         <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
                     </svg>
-                    <span data-translate="settings">Settings</span>
+                    <span data-translate="navigation.settings">Settings</span>
                 </button>
             </div>
             
@@ -268,8 +292,8 @@
             <div id="dashboard-view" class="view" style="display: block;">
                 <div class="dashboard-section">
                     <div class="section-header">
-                        <h3>Dashboard Overview</h3>
-                        <p class="section-subtitle">Key metrics and statistics</p>
+                        <h3 data-translate="dashboard.title">Dashboard Overview</h3>
+                        <p class="section-subtitle" data-translate="dashboard.subtitle">Key metrics and statistics</p>
                     </div>
                     
                     <div class="kpi-grid">
@@ -284,7 +308,7 @@
                                 </div>
                             </div>
                             <div class="kpi-content">
-                                <h4>Total Sales</h4>
+                                <h4 data-translate="dashboard.totalSales">Total Sales</h4>
                                 <p class="kpi-value" id="totalSales">$0.00</p>
                             </div>
                         </div>
@@ -300,7 +324,7 @@
                                 </div>
                             </div>
                             <div class="kpi-content">
-                                <h4>Total Profit</h4>
+                                <h4 data-translate="dashboard.totalProfit">Total Profit</h4>
                                 <p class="kpi-value" id="totalProfit">$0.00</p>
                             </div>
                         </div>
@@ -317,7 +341,7 @@
                                 </div>
                             </div>
                             <div class="kpi-content">
-                                <h4>Sales Count</h4>
+                                <h4 data-translate="dashboard.salesCount">Sales Count</h4>
                                 <p class="kpi-value" id="totalSalesCount">0</p>
                             </div>
                         </div>
@@ -326,25 +350,25 @@
                 
                 <div class="dashboard-section">
                     <div class="section-header">
-                        <h3>Recent Sales</h3>
-                        <p class="section-subtitle">Latest transactions</p>
+                        <h3 data-translate="dashboard.recentSales">Recent Sales</h3>
+                        <p class="section-subtitle" data-translate="dashboard.latestTransactions">Latest transactions</p>
                     </div>
                     
                     <div class="table-container">
                         <table class="data-table" id="recentSalesTable">
                             <thead>
                                 <tr>
-                                    <th>Sale ID</th>
-                                    <th>Date</th>
-                                    <th>Product</th>
-                                    <th>Quantity</th>
-                                    <th>Amount</th>
-                                    <th>Profit</th>
+                                    <th data-translate="sales.saleId">Sale ID</th>
+                                    <th data-translate="sales.date">Date</th>
+                                    <th data-translate="sales.product">Product</th>
+                                    <th data-translate="sales.quantity">Quantity</th>
+                                    <th data-translate="sales.totalAmount">Amount</th>
+                                    <th data-translate="sales.profit">Profit</th>
                                 </tr>
                             </thead>
                             <tbody id="recentSalesBody">
                                 <tr>
-                                    <td colspan="6" class="empty-state">No sales yet</td>
+                                    <td colspan="6" class="empty-state" data-translate="sales.noSales">No sales yet</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -355,8 +379,8 @@
             <!-- Sales View -->
             <div id="sales-view" class="view" style="display: none;">
                 <div class="section-header">
-                    <h3>Sales Management</h3>
-                    <p class="section-subtitle">Record new sales transactions</p>
+                    <h3 data-translate="sales.title">Sales Management</h3>
+                    <p class="section-subtitle" data-translate="sales.subtitle">Record new sales transactions</p>
                 </div>
                 
                 <div class="actions-bar">
@@ -366,7 +390,7 @@
                             <line x1="12" y1="8" x2="12" y2="16"/>
                             <line x1="8" y1="12" x2="16" y2="12"/>
                         </svg>
-                        New Sale
+                        <span data-translate="sales.newSale">New Sale</span>
                     </button>
                 </div>
                 
@@ -374,19 +398,19 @@
                     <table class="data-table" id="salesTable">
                         <thead>
                             <tr>
-                                <th>Sale ID</th>
-                                <th>Date</th>
-                                <th>Product</th>
-                                <th>Quantity</th>
-                                <th>Unit Price</th>
-                                <th>Total</th>
-                                <th>Profit</th>
-                                <th>Actions</th>
+                                <th data-translate="sales.saleId">Sale ID</th>
+                                <th data-translate="sales.date">Date</th>
+                                <th data-translate="sales.product">Product</th>
+                                <th data-translate="sales.quantity">Quantity</th>
+                                <th data-translate="sales.unitPrice">Unit Price</th>
+                                <th data-translate="sales.totalAmount">Total</th>
+                                <th data-translate="sales.profit">Profit</th>
+                                <th data-translate="common.actions">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="salesBody">
                             <tr>
-                                <td colspan="8" class="empty-state">No sales yet</td>
+                                <td colspan="8" class="empty-state" data-translate="sales.noSales">No sales yet</td>
                             </tr>
                         </tbody>
                     </table>
@@ -396,74 +420,86 @@
             <!-- Reports View -->
             <div id="reports-view" class="view" style="display: none;">
                 <div class="section-header">
-                    <h3>Daily Sales Report</h3>
-                    <p class="section-subtitle">View sales performance by day</p>
+                    <h3 data-translate="reports.title">Daily Sales Report</h3>
+                    <p class="section-subtitle" data-translate="reports.subtitle">View sales performance by day</p>
                 </div>
                 
                 <div class="form-group">
-                    <label for="reportDate">Select Date:</label>
+                    <label for="reportDate" data-translate="reports.selectDate">Select Date:</label>
                     <input type="date" id="reportDate" class="form-control">
                 </div>
                 
                 <div id="reportContent" class="report-content">
-                    <div class="empty-state">Select a date to view the sales report</div>
+                    <div class="empty-state" data-translate="reports.selectDateMessage">Select a date to view the sales report</div>
                 </div>
             </div>
 
             <!-- Settings View -->
             <div id="settings-view" class="view" style="display: none;">
                 <div class="section-header">
-                    <h3>Application Settings</h3>
-                    <p class="section-subtitle">Configure your application preferences</p>
+                    <h3 data-translate="settings.title">Application Settings</h3>
+                    <p class="section-subtitle" data-translate="settings.subtitle">Configure your application preferences</p>
                 </div>
                 
                 <div class="settings-section">
-                    <h4>Workbook Management</h4>
+                    <h4 data-translate="settings.workbookManagement">Workbook Management</h4>
                     <div class="form-group">
-                        <label>Current Workbook:</label>
+                        <label data-translate="settings.currentWorkbook">Current Workbook:</label>
                         <div class="input-group">
                             <input type="text" id="currentWorkbookPath" class="form-control" readonly>
-                            <button id="changeWorkbookBtn" class="btn btn-secondary">Change</button>
+                            <button id="changeWorkbookBtn" class="btn btn-secondary" data-translate="settings.change">Change</button>
                         </div>
                     </div>
                     <div class="form-group">
-                        <button id="createWorkbookBtn" class="btn btn-primary">Create New Workbook</button>
-                        <button id="openWorkbookBtn" class="btn btn-secondary">Open Existing Workbook</button>
-                        <button id="useDefaultWorkbookBtn" class="btn btn-secondary">Use Default Workbook</button>
+                        <button id="createWorkbookBtn" class="btn btn-primary" data-translate="settings.createNewWorkbook">Create New Workbook</button>
+                        <button id="openWorkbookBtn" class="btn btn-secondary" data-translate="settings.openExistingWorkbook">Open Existing Workbook</button>
+                        <button id="useDefaultWorkbookBtn" class="btn btn-secondary" data-translate="settings.useDefaultWorkbook">Use Default Workbook</button>
                     </div>
                 </div>
                 
                 <div class="settings-section">
-                    <h4>Currency Settings</h4>
+                    <h4 data-translate="settings.currencySettings">Currency Settings</h4>
                     <div class="form-group">
-                        <label for="currencySelect">Currency:</label>
+                        <label for="currencySelect" data-translate="settings.currency">Currency:</label>
                         <select id="currencySelect" class="form-control">
-                            <option value="USD">US Dollar (USD)</option>
-                            <option value="EUR">Euro (EUR)</option>
-                            <option value="GBP">British Pound (GBP)</option>
-                            <option value="JPY">Japanese Yen (JPY)</option>
-                            <option value="CAD">Canadian Dollar (CAD)</option>
-                            <option value="AUD">Australian Dollar (AUD)</option>
-                            <option value="CHF">Swiss Franc (CHF)</option>
-                            <option value="CNY">Chinese Yuan (CNY)</option>
-                            <option value="INR">Indian Rupee (INR)</option>
-                            <option value="BRL">Brazilian Real (BRL)</option>
-                            <option value="MXN">Mexican Peso (MXN)</option>
-                            <option value="SGD">Singapore Dollar (SGD)</option>
-                            <option value="DZD">Algerian Dinar (DZD)</option>
-                            <option value="MAD">Moroccan Dirham (MAD)</option>
+                            <option value="USD" data-translate="currencies.USD">US Dollar (USD)</option>
+                            <option value="EUR" data-translate="currencies.EUR">Euro (EUR)</option>
+                            <option value="GBP" data-translate="currencies.GBP">British Pound (GBP)</option>
+                            <option value="JPY" data-translate="currencies.JPY">Japanese Yen (JPY)</option>
+                            <option value="CAD" data-translate="currencies.CAD">Canadian Dollar (CAD)</option>
+                            <option value="AUD" data-translate="currencies.AUD">Australian Dollar (AUD)</option>
+                            <option value="CHF" data-translate="currencies.CHF">Swiss Franc (CHF)</option>
+                            <option value="CNY" data-translate="currencies.CNY">Chinese Yuan (CNY)</option>
+                            <option value="INR" data-translate="currencies.INR">Indian Rupee (INR)</option>
+                            <option value="BRL" data-translate="currencies.BRL">Brazilian Real (BRL)</option>
+                            <option value="MXN" data-translate="currencies.MXN">Mexican Peso (MXN)</option>
+                            <option value="SGD" data-translate="currencies.SGD">Singapore Dollar (SGD)</option>
+                            <option value="DZD" data-translate="currencies.DZD">Algerian Dinar (DZD)</option>
+                            <option value="MAD" data-translate="currencies.MAD">Moroccan Dirham (MAD)</option>
                         </select>
                     </div>
                 </div>
                 
                 <div class="settings-section">
-                    <h4>Theme Settings</h4>
+                    <h4 data-translate="settings.themeSettings">Theme Settings</h4>
                     <div class="form-group">
-                        <label for="themeSelect">Theme:</label>
+                        <label for="themeSelect" data-translate="settings.theme">Theme:</label>
                         <select id="themeSelect" class="form-control">
-                            <option value="light">Light</option>
-                            <option value="dark">Dark</option>
-                            <option value="auto">Auto (System)</option>
+                            <option value="light" data-translate="settings.light">Light</option>
+                            <option value="dark" data-translate="settings.dark">Dark</option>
+                            <option value="auto" data-translate="settings.auto">Auto (System)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h4 data-translate="settings.languageSettings">Language Settings</h4>
+                    <div class="form-group">
+                        <label for="languageSelect" data-translate="settings.language">Language:</label>
+                        <select id="languageSelect" class="form-control">
+                            <option value="en" data-translate="languages.english">English</option>
+                            <option value="fr" data-translate="languages.french">French</option>
+                            <option value="ar" data-translate="languages.arabic">Arabic</option>
                         </select>
                     </div>
                 </div>
@@ -475,51 +511,51 @@
     <div id="addSaleModal" class="modal">
         <div class="modal-content modal-medium">
             <div class="modal-header">
-                <h2>Record New Sale</h2>
+                <h2 data-translate="sales.newSale">Record New Sale</h2>
                 <button class="modal-close">&times;</button>
             </div>
             <div class="modal-form">
                 <div class="form-group">
-                    <label for="saleProduct">Product</label>
+                    <label for="saleProduct" data-translate="sales.product">Product</label>
                     <input type="text" id="saleProduct" class="form-control" placeholder="Enter product name" required>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="buyPrice">Buy Price ($)</label>
+                        <label for="buyPrice" data-translate="sales.buyPrice">Buy Price ($)</label>
                         <input type="number" id="buyPrice" class="form-control" min="0" step="0.01">
                     </div>
                     <div class="form-group">
-                        <label for="saleUnitPrice">Sale Price ($)</label>
+                        <label for="saleUnitPrice" data-translate="sales.unitPrice">Sale Price ($)</label>
                         <input type="number" id="saleUnitPrice" class="form-control" min="0" step="0.01" required>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="saleQuantity">Quantity</label>
+                        <label for="saleQuantity" data-translate="sales.quantity">Quantity</label>
                         <input type="number" id="saleQuantity" class="form-control" min="1" value="1" required>
                     </div>
                     <div class="form-group">
-                        <label for="saleDate">Date</label>
+                        <label for="saleDate" data-translate="sales.date">Date</label>
                         <input type="date" id="saleDate" class="form-control" required>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Total Amount ($)</label>
+                        <label data-translate="sales.totalAmount">Total Amount ($)</label>
                         <input type="number" id="saleTotal" class="form-control" readonly>
                     </div>
                     <div class="form-group">
-                        <label>Profit ($)</label>
+                        <label data-translate="sales.profit">Profit ($)</label>
                         <input type="number" id="saleProfit" class="form-control" readonly>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="saleId">Sale ID</label>
+                    <label for="saleId" data-translate="sales.saleId">Sale ID</label>
                     <input type="text" id="saleId" class="form-control" required readonly>
                 </div>
                 <div class="modal-actions">
-                    <button id="saveSaleBtn" class="btn btn-primary">Record Sale</button>
-                    <button class="btn btn-secondary modal-close-btn">Cancel</button>
+                    <button id="saveSaleBtn" class="btn btn-primary" data-translate="sales.recordSale">Record Sale</button>
+                    <button class="btn btn-secondary modal-close-btn" data-translate="common.cancel">Cancel</button>
                 </div>
             </div>
         </div>
@@ -529,16 +565,16 @@
     <div id="confirmDeleteModal" class="modal">
         <div class="modal-content modal-small">
             <div class="modal-header">
-                <h2>Confirm Delete</h2>
+                <h2 data-translate="common.confirmDelete">Confirm Delete</h2>
                 <button class="modal-close">&times;</button>
             </div>
             <div class="modal-form">
-                <p>Are you sure you want to delete this item? This action cannot be undone.</p>
+                <p data-translate="common.confirmDeleteMessage">Are you sure you want to delete this item? This action cannot be undone.</p>
                 <input type="hidden" id="deleteItemType">
                 <input type="hidden" id="deleteItemName">
                 <div class="modal-actions">
-                    <button id="confirmDeleteBtn" class="btn btn-danger">Delete</button>
-                    <button class="btn btn-secondary modal-close-btn">Cancel</button>
+                    <button id="confirmDeleteBtn" class="btn btn-danger" data-translate="common.delete">Delete</button>
+                    <button class="btn btn-secondary modal-close-btn" data-translate="common.cancel">Cancel</button>
                 </div>
             </div>
         </div>

@@ -1,0 +1,116 @@
+{
+  "app": {
+    "title": "Daily Sales Tracker"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "sales": "Sales",
+    "reports": "Reports",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "title": "Dashboard Overview",
+    "subtitle": "Key metrics and statistics",
+    "totalSales": "Total Sales",
+    "totalProfit": "Total Profit",
+    "salesCount": "Sales Count",
+    "recentSales": "Recent Sales",
+    "latestTransactions": "Latest transactions"
+  },
+  "sales": {
+    "title": "Sales Management",
+    "subtitle": "Record new sales transactions",
+    "newSale": "New Sale",
+    "saleId": "Sale ID",
+    "date": "Date",
+    "product": "Product",
+    "quantity": "Quantity",
+    "unitPrice": "Unit Price",
+    "buyPrice": "Buy Price",
+    "totalAmount": "Total Amount",
+    "profit": "Profit",
+    "recordSale": "Record Sale",
+    "noSales": "No sales yet"
+  },
+  "reports": {
+    "title": "Daily Sales Report",
+    "subtitle": "View sales performance by day",
+    "selectDate": "Select Date",
+    "selectDateMessage": "Select a date to view the sales report"
+  },
+  "settings": {
+    "title": "Application Settings",
+    "subtitle": "Configure your application preferences",
+    "workbookManagement": "Workbook Management",
+    "currentWorkbook": "Current Workbook",
+    "change": "Change",
+    "createNewWorkbook": "Create New Workbook",
+    "openExistingWorkbook": "Open Existing Workbook",
+    "useDefaultWorkbook": "Use Default Workbook",
+    "currencySettings": "Currency Settings",
+    "currency": "Currency",
+    "themeSettings": "Theme Settings",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "auto": "Auto (System)",
+    "languageSettings": "Language Settings",
+    "language": "Language"
+  },
+  "languages": {
+    "english": "English",
+    "french": "French",
+    "arabic": "Arabic"
+  },
+  "common": {
+    "noWorkbook": "No workbook loaded",
+    "toggleTheme": "Toggle theme",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirmDelete": "Confirm Delete",
+    "confirmDeleteMessage": "Are you sure you want to delete this item? This action cannot be undone.",
+    "save": "Save",
+    "close": "Close",
+    "actions": "Actions"
+  },
+  "notifications": {
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info",
+    "validationError": "Validation Error",
+    "productNameRequired": "Product name is required",
+    "quantityRequired": "Quantity must be greater than 0",
+    "dateRequired": "Date is required",
+    "salePriceRequired": "Sale price must be greater than 0",
+    "saleIdRequired": "Sale ID is required",
+    "saveFailed": "Save Failed",
+    "loadingError": "Loading Error",
+    "createError": "Create Error",
+    "openError": "Open Error",
+    "usingDefault": "Using Default",
+    "workbookCreated": "Workbook Created",
+    "workbookOpened": "Workbook Opened",
+    "saleRecorded": "Sale Recorded",
+    "workbookCreatedMessage": "New workbook created successfully",
+    "workbookOpenedMessage": "Workbook opened successfully",
+    "usingDefaultMessage": "Using default workbook",
+    "saleRecordedMessage": "Sale recorded successfully"
+  },
+  "currencies": {
+    "USD": "US Dollar (USD)",
+    "EUR": "Euro (EUR)",
+    "GBP": "British Pound (GBP)",
+    "JPY": "Japanese Yen (JPY)",
+    "CAD": "Canadian Dollar (CAD)",
+    "AUD": "Australian Dollar (AUD)",
+    "CHF": "Swiss Franc (CHF)",
+    "CNY": "Chinese Yuan (CNY)",
+    "INR": "Indian Rupee (INR)",
+    "BRL": "Brazilian Real (BRL)",
+    "MXN": "Mexican Peso (MXN)",
+    "SGD": "Singapore Dollar (SGD)",
+    "DZD": "Algerian Dinar (DZD)",
+    "MAD": "Moroccan Dirham (MAD)"
+  }
+}

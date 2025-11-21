@@ -1,0 +1,116 @@
+{
+  "app": {
+    "title": "متتبع المبيعات اليومية"
+  },
+  "navigation": {
+    "dashboard": "لوحة التحكم",
+    "sales": "المبيعات",
+    "reports": "التقارير",
+    "settings": "الإعدادات"
+  },
+  "dashboard": {
+    "title": "نظرة عامة على لوحة التحكم",
+    "subtitle": "المقاييس والإحصائيات الرئيسية",
+    "totalSales": "إجمالي المبيعات",
+    "totalProfit": "إجمالي الربح",
+    "salesCount": "عدد المبيعات",
+    "recentSales": "المبيعات الأخيرة",
+    "latestTransactions": "أحدث المعاملات"
+  },
+  "sales": {
+    "title": "إدارة المبيعات",
+    "subtitle": "تسجيل معاملات مبيعات جديدة",
+    "newSale": "بيع جديد",
+    "saleId": "معرف البيع",
+    "date": "التاريخ",
+    "product": "المنتج",
+    "quantity": "الكمية",
+    "unitPrice": "سعر الوحدة",
+    "buyPrice": "سعر الشراء",
+    "totalAmount": "المبلغ الإجمالي",
+    "profit": "الربح",
+    "recordSale": "تسجيل البيع",
+    "noSales": "لا توجد مبيعات بعد"
+  },
+  "reports": {
+    "title": "تقرير المبيعات اليومي",
+    "subtitle": "عرض أداء المبيعات حسب اليوم",
+    "selectDate": "اختر التاريخ",
+    "selectDateMessage": "اختر تاريخاً لعرض تقرير المبيعات"
+  },
+  "settings": {
+    "title": "إعدادات التطبيق",
+    "subtitle": "تكوين تفضيلات التطبيق الخاصة بك",
+    "workbookManagement": "إدارة دفتر العمل",
+    "currentWorkbook": "دفتر العمل الحالي",
+    "change": "تغيير",
+    "createNewWorkbook": "إنشاء دفتر عمل جديد",
+    "openExistingWorkbook": "فتح دفتر عمل موجود",
+    "useDefaultWorkbook": "استخدام دفتر العمل الافتراضي",
+    "currencySettings": "إعدادات العملة",
+    "currency": "العملة",
+    "themeSettings": "إعدادات السمة",
+    "theme": "السمة",
+    "light": "فاتح",
+    "dark": "داكن",
+    "auto": "تلقائي (النظام)",
+    "languageSettings": "إعدادات اللغة",
+    "language": "اللغة"
+  },
+  "languages": {
+    "english": "الإنجليزية",
+    "french": "الفرنسية",
+    "arabic": "العربية"
+  },
+  "common": {
+    "noWorkbook": "لم يتم تحميل دفتر عمل",
+    "toggleTheme": "تبديل السمة",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "confirmDelete": "تأكيد الحذف",
+    "confirmDeleteMessage": "هل أنت متأكد من رغبتك في حذف هذا العنصر؟ لا يمكن التراجع عن هذا الإجراء.",
+    "save": "حفظ",
+    "close": "إغلاق",
+    "actions": "إجراءات"
+  },
+  "notifications": {
+    "success": "نجاح",
+    "error": "خطأ",
+    "warning": "تحذير",
+    "info": "معلومات",
+    "validationError": "خطأ في التحقق",
+    "productNameRequired": "اسم المنتج مطلوب",
+    "quantityRequired": "يجب أن تكون الكمية أكبر من 0",
+    "dateRequired": "التاريخ مطلوب",
+    "salePriceRequired": "يجب أن يكون سعر البيع أكبر من 0",
+    "saleIdRequired": "معرف البيع مطلوب",
+    "saveFailed": "فشل الحفظ",
+    "loadingError": "خطأ في التحميل",
+    "createError": "خطأ في الإنشاء",
+    "openError": "خطأ في الفتح",
+    "usingDefault": "استخدام الافتراضي",
+    "workbookCreated": "تم إنشاء دفتر العمل",
+    "workbookOpened": "تم فتح دفتر العمل",
+    "saleRecorded": "تم تسجيل البيع",
+    "workbookCreatedMessage": "تم إنشاء دفتر عمل جديد بنجاح",
+    "workbookOpenedMessage": "تم فتح دفتر العمل بنجاح",
+    "usingDefaultMessage": "استخدام دفتر العمل الافتراضي",
+    "saleRecordedMessage": "تم تسجيل البيع بنجاح"
+  },
+  "currencies": {
+    "USD": "الدولار الأمريكي (USD)",
+    "EUR": "اليورو (EUR)",
+    "GBP": "الجنيه الإسترليني (GBP)",
+    "JPY": "الين الياباني (JPY)",
+    "CAD": "الدولار الكندي (CAD)",
+    "AUD": "الدولار الأسترالي (AUD)",
+    "CHF": "الفرنك السويسري (CHF)",
+    "CNY": "اليوان الصيني (CNY)",
+    "INR": "الروبية الهندية (INR)",
+    "BRL": "الريال البرازيلي (BRL)",
+    "MXN": "البيزو المكسيكي (MXN)",
+    "SGD": "الدولار السنغافوري (SGD)",
+    "DZD": "الدينار الجزائري (DZD)",
+    "MAD": "الدرهم المغربي (MAD)"
+  }
+}

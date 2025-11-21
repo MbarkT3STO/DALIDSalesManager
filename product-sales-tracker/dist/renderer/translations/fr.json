@@ -1,0 +1,116 @@
+{
+  "app": {
+    "title": "Suivi des Ventes Quotidiennes"
+  },
+  "navigation": {
+    "dashboard": "Tableau de bord",
+    "sales": "Ventes",
+    "reports": "Rapports",
+    "settings": "Paramètres"
+  },
+  "dashboard": {
+    "title": "Aperçu du tableau de bord",
+    "subtitle": "Métriques et statistiques clés",
+    "totalSales": "Ventes totales",
+    "totalProfit": "Bénéfice total",
+    "salesCount": "Nombre de ventes",
+    "recentSales": "Ventes récentes",
+    "latestTransactions": "Dernières transactions"
+  },
+  "sales": {
+    "title": "Gestion des ventes",
+    "subtitle": "Enregistrer de nouvelles transactions",
+    "newSale": "Nouvelle vente",
+    "saleId": "ID de vente",
+    "date": "Date",
+    "product": "Produit",
+    "quantity": "Quantité",
+    "unitPrice": "Prix unitaire",
+    "buyPrice": "Prix d'achat",
+    "totalAmount": "Montant total",
+    "profit": "Bénéfice",
+    "recordSale": "Enregistrer la vente",
+    "noSales": "Aucune vente pour le moment"
+  },
+  "reports": {
+    "title": "Rapport de ventes quotidien",
+    "subtitle": "Voir les performances de ventes par jour",
+    "selectDate": "Sélectionner une date",
+    "selectDateMessage": "Sélectionnez une date pour voir le rapport de ventes"
+  },
+  "settings": {
+    "title": "Paramètres de l'application",
+    "subtitle": "Configurer vos préférences d'application",
+    "workbookManagement": "Gestion du classeur",
+    "currentWorkbook": "Classeur actuel",
+    "change": "Changer",
+    "createNewWorkbook": "Créer un nouveau classeur",
+    "openExistingWorkbook": "Ouvrir un classeur existant",
+    "useDefaultWorkbook": "Utiliser le classeur par défaut",
+    "currencySettings": "Paramètres de devise",
+    "currency": "Devise",
+    "themeSettings": "Paramètres de thème",
+    "theme": "Thème",
+    "light": "Clair",
+    "dark": "Sombre",
+    "auto": "Auto (Système)",
+    "languageSettings": "Paramètres de langue",
+    "language": "Langue"
+  },
+  "languages": {
+    "english": "Anglais",
+    "french": "Français",
+    "arabic": "Arabe"
+  },
+  "common": {
+    "noWorkbook": "Aucun classeur chargé",
+    "toggleTheme": "Basculer le thème",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "confirmDelete": "Confirmer la suppression",
+    "confirmDeleteMessage": "Êtes-vous sûr de vouloir supprimer cet élément ? Cette action est irréversible.",
+    "save": "Enregistrer",
+    "close": "Fermer",
+    "actions": "Actions"
+  },
+  "notifications": {
+    "success": "Succès",
+    "error": "Erreur",
+    "warning": "Avertissement",
+    "info": "Information",
+    "validationError": "Erreur de validation",
+    "productNameRequired": "Le nom du produit est requis",
+    "quantityRequired": "La quantité doit être supérieure à 0",
+    "dateRequired": "La date est requise",
+    "salePriceRequired": "Le prix de vente doit être supérieur à 0",
+    "saleIdRequired": "L'ID de vente est requis",
+    "saveFailed": "Échec de l'enregistrement",
+    "loadingError": "Erreur de chargement",
+    "createError": "Erreur de création",
+    "openError": "Erreur d'ouverture",
+    "usingDefault": "Utilisation par défaut",
+    "workbookCreated": "Classeur créé",
+    "workbookOpened": "Classeur ouvert",
+    "saleRecorded": "Vente enregistrée",
+    "workbookCreatedMessage": "Nouveau classeur créé avec succès",
+    "workbookOpenedMessage": "Classeur ouvert avec succès",
+    "usingDefaultMessage": "Utilisation du classeur par défaut",
+    "saleRecordedMessage": "Vente enregistrée avec succès"
+  },
+  "currencies": {
+    "USD": "Dollar américain (USD)",
+    "EUR": "Euro (EUR)",
+    "GBP": "Livre sterling (GBP)",
+    "JPY": "Yen japonais (JPY)",
+    "CAD": "Dollar canadien (CAD)",
+    "AUD": "Dollar australien (AUD)",
+    "CHF": "Franc suisse (CHF)",
+    "CNY": "Yuan chinois (CNY)",
+    "INR": "Roupie indienne (INR)",
+    "BRL": "Réal brésilien (BRL)",
+    "MXN": "Peso mexicain (MXN)",
+    "SGD": "Dollar de Singapour (SGD)",
+    "DZD": "Dinar algérien (DZD)",
+    "MAD": "Dirham marocain (MAD)"
+  }
+}

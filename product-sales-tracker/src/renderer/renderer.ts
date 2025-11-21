@@ -16,6 +16,8 @@ declare global {
 // Global variables
 let sales: Sale[] = [];
 let currentWorkbookPath: string = '';
+let currentLanguage: string = 'en';
+let translations: any = {};
 
 // DOM Elements
 let views: { [key: string]: HTMLElement | null } = {};
@@ -31,12 +33,14 @@ interface AppSettings {
   workbookPath?: string;
   lastOpenedDate?: string;
   currency?: string;
+  language?: string;
 }
 
 // Default settings
 const DEFAULT_SETTINGS: AppSettings = {
   theme: 'auto',
-  currency: 'USD'
+  currency: 'USD',
+  language: 'en'
 };
 
 // Load settings from localStorage
@@ -63,7 +67,7 @@ function saveSettings(settings: AppSettings): void {
 }
 
 // Initialize all application settings
-function initAppSettings(): void {
+async function initAppSettings(): Promise<void> {
   try {
     const settings = loadSettings();
     
@@ -81,6 +85,18 @@ function initAppSettings(): void {
     if (currencySelect) {
       currencySelect.value = settings.currency || 'USD';
     }
+    
+    // Set language select value
+    const languageSelect = document.getElementById('languageSelect') as HTMLSelectElement;
+    if (languageSelect) {
+      languageSelect.value = settings.language || 'en';
+    }
+    
+    // Initialize language
+    currentLanguage = settings.language || 'en';
+    
+    // Load translations
+    await loadTranslations(currentLanguage);
     
     // Apply theme
     setTheme(settings.theme);
@@ -298,6 +314,31 @@ function setupEventListeners(): void {
       console.log('currencySelect event listener added');
     }
     
+    // Language select in settings
+    const languageSelect = document.getElementById('languageSelect');
+    if (languageSelect) {
+      languageSelect.addEventListener('change', async (e) => {
+        const target = e.target as HTMLSelectElement;
+        const newLanguage = target.value;
+        
+        // Load translations for the new language
+        await loadTranslations(newLanguage);
+        
+        // Update language setting
+        const settings = loadSettings();
+        settings.language = newLanguage;
+        saveSettings(settings);
+        
+        // Apply translations to UI
+        applyTranslations();
+        
+        // Update dashboard and sales to reflect the new language
+        updateDashboard();
+        renderSales();
+      });
+      console.log('languageSelect event listener added');
+    }
+    
     // Settings header button for collapsible behavior
     const settingsViewHeaderBtn = document.querySelector('#settings-view .section-header');
     if (settingsViewHeaderBtn) {
@@ -464,7 +505,7 @@ async function createNewWorkbook(): Promise<void> {
     if (result.success && result.path) {
       currentWorkbookPath = result.path;
       updateWorkbookPathDisplay(result.path);
-      window.showSuccess('Workbook Created', 'New workbook created successfully');
+      window.showSuccess(t('notifications.workbookCreated'), t('notifications.workbookCreatedMessage'));
       
       // Clear existing data
       sales = [];
@@ -472,11 +513,11 @@ async function createNewWorkbook(): Promise<void> {
       // Refresh UI
       renderSales();
     } else {
-      window.showError('Create Error', result.message || 'Failed to create workbook');
+      window.showError(t('notifications.createError'), result.message || t('notifications.createError'));
     }
   } catch (error) {
     console.error('Error creating new workbook:', error);
-    window.showError('Create Error', (error as Error).message);
+    window.showError(t('notifications.createError'), (error as Error).message);
   }
 }
 
@@ -488,16 +529,16 @@ async function openExistingWorkbook(): Promise<void> {
     if (result.success && result.path) {
       currentWorkbookPath = result.path;
       updateWorkbookPathDisplay(result.path);
-      window.showSuccess('Workbook Opened', 'Workbook opened successfully');
+      window.showSuccess(t('notifications.workbookOpened'), t('notifications.workbookOpenedMessage'));
       
       // Load data from the workbook
       await loadData();
     } else {
-      window.showError('Open Error', result.message || 'Failed to open workbook');
+      window.showError(t('notifications.openError'), result.message || t('notifications.openError'));
     }
   } catch (error) {
     console.error('Error opening workbook:', error);
-    window.showError('Open Error', (error as Error).message);
+    window.showError(t('notifications.openError'), (error as Error).message);
   }
 }
 
@@ -509,16 +550,39 @@ async function useDefaultWorkbook(): Promise<void> {
     if (result.success && result.path) {
       currentWorkbookPath = result.path;
       updateWorkbookPathDisplay(result.path);
-      window.showSuccess('Using Default', 'Using default workbook');
+      window.showSuccess(t('notifications.usingDefault'), t('notifications.usingDefaultMessage'));
       
       // Load data from the workbook
       await loadData();
     } else {
-      window.showError('Error', result.message || 'Failed to use default workbook');
+      window.showError(t('notifications.error'), result.message || t('notifications.error'));
     }
   } catch (error) {
     console.error('Error using default workbook:', error);
-    window.showError('Error', (error as Error).message);
+    window.showError(t('notifications.error'), (error as Error).message);
+  }
+}
+
+// Load data from workbook
+async function loadData(): Promise<void> {
+  try {
+    if (!currentWorkbookPath) {
+      return;
+    }
+    
+    // Load sales
+    const dataResult = await window.electronAPI.readWorkbook();
+    
+    if (dataResult.success && dataResult.data) {
+      sales = dataResult.data.sales || [];
+      renderSales();
+      updateDashboard();
+    } else {
+      window.showError(t('notifications.loadingError'), dataResult.message || t('notifications.loadingError'));
+    }
+  } catch (error) {
+    console.error('Error loading data:', error);
+    window.showError(t('notifications.loadingError'), (error as Error).message);
   }
 }
 
@@ -564,27 +628,27 @@ async function saveSale(): Promise<void> {
     
     // Validate required fields
     if (!product) {
-      window.showError('Validation Error', 'Product name is required');
+      window.showError(t('notifications.validationError'), t('notifications.productNameRequired'));
       return;
     }
     
     if (quantity <= 0) {
-      window.showError('Validation Error', 'Quantity must be greater than 0');
+      window.showError(t('notifications.validationError'), t('notifications.quantityRequired'));
       return;
     }
     
     if (!date) {
-      window.showError('Validation Error', 'Date is required');
+      window.showError(t('notifications.validationError'), t('notifications.dateRequired'));
       return;
     }
     
     if (unitPrice <= 0) {
-      window.showError('Validation Error', 'Sale price must be greater than 0');
+      window.showError(t('notifications.validationError'), t('notifications.salePriceRequired'));
       return;
     }
     
     if (!saleId) {
-      window.showError('Validation Error', 'Sale ID is required');
+      window.showError(t('notifications.validationError'), t('notifications.saleIdRequired'));
       return;
     }
     
@@ -604,7 +668,7 @@ async function saveSale(): Promise<void> {
     const result = await window.electronAPI.addSale(sale);
     
     if (result.success) {
-      window.showSuccess('Sale Recorded', 'Sale recorded successfully');
+      window.showSuccess(t('notifications.saleRecorded'), t('notifications.saleRecordedMessage'));
       closeModal();
       
       // Reset form
@@ -622,34 +686,11 @@ async function saveSale(): Promise<void> {
       // Reload data
       await loadData();
     } else {
-      window.showError('Save Failed', result.message || 'Failed to record sale');
+      window.showError(t('notifications.saveFailed'), result.message || t('notifications.saveFailed'));
     }
   } catch (error) {
     console.error('Error saving sale:', error);
-    window.showError('Save Failed', (error as Error).message);
-  }
-}
-
-// Load data from workbook
-async function loadData(): Promise<void> {
-  try {
-    if (!currentWorkbookPath) {
-      return;
-    }
-    
-    // Load sales
-    const dataResult = await window.electronAPI.readWorkbook();
-    
-    if (dataResult.success && dataResult.data) {
-      sales = dataResult.data.sales || [];
-      renderSales();
-      updateDashboard();
-    } else {
-      window.showError('Loading Error', dataResult.message || 'Failed to load data');
-    }
-  } catch (error) {
-    console.error('Error loading data:', error);
-    window.showError('Loading Error', (error as Error).message);
+    window.showError(t('notifications.saveFailed'), (error as Error).message);
   }
 }
 
@@ -760,33 +801,25 @@ function showDeleteConfirmation(saleId: string): void {
 // Delete sale
 async function deleteSale(): Promise<void> {
   try {
-    const deleteItemType = document.getElementById('deleteItemType') as HTMLInputElement;
-    const deleteItemName = document.getElementById('deleteItemName') as HTMLInputElement;
+    const saleId = (document.getElementById('deleteItemName') as HTMLInputElement).value;
     
-    if (!deleteItemType || !deleteItemName) {
-      window.showError('Delete Error', 'Missing delete item information');
+    if (!saleId) {
+      window.showError(t('notifications.validationError'), t('notifications.saleIdRequired'));
       return;
     }
     
-    const itemType = deleteItemType.value;
-    const itemName = deleteItemName.value;
+    const result = await window.electronAPI.deleteSale(saleId);
     
-    if (itemType === 'sale' && itemName) {
-      const result = await window.electronAPI.deleteSale(itemName);
-      
-      if (result.success) {
-        window.showSuccess('Sale Deleted', 'Sale deleted successfully');
-        closeModal();
-        await loadData();
-      } else {
-        window.showError('Delete Failed', result.message || 'Failed to delete sale');
-      }
+    if (result.success) {
+      window.showSuccess(t('notifications.success'), t('notifications.saleRecordedMessage'));
+      closeModal();
+      await loadData();
     } else {
-      window.showError('Delete Error', 'Invalid item type or name');
+      window.showError(t('notifications.error'), result.message || t('notifications.error'));
     }
   } catch (error) {
     console.error('Error deleting sale:', error);
-    window.showError('Delete Failed', (error as Error).message);
+    window.showError(t('notifications.error'), (error as Error).message);
   }
 }
 
@@ -927,6 +960,75 @@ function renderDailyReport(report: DailySalesReport): void {
   }
 }
 
+// Load translations for the specified language
+async function loadTranslations(language: string): Promise<void> {
+  try {
+    const response = await fetch(`translations/${language}.json`);
+    translations = await response.json();
+    currentLanguage = language;
+    console.log(`Translations loaded for language: ${language}`);
+  } catch (error) {
+    console.error(`Error loading translations for ${language}:`, error);
+    // Fallback to English
+    if (language !== 'en') {
+      await loadTranslations('en');
+    }
+  }
+}
+
+// Get translated text by key
+function t(key: string, fallback?: string): string {
+  try {
+    // Navigate through the translations object using the key
+    const keys = key.split('.');
+    let value = translations;
+    
+    for (const k of keys) {
+      if (value && typeof value === 'object' && k in value) {
+        value = value[k];
+      } else {
+        // Return fallback or the key itself if translation not found
+        return fallback || key;
+      }
+    }
+    
+    return value as string;
+  } catch (error) {
+    console.error(`Error translating key ${key}:`, error);
+    return fallback || key;
+  }
+}
+
+// Apply translations to the UI
+function applyTranslations(): void {
+  try {
+    // Translate elements with data-translate attribute
+    const translateElements = document.querySelectorAll('[data-translate]');
+    translateElements.forEach(element => {
+      const key = element.getAttribute('data-translate');
+      if (key) {
+        element.textContent = t(key);
+      }
+    });
+    
+    // Translate elements with data-translate-title attribute (for tooltips)
+    const translateTitleElements = document.querySelectorAll('[data-translate-title]');
+    translateTitleElements.forEach(element => {
+      const key = element.getAttribute('data-translate-title');
+      if (key) {
+        element.setAttribute('title', t(key));
+      }
+    });
+    
+    // Update the t function in the global scope for notifications
+    (window as any).t = t;
+    
+    console.log('Translations applied to UI');
+  } catch (error) {
+    console.error('Error applying translations:', error);
+  }
+}
+
 // Format currency value based on selected currency
 function formatCurrency(value: number): string {
   try {
@@ -985,7 +1087,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Initialize all application settings
-    initAppSettings();
+    await initAppSettings();
+    
+    // Apply translations to UI
+    applyTranslations();
     
     // Check if we have a saved workbook path and load it, otherwise load default
     const settings = loadSettings();
@@ -1021,7 +1126,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('Application initialized successfully');
   } catch (error) {
     console.error('Error initializing application:', error);
-    window.showError('Failed to initialize application', (error as Error).message);
+    window.showError('Error', (error as Error).message);
   }
 });
 
