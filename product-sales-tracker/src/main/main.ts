@@ -217,6 +217,17 @@ ipcMain.handle('get-app-settings', async () => {
   }
 });
 
+// IPC handler to save app settings
+ipcMain.handle('save-settings', async (event, settings) => {
+  try {
+    const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+});
+
 // IPC handler to open secret window
 ipcMain.handle('open-secret-window', async () => {
   try {

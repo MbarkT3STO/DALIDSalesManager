@@ -14,6 +14,7 @@ export interface IElectronAPI {
   getWorkbookPath: () => Promise<{ success: boolean; path?: string; message?: string }>;
   navigateToMainApp: () => Promise<{ success: boolean; message?: string }>;
   getAppSettings: () => Promise<{ success: boolean; settings?: any; message?: string }>;
+  saveSettings: (settings: any) => Promise<{ success: boolean; message?: string }>;
   exportSalesCSV: () => Promise<{ success: boolean; path?: string; message?: string }>;
   exportSalesExcel: () => Promise<{ success: boolean; path?: string; message?: string }>;
   openSecretWindow: () => Promise<{ success: boolean; message?: string }>;
@@ -33,6 +34,7 @@ const api: IElectronAPI = {
   getWorkbookPath: () => ipcRenderer.invoke('get-workbook-path'),
   navigateToMainApp: () => ipcRenderer.invoke('navigate-to-main-app'),
   getAppSettings: () => ipcRenderer.invoke('get-app-settings'),
+  saveSettings: (settings: any) => ipcRenderer.invoke('save-settings', settings),
   exportSalesCSV: () => ipcRenderer.invoke('export-sales-csv'),
   exportSalesExcel: () => ipcRenderer.invoke('export-sales-excel'),
   openSecretWindow: () => ipcRenderer.invoke('open-secret-window'),

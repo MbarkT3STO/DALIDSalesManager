@@ -54,6 +54,10 @@ export interface IElectronAPI {
         settings?: any;
         message?: string;
     }>;
+    saveSettings: (settings: any) => Promise<{
+        success: boolean;
+        message?: string;
+    }>;
     exportSalesCSV: () => Promise<{
         success: boolean;
         path?: string;

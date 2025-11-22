@@ -226,6 +226,17 @@ electron_1.ipcMain.handle('get-app-settings', async () => {
         return { success: false, message: error.message };
     }
 });
+// IPC handler to save app settings
+electron_1.ipcMain.handle('save-settings', async (event, settings) => {
+    try {
+        const settingsPath = path.join(electron_1.app.getPath('userData'), 'settings.json');
+        fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+        return { success: true };
+    }
+    catch (error) {
+        return { success: false, message: error.message };
+    }
+});
 // IPC handler to open secret window
 electron_1.ipcMain.handle('open-secret-window', async () => {
     try {

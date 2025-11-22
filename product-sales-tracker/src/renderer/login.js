@@ -17,10 +17,17 @@ let currentLanguage = 'en';
 // Load translations for the specified language
 async function loadTranslations(language) {
   try {
+    console.log(`Attempting to load translations for language: ${language}`);
+    console.log(`Fetching from: translations/${language}.json`);
     const response = await fetch(`translations/${language}.json`);
+    console.log(`Response status: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     translations = await response.json();
     currentLanguage = language;
     console.log(`Translations loaded for language: ${language}`);
+    console.log('Translations object:', translations);
   } catch (error) {
     console.error(`Error loading translations for ${language}:`, error);
     // Fallback to English
@@ -56,17 +63,48 @@ function t(key, fallback) {
 // Apply translations to the UI
 function applyTranslations() {
   try {
+    console.log('Applying translations...');
+    console.log('Current language:', currentLanguage);
+    console.log('Translations object:', translations);
+    
     // Translate elements with data-translate attribute
     const translateElements = document.querySelectorAll('[data-translate]');
+    console.log(`Found ${translateElements.length} elements to translate`);
+    
     translateElements.forEach(element => {
       const key = element.getAttribute('data-translate');
       if (key) {
-        element.textContent = t(key);
+        const translatedText = t(key);
+        console.log(`Translating element with key ${key} to: ${translatedText}`);
+        element.textContent = translatedText;
+      }
+    });
+    
+    // Translate placeholders with data-translate-placeholder attribute
+    const placeholderElements = document.querySelectorAll('[data-translate-placeholder]');
+    console.log(`Found ${placeholderElements.length} placeholder elements to translate`);
+    
+    placeholderElements.forEach(element => {
+      const key = element.getAttribute('data-translate-placeholder');
+      if (key) {
+        const translatedText = t(key);
+        console.log(`Translating placeholder with key ${key} to: ${translatedText}`);
+        element.placeholder = translatedText;
       }
     });
     
     // Update the document title
     document.title = t('login.title');
+    
+    // Set RTL for Arabic
+    const html = document.documentElement;
+    if (currentLanguage === 'ar') {
+      html.setAttribute('dir', 'rtl');
+      html.setAttribute('lang', 'ar');
+    } else {
+      html.setAttribute('dir', 'ltr');
+      html.setAttribute('lang', currentLanguage);
+    }
     
     console.log('Translations applied to UI');
   } catch (error) {
@@ -153,30 +191,51 @@ async function loadTheme() {
 // Load language from settings
 async function loadLanguage() {
   try {
+    console.log('=== LOADING LANGUAGE ===');
     // Try to get language from Electron app settings first
     if (window.electronAPI && window.electronAPI.getAppSettings) {
       try {
+        console.log('Attempting to load language from Electron IPC...');
         const result = await window.electronAPI.getAppSettings();
+        console.log('Electron IPC result:', result);
         if (result.success && result.settings && result.settings.language) {
+          console.log('Language from Electron IPC:', result.settings.language);
           await loadTranslations(result.settings.language);
           return;
+        } else {
+          console.log('No language found in Electron IPC settings');
         }
       } catch (error) {
         console.warn('Could not load language from Electron, falling back to localStorage');
       }
+    } else {
+      console.log('Electron API or getAppSettings not available');
     }
     
     // Fallback to localStorage
+    console.log('Attempting to load language from localStorage...');
     const savedSettings = localStorage.getItem('appSettings');
+    console.log('Raw localStorage appSettings:', savedSettings);
     if (savedSettings) {
-      const settings = JSON.parse(savedSettings);
-      if (settings.language) {
-        await loadTranslations(settings.language);
-        return;
+      try {
+        const settings = JSON.parse(savedSettings);
+        console.log('Parsed localStorage settings:', settings);
+        if (settings.language) {
+          console.log('Language from localStorage:', settings.language);
+          await loadTranslations(settings.language);
+          return;
+        } else {
+          console.log('No language found in localStorage settings');
+        }
+      } catch (error) {
+        console.error('Error parsing localStorage settings:', error);
       }
+    } else {
+      console.log('No appSettings found in localStorage');
     }
     
     // Default to English
+    console.log('Using default language (English)');
     await loadTranslations('en');
   } catch (error) {
     console.error('Error loading language:', error);
@@ -239,18 +298,31 @@ async function handleLogin(event) {
 
 // Initialize the login page
 async function initLoginPage() {
+  console.log('=== INITIALIZING LOGIN PAGE ===');
+  
   // Load theme and language
+  console.log('Calling loadTheme()...');
   await loadTheme();
+  console.log('loadTheme() completed');
+  
   watchSystemTheme();
+  
+  console.log('Calling loadLanguage()...');
   await loadLanguage();
+  console.log('loadLanguage() completed');
   
   // Apply translations
+  console.log('Calling applyTranslations()...');
   applyTranslations();
+  console.log('applyTranslations() completed');
   
   // Add event listeners
+  console.log('Adding event listeners...');
   loginForm.addEventListener('submit', handleLogin);
+  console.log('Event listeners added');
   
   console.log('Login page initialized');
+  console.log('=== INITIALIZATION COMPLETE ===');
 }
 
 // Initialize when DOM is loaded

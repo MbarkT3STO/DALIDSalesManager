@@ -27,11 +27,27 @@ function loadSettings() {
     }
     return DEFAULT_SETTINGS;
 }
-// Save settings to localStorage
-function saveSettings(settings) {
+// Save settings to localStorage and file
+async function saveSettings(settings) {
     try {
+        // Save to localStorage
         localStorage.setItem('appSettings', JSON.stringify(settings));
-        console.log('Settings saved:', settings);
+        console.log('Settings saved to localStorage:', settings);
+        // Also save to file via IPC if available
+        if (window.electronAPI && window.electronAPI.saveSettings) {
+            try {
+                const result = await window.electronAPI.saveSettings(settings);
+                if (result.success) {
+                    console.log('Settings saved to file:', settings);
+                }
+                else {
+                    console.error('Error saving settings to file:', result.message);
+                }
+            }
+            catch (error) {
+                console.error('Error saving settings to file:', error);
+            }
+        }
     }
     catch (error) {
         console.error('Error saving settings:', error);
@@ -73,7 +89,7 @@ async function initAppSettings() {
             html.setAttribute('lang', currentLanguage);
         }
         // Apply theme
-        setTheme(settings.theme);
+        await setTheme(settings.theme);
         // Initialize other settings as needed
         if (settings.workbookPath) {
             currentWorkbookPath = settings.workbookPath;
@@ -90,15 +106,15 @@ function initTheme() {
     initAppSettings();
 }
 // Toggle theme
-function toggleTheme() {
+async function toggleTheme() {
     try {
         const html = document.documentElement;
         const currentTheme = html.getAttribute('data-theme');
         if (currentTheme === 'dark') {
-            setTheme('light');
+            await setTheme('light');
         }
         else {
-            setTheme('dark');
+            await setTheme('dark');
         }
         // Update theme select
         const themeSelect = document.getElementById('themeSelect');
@@ -112,7 +128,7 @@ function toggleTheme() {
     }
 }
 // Set theme
-function setTheme(theme) {
+async function setTheme(theme) {
     try {
         const html = document.documentElement;
         if (theme === 'auto') {
@@ -126,7 +142,7 @@ function setTheme(theme) {
         // Save theme setting
         const settings = loadSettings();
         settings.theme = theme;
-        saveSettings(settings);
+        await saveSettings(settings);
         // Update icons
         const sunIcon = document.getElementById('sunIcon');
         const moonIcon = document.getElementById('moonIcon');
@@ -224,18 +240,18 @@ function setupEventListeners() {
         // Theme select in settings
         const themeSelect = document.getElementById('themeSelect');
         if (themeSelect) {
-            themeSelect.addEventListener('change', function () {
-                setTheme(this.value);
+            themeSelect.addEventListener('change', async function () {
+                await setTheme(this.value);
             });
         }
         // Currency select in settings
         const currencySelect = document.getElementById('currencySelect');
         if (currencySelect) {
-            currencySelect.addEventListener('change', (e) => {
+            currencySelect.addEventListener('change', async (e) => {
                 const target = e.target;
                 const settings = loadSettings();
                 settings.currency = target.value;
-                saveSettings(settings);
+                await saveSettings(settings);
                 // Update UI to reflect the new currency
                 updateDashboard();
                 renderSales();
