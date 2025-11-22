@@ -24,5 +24,10 @@ export declare class ExcelHandler {
     }>;
     deleteSale(saleId: string): Promise<void>;
     getWorkbookPath(): string;
+    generateSampleData(recordsPerDay?: number): Promise<{
+        success: boolean;
+        message?: string;
+        count?: number;
+    }>;
 }
 //# sourceMappingURL=excel-handler.d.ts.map

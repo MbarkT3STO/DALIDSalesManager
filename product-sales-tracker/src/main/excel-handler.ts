@@ -213,4 +213,79 @@ export class ExcelHandler {
   getWorkbookPath(): string {
     return this.workbookPath;
   }
+
+  // Generate sample sales data for testing
+  async generateSampleData(recordsPerDay: number = 20): Promise<{ success: boolean; message?: string; count?: number }> {
+    try {
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.readFile(this.workbookPath);
+
+      const salesSheet = workbook.getWorksheet('Sales');
+      if (!salesSheet) {
+        throw new Error('Sales sheet not found');
+      }
+
+      // Get the current date and create dates for the past 10 days
+      const dates: string[] = [];
+      const today = new Date();
+      
+      for (let i = 10; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        dates.push(date.toISOString().split('T')[0]);
+      }
+      
+      // Sample products
+      const products = [
+        'Laptop Computer', 'Wireless Mouse', 'Mechanical Keyboard', 'USB-C Hub', 
+        'External SSD', 'Bluetooth Headphones', 'Smartphone', 'Tablet', 
+        'Smart Watch', 'Gaming Console', 'Camera', 'Printer', 
+        'Router', 'Monitor', 'Speaker', 'Charger', 
+        'Power Bank', 'Webcam', 'Microphone', 'Docking Station'
+      ];
+      
+      // Sample categories
+      const categories = ['Electronics', 'Computers', 'Audio', 'Mobile', 'Accessories'];
+      
+      let totalRecords = 0;
+      
+      // Generate data for each date
+      for (const date of dates) {
+        for (let i = 0; i < recordsPerDay; i++) {
+          const product = products[Math.floor(Math.random() * products.length)];
+          const category = categories[Math.floor(Math.random() * categories.length)];
+          const quantity = Math.floor(Math.random() * 10) + 1;
+          const buyPrice = parseFloat((Math.random() * 500 + 50).toFixed(2));
+          const salePrice = parseFloat((buyPrice * (1 + Math.random() * 0.5 + 0.1)).toFixed(2));
+          const total = parseFloat((salePrice * quantity).toFixed(2));
+          const profit = parseFloat((total - (buyPrice * quantity)).toFixed(2));
+          
+          // Generate a unique sale ID
+          const saleId = `SL-${date.replace(/-/g, '')}-${String(totalRecords + 1).padStart(4, '0')}`;
+          
+          // Add new sale by column index to ensure proper placement
+          const newRow = [
+            date,           // Column 1: Date
+            saleId,         // Column 2: SaleID
+            `${product} ${category}`,    // Column 3: Product
+            buyPrice || 0,  // Column 4: BuyPrice
+            salePrice,      // Column 5: SalePrice
+            quantity,       // Column 6: Quantity
+            total,          // Column 7: Total
+            profit          // Column 8: Profit
+          ];
+          
+          salesSheet.addRow(newRow);
+          totalRecords++;
+        }
+      }
+      
+      await workbook.xlsx.writeFile(this.workbookPath);
+      
+      return { success: true, count: totalRecords, message: `Generated ${totalRecords} sample records for ${dates.length} days` };
+    } catch (error) {
+      console.error('Error in generateSampleData:', error);
+      return { success: false, message: (error as Error).message };
+    }
+  }
 }

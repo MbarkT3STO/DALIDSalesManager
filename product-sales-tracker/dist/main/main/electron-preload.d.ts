@@ -54,6 +54,25 @@ export interface IElectronAPI {
         settings?: any;
         message?: string;
     }>;
+    exportSalesCSV: () => Promise<{
+        success: boolean;
+        path?: string;
+        message?: string;
+    }>;
+    exportSalesExcel: () => Promise<{
+        success: boolean;
+        path?: string;
+        message?: string;
+    }>;
+    openSecretWindow: () => Promise<{
+        success: boolean;
+        message?: string;
+    }>;
+    generateSampleData: (recordsPerDay: number) => Promise<{
+        success: boolean;
+        message?: string;
+        count?: number;
+    }>;
 }
 declare const api: IElectronAPI;
 export { api };

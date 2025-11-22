@@ -14,7 +14,11 @@ const api = {
     getDailySalesReport: (date) => electron_1.ipcRenderer.invoke('get-daily-sales-report', date),
     getWorkbookPath: () => electron_1.ipcRenderer.invoke('get-workbook-path'),
     navigateToMainApp: () => electron_1.ipcRenderer.invoke('navigate-to-main-app'),
-    getAppSettings: () => electron_1.ipcRenderer.invoke('get-app-settings')
+    getAppSettings: () => electron_1.ipcRenderer.invoke('get-app-settings'),
+    exportSalesCSV: () => electron_1.ipcRenderer.invoke('export-sales-csv'),
+    exportSalesExcel: () => electron_1.ipcRenderer.invoke('export-sales-excel'),
+    openSecretWindow: () => electron_1.ipcRenderer.invoke('open-secret-window'),
+    generateSampleData: (recordsPerDay) => electron_1.ipcRenderer.invoke('generate-sample-data', recordsPerDay)
 };
 exports.api = api;
 // Expose the API to the renderer process

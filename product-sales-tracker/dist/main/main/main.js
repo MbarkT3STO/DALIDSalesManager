@@ -226,4 +226,78 @@ electron_1.ipcMain.handle('get-app-settings', async () => {
         return { success: false, message: error.message };
     }
 });
+// IPC handler to open secret window
+electron_1.ipcMain.handle('open-secret-window', async () => {
+    try {
+        // Create secret window
+        const secretWindow = new electron_1.BrowserWindow({
+            width: 800,
+            height: 600,
+            minWidth: 600,
+            minHeight: 500,
+            webPreferences: {
+                nodeIntegration: false,
+                contextIsolation: true,
+                preload: path.join(__dirname, 'electron-preload.js')
+            },
+            title: 'Secret Administration Panel',
+            backgroundColor: '#f8fafc'
+        });
+        // Load secret window HTML
+        secretWindow.loadFile(path.join(__dirname, '../../renderer/secret-window.html'));
+        // Handle window close
+        secretWindow.on('closed', () => {
+            // Clean up if needed
+        });
+        return { success: true };
+    }
+    catch (error) {
+        return { success: false, message: error.message };
+    }
+});
+// IPC handler to generate sample data
+electron_1.ipcMain.handle('generate-sample-data', async (event, recordsPerDay) => {
+    try {
+        if (!excelHandler) {
+            return { success: false, message: 'No workbook loaded' };
+        }
+        const result = await excelHandler.generateSampleData(recordsPerDay);
+        return result;
+    }
+    catch (error) {
+        return { success: false, message: error.message };
+    }
+});
+// Helper function to export sales to CSV
+async function exportSalesToCSV(sales, outputPath) {
+    return new Promise((resolve, reject) => {
+        try {
+            // CSV headers
+            const headers = ['Date', 'SaleID', 'Product', 'Quantity', 'UnitPrice', 'Total', 'Profit', 'BuyPrice'];
+            // Create CSV rows
+            const csvRows = [];
+            // Add headers
+            csvRows.push(headers.join(','));
+            // Add data rows
+            sales.forEach(sale => {
+                const values = [
+                    `"${sale.date}"`,
+                    `"${sale.saleId}"`,
+                    `"${sale.productName}"`,
+                    sale.quantity,
+                    sale.unitPrice,
+                    sale.total,
+                    sale.profit,
+                    sale.buyPrice || 0
+                ];
+                csvRows.push(values.join(','));
+            });
+            fs.writeFileSync(outputPath, csvRows.join('\n'), 'utf-8');
+            resolve();
+        }
+        catch (error) {
+            reject(error);
+        }
+    });
+}
 //# sourceMappingURL=main.js.map

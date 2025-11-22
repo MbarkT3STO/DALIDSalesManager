@@ -1085,6 +1085,21 @@ function formatCurrency(value) {
         return `$${value.toFixed(2)}`;
     }
 }
+// Show secret window with password protection
+async function showSecretWindow() {
+    try {
+        // In a real implementation, we would show a password prompt
+        // For now, we'll just open the secret window directly
+        const result = await window.electronAPI.openSecretWindow();
+        if (!result.success) {
+            window.showError(t('notifications.error'), result.message || 'Failed to open secret window');
+        }
+    }
+    catch (error) {
+        console.error('Error opening secret window:', error);
+        window.showError(t('notifications.error'), error.message);
+    }
+}
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -1152,6 +1167,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         setupEventListeners();
         // Show dashboard by default
         showView('dashboard');
+        // Add keyboard shortcut for secret window (Ctrl+Shift+L)
+        document.addEventListener('keydown', async (e) => {
+            // Check for Ctrl+Shift+L combination
+            if (e.ctrlKey && e.shiftKey && e.key === 'L') {
+                e.preventDefault();
+                await showSecretWindow();
+            }
+        });
         console.log('Application initialized successfully');
     }
     catch (error) {

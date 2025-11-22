@@ -441,66 +441,84 @@
                     <p class="section-subtitle" data-translate="settings.subtitle">Configure your application preferences</p>
                 </div>
                 
-                <div class="settings-section">
-                    <h4 data-translate="settings.workbookManagement">Workbook Management</h4>
-                    <div class="form-group">
-                        <label data-translate="settings.currentWorkbook">Current Workbook:</label>
-                        <div class="input-group">
-                            <input type="text" id="currentWorkbookPath" class="form-control" readonly>
-                            <button id="changeWorkbookBtn" class="btn btn-secondary" data-translate="settings.change">Change</button>
+                <div class="settings-grid">
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <h4 data-translate="settings.workbookManagement">Workbook Management</h4>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="form-group">
+                                <label data-translate="settings.currentWorkbook">Current Workbook:</label>
+                                <div class="input-group">
+                                    <input type="text" id="currentWorkbookPath" class="form-control" readonly>
+                                    <button id="changeWorkbookBtn" class="btn btn-secondary" data-translate="settings.change">Change</button>
+                                </div>
+                            </div>
+                            <div class="settings-button-group">
+                                <button id="createWorkbookBtn" class="btn btn-primary" data-translate="settings.createNewWorkbook">Create New Workbook</button>
+                                <button id="openWorkbookBtn" class="btn btn-secondary" data-translate="settings.openExistingWorkbook">Open Existing Workbook</button>
+                                <button id="useDefaultWorkbookBtn" class="btn btn-secondary" data-translate="settings.useDefaultWorkbook">Use Default Workbook</button>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <button id="createWorkbookBtn" class="btn btn-primary" data-translate="settings.createNewWorkbook">Create New Workbook</button>
-                        <button id="openWorkbookBtn" class="btn btn-secondary" data-translate="settings.openExistingWorkbook">Open Existing Workbook</button>
-                        <button id="useDefaultWorkbookBtn" class="btn btn-secondary" data-translate="settings.useDefaultWorkbook">Use Default Workbook</button>
+                    
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <h4 data-translate="settings.currencySettings">Currency Settings</h4>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="form-group">
+                                <label for="currencySelect" data-translate="settings.currency">Currency:</label>
+                                <select id="currencySelect" class="form-control">
+                                    <option value="USD" data-translate="currencies.USD">US Dollar (USD)</option>
+                                    <option value="EUR" data-translate="currencies.EUR">Euro (EUR)</option>
+                                    <option value="GBP" data-translate="currencies.GBP">British Pound (GBP)</option>
+                                    <option value="JPY" data-translate="currencies.JPY">Japanese Yen (JPY)</option>
+                                    <option value="CAD" data-translate="currencies.CAD">Canadian Dollar (CAD)</option>
+                                    <option value="AUD" data-translate="currencies.AUD">Australian Dollar (AUD)</option>
+                                    <option value="CHF" data-translate="currencies.CHF">Swiss Franc (CHF)</option>
+                                    <option value="CNY" data-translate="currencies.CNY">Chinese Yuan (CNY)</option>
+                                    <option value="INR" data-translate="currencies.INR">Indian Rupee (INR)</option>
+                                    <option value="BRL" data-translate="currencies.BRL">Brazilian Real (BRL)</option>
+                                    <option value="MXN" data-translate="currencies.MXN">Mexican Peso (MXN)</option>
+                                    <option value="SGD" data-translate="currencies.SGD">Singapore Dollar (SGD)</option>
+                                    <option value="DZD" data-translate="currencies.DZD">Algerian Dinar (DZD)</option>
+                                    <option value="MAD" data-translate="currencies.MAD">Moroccan Dirham (MAD)</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="settings-section">
-                    <h4 data-translate="settings.currencySettings">Currency Settings</h4>
-                    <div class="form-group">
-                        <label for="currencySelect" data-translate="settings.currency">Currency:</label>
-                        <select id="currencySelect" class="form-control">
-                            <option value="USD" data-translate="currencies.USD">US Dollar (USD)</option>
-                            <option value="EUR" data-translate="currencies.EUR">Euro (EUR)</option>
-                            <option value="GBP" data-translate="currencies.GBP">British Pound (GBP)</option>
-                            <option value="JPY" data-translate="currencies.JPY">Japanese Yen (JPY)</option>
-                            <option value="CAD" data-translate="currencies.CAD">Canadian Dollar (CAD)</option>
-                            <option value="AUD" data-translate="currencies.AUD">Australian Dollar (AUD)</option>
-                            <option value="CHF" data-translate="currencies.CHF">Swiss Franc (CHF)</option>
-                            <option value="CNY" data-translate="currencies.CNY">Chinese Yuan (CNY)</option>
-                            <option value="INR" data-translate="currencies.INR">Indian Rupee (INR)</option>
-                            <option value="BRL" data-translate="currencies.BRL">Brazilian Real (BRL)</option>
-                            <option value="MXN" data-translate="currencies.MXN">Mexican Peso (MXN)</option>
-                            <option value="SGD" data-translate="currencies.SGD">Singapore Dollar (SGD)</option>
-                            <option value="DZD" data-translate="currencies.DZD">Algerian Dinar (DZD)</option>
-                            <option value="MAD" data-translate="currencies.MAD">Moroccan Dirham (MAD)</option>
-                        </select>
+                    
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <h4 data-translate="settings.themeSettings">Theme Settings</h4>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="form-group">
+                                <label for="themeSelect" data-translate="settings.theme">Theme:</label>
+                                <select id="themeSelect" class="form-control">
+                                    <option value="light" data-translate="settings.light">Light</option>
+                                    <option value="dark" data-translate="settings.dark">Dark</option>
+                                    <option value="auto" data-translate="settings.auto">Auto (System)</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="settings-section">
-                    <h4 data-translate="settings.themeSettings">Theme Settings</h4>
-                    <div class="form-group">
-                        <label for="themeSelect" data-translate="settings.theme">Theme:</label>
-                        <select id="themeSelect" class="form-control">
-                            <option value="light" data-translate="settings.light">Light</option>
-                            <option value="dark" data-translate="settings.dark">Dark</option>
-                            <option value="auto" data-translate="settings.auto">Auto (System)</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="settings-section">
-                    <h4 data-translate="settings.languageSettings">Language Settings</h4>
-                    <div class="form-group">
-                        <label for="languageSelect" data-translate="settings.language">Language:</label>
-                        <select id="languageSelect" class="form-control">
-                            <option value="en" data-translate="languages.english">English</option>
-                            <option value="fr" data-translate="languages.french">French</option>
-                            <option value="ar" data-translate="languages.arabic">Arabic</option>
-                        </select>
+                    
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <h4 data-translate="settings.languageSettings">Language Settings</h4>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="form-group">
+                                <label for="languageSelect" data-translate="settings.language">Language:</label>
+                                <select id="languageSelect" class="form-control">
+                                    <option value="en" data-translate="languages.english">English</option>
+                                    <option value="fr" data-translate="languages.french">French</option>
+                                    <option value="ar" data-translate="languages.arabic">Arabic</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
