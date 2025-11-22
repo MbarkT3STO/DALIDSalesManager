@@ -51,7 +51,12 @@
     "totalAmount": "المبلغ الإجمالي",
     "profit": "الربح",
     "recordSale": "تسجيل البيع",
-    "noSales": "لا توجد مبيعات بعد"
+    "noSales": "لا توجد مبيعات بعد",
+    "exportCSV": "تصدير CSV",
+    "exportExcel": "تصدير Excel",
+    "exportSuccessCSV": "تم تصدير بيانات المبيعات إلى CSV بنجاح",
+    "exportSuccessExcel": "تم تصدير بيانات المبيعات إلى Excel بنجاح",
+    "exportError": "فشل في تصدير بيانات المبيعات"
   },
   "reports": {
     "title": "تقرير المبيعات اليومي",
@@ -61,7 +66,14 @@
     "soldUnits": "الوحدات المباعة",
     "unitsSold": "الوحدات المباعة",
     "salesValue": "قيمة المبيعات",
-    "loadFailed": "فشل تحميل التقرير"
+    "loadFailed": "فشل تحميل التقرير",
+    "exportCSV": "تصدير CSV",
+    "exportExcel": "تصدير Excel",
+    "exportSuccessCSV": "تم تصدير بيانات التقرير إلى CSV بنجاح",
+    "exportSuccessExcel": "تم تصدير بيانات التقرير إلى Excel بنجاح",
+    "exportError": "فشل في تصدير بيانات التقرير",
+    "noReportData": "لا توجد بيانات تقرير متاحة",
+    "selectDateFirst": "يرجى اختيار تاريخ أولاً"
   },
   "settings": {
     "title": "إعدادات التطبيق",
@@ -80,7 +92,15 @@
     "dark": "داكن",
     "auto": "تلقائي (النظام)",
     "languageSettings": "إعدادات اللغة",
-    "language": "اللغة"
+    "language": "اللغة",
+    "workbookChanged": "تم تغيير دفتر العمل بنجاح",
+    "workbookChangeFailed": "فشل في تغيير دفتر العمل",
+    "workbookCreated": "تم إنشاء دفتر العمل بنجاح",
+    "workbookCreateFailed": "فشل في إنشاء دفتر العمل",
+    "workbookOpened": "تم فتح دفتر العمل بنجاح",
+    "workbookOpenFailed": "فشل في فتح دفتر العمل",
+    "workbookReset": "استخدام دفتر العمل الافتراضي",
+    "workbookResetFailed": "فشل في إعادة تعيين دفتر العمل الافتراضي"
   },
   "languages": {
     "english": "الإنجليزية",
@@ -90,13 +110,15 @@
   "common": {
     "noWorkbook": "لم يتم تحميل دفتر عمل",
     "toggleTheme": "تبديل السمة",
+    "refreshData": "تحديث البيانات",
     "cancel": "إلغاء",
     "delete": "حذف",
     "confirmDelete": "تأكيد الحذف",
     "confirmDeleteMessage": "هل أنت متأكد من رغبتك في حذف هذا العنصر؟ لا يمكن التراجع عن هذا الإجراء.",
     "save": "حفظ",
     "close": "إغلاق",
-    "actions": "إجراءات"
+    "actions": "إجراءات",
+    "dataRefreshed": "تم تحديث البيانات بنجاح"
   },
   "notifications": {
     "success": "نجاح",
@@ -120,7 +142,8 @@
     "workbookCreatedMessage": "تم إنشاء دفتر عمل جديد بنجاح",
     "workbookOpenedMessage": "تم فتح دفتر العمل بنجاح",
     "usingDefaultMessage": "استخدام دفتر العمل الافتراضي",
-    "saleRecordedMessage": "تم تسجيل البيع بنجاح"
+    "saleRecordedMessage": "تم تسجيل البيع بنجاح",
+    "dataRefreshed": "تم تحديث البيانات بنجاح"
   },
   "currencies": {
     "USD": "الدولار الأمريكي (USD)",

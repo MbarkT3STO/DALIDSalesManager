@@ -51,7 +51,12 @@
     "totalAmount": "Total Amount",
     "profit": "Profit",
     "recordSale": "Record Sale",
-    "noSales": "No sales yet"
+    "noSales": "No sales yet",
+    "exportCSV": "Export CSV",
+    "exportExcel": "Export Excel",
+    "exportSuccessCSV": "Sales data exported to CSV successfully",
+    "exportSuccessExcel": "Sales data exported to Excel successfully",
+    "exportError": "Failed to export sales data"
   },
   "reports": {
     "title": "Daily Sales Report",
@@ -61,7 +66,14 @@
     "soldUnits": "Sold Units",
     "unitsSold": "Units Sold",
     "salesValue": "Sales Value",
-    "loadFailed": "Failed to load report"
+    "loadFailed": "Failed to load report",
+    "exportCSV": "Export CSV",
+    "exportExcel": "Export Excel",
+    "exportSuccessCSV": "Report data exported to CSV successfully",
+    "exportSuccessExcel": "Report data exported to Excel successfully",
+    "exportError": "Failed to export report data",
+    "noReportData": "No report data available",
+    "selectDateFirst": "Please select a date first"
   },
   "settings": {
     "title": "Application Settings",
@@ -80,7 +92,15 @@
     "dark": "Dark",
     "auto": "Auto (System)",
     "languageSettings": "Language Settings",
-    "language": "Language"
+    "language": "Language",
+    "workbookChanged": "Workbook changed successfully",
+    "workbookChangeFailed": "Failed to change workbook",
+    "workbookCreated": "Workbook created successfully",
+    "workbookCreateFailed": "Failed to create workbook",
+    "workbookOpened": "Workbook opened successfully",
+    "workbookOpenFailed": "Failed to open workbook",
+    "workbookReset": "Using default workbook",
+    "workbookResetFailed": "Failed to reset to default workbook"
   },
   "languages": {
     "english": "English",
@@ -90,13 +110,15 @@
   "common": {
     "noWorkbook": "No workbook loaded",
     "toggleTheme": "Toggle theme",
+    "refreshData": "Refresh data",
     "cancel": "Cancel",
     "delete": "Delete",
     "confirmDelete": "Confirm Delete",
     "confirmDeleteMessage": "Are you sure you want to delete this item? This action cannot be undone.",
     "save": "Save",
     "close": "Close",
-    "actions": "Actions"
+    "actions": "Actions",
+    "dataRefreshed": "Data refreshed successfully"
   },
   "notifications": {
     "success": "Success",
@@ -120,7 +142,8 @@
     "workbookCreatedMessage": "New workbook created successfully",
     "workbookOpenedMessage": "Workbook opened successfully",
     "usingDefaultMessage": "Using default workbook",
-    "saleRecordedMessage": "Sale recorded successfully"
+    "saleRecordedMessage": "Sale recorded successfully",
+    "dataRefreshed": "Data refreshed successfully"
   },
   "currencies": {
     "USD": "US Dollar (USD)",

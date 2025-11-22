@@ -198,115 +198,86 @@ function setupEventListeners(): void {
     // Navigation links
     const navLinks = document.querySelectorAll('.nav-link');
     navLinks.forEach(link => {
-      const typedLink = link as HTMLElement;
-      if (typedLink.dataset && typedLink.dataset.view) {
-        // Skip adding event listener for hidden settings tab
-        if (typedLink.dataset.view !== 'settings' || !typedLink.classList.contains('hidden')) {
-          typedLink.addEventListener('click', function(this: HTMLElement, e: Event) {
-            e.preventDefault();
-            console.log('Direct nav link clicked, view:', this.dataset?.view);
-            if (this.dataset?.view) {
-              showView(this.dataset.view);
-            }
-          });
+      link.addEventListener('click', function(this: HTMLElement) {
+        const viewName = this.getAttribute('data-view');
+        if (viewName) {
+          showView(viewName);
         }
-      }
+      });
     });
 
     // Theme toggle button
-    const themeToggle = document.getElementById('themeToggleBtn');
-    if (themeToggle) {
-      themeToggle.addEventListener('click', toggleTheme);
-      console.log('themeToggleBtn event listener added');
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', toggleTheme);
     }
 
-    // Settings header button
-    const settingsHeaderBtn = document.getElementById('settingsHeaderBtn');
-    if (settingsHeaderBtn) {
-      settingsHeaderBtn.addEventListener('click', () => showView('settings'));
-      console.log('settingsHeaderBtn event listener added');
+    // Refresh data button
+    const refreshDataBtn = document.getElementById('refreshDataBtn');
+    if (refreshDataBtn) {
+      refreshDataBtn.addEventListener('click', async function() {
+        try {
+          // Show loading state
+          const refreshIcon = refreshDataBtn.querySelector('svg');
+          if (refreshIcon) {
+            refreshIcon.innerHTML = `
+              <path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/>
+              <path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/>
+              <path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/>
+            `;
+          }
+          
+          // Reload data from workbook
+          await loadData();
+          
+          // Update UI to reflect current view
+          const activeView = document.querySelector('.nav-link.active')?.getAttribute('data-view') || 'dashboard';
+          if (activeView === 'sales') {
+            renderSales();
+          } else if (activeView === 'reports') {
+            const reportDateInput = document.getElementById('reportDate') as HTMLInputElement;
+            if (reportDateInput && reportDateInput.value) {
+              await loadDailyReport(1);
+            }
+          } else {
+            updateDashboard();
+          }
+          
+          // Reset refresh icon
+          if (refreshIcon) {
+            refreshIcon.innerHTML = `
+              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+              <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+              <path d="M16 16h5v5"/>
+            `;
+          }
+          
+          window.showSuccess(t('notifications.success'), t('notifications.dataRefreshed'));
+        } catch (error) {
+          console.error('Error refreshing data:', error);
+          window.showError(t('notifications.error'), (error as Error).message);
+          
+          // Reset refresh icon even on error
+          const refreshIcon = refreshDataBtn.querySelector('svg');
+          if (refreshIcon) {
+            refreshIcon.innerHTML = `
+              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+              <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+              <path d="M16 16h5v5"/>
+            `;
+          }
+        }
+      });
     }
 
-    // Workbook buttons
-    const createWorkbookBtn = document.getElementById('createWorkbookBtn');
-    if (createWorkbookBtn) {
-      createWorkbookBtn.addEventListener('click', createNewWorkbook);
-      console.log('createWorkbookBtn event listener added');
-    }
-    
-    const openWorkbookBtn = document.getElementById('openWorkbookBtn');
-    if (openWorkbookBtn) {
-      openWorkbookBtn.addEventListener('click', openExistingWorkbook);
-      console.log('openWorkbookBtn event listener added');
-    }
-    
-    const useDefaultWorkbookBtn = document.getElementById('useDefaultWorkbookBtn');
-    if (useDefaultWorkbookBtn) {
-      useDefaultWorkbookBtn.addEventListener('click', useDefaultWorkbook);
-      console.log('useDefaultWorkbookBtn event listener added');
-    }
-    
-    const changeWorkbookBtn = document.getElementById('changeWorkbookBtn');
-    if (changeWorkbookBtn) {
-      changeWorkbookBtn.addEventListener('click', useDefaultWorkbook);
-      console.log('changeWorkbookBtn event listener added');
-    }
-    
-    // Sale management buttons
-    const addSaleBtn = document.getElementById('addSaleBtn');
-    console.log('addSaleBtn element:', addSaleBtn);
-    if (addSaleBtn) {
-      addSaleBtn.addEventListener('click', () => showModal('addSaleModal'));
-      console.log('addSaleBtn event listener added');
-    }
-    
-    const saveSaleBtn = document.getElementById('saveSaleBtn');
-    console.log('saveSaleBtn element:', saveSaleBtn);
-    if (saveSaleBtn) {
-      saveSaleBtn.addEventListener('click', saveSale);
-      console.log('saveSaleBtn event listener added');
-    }
-    
-    // Delete confirmation button
-    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-    if (confirmDeleteBtn) {
-      confirmDeleteBtn.addEventListener('click', deleteSale);
-      console.log('confirmDeleteBtn event listener added');
-    }
-    
-    // Form inputs
-    const saleProduct = document.getElementById('saleProduct');
-    if (saleProduct) {
-      saleProduct.addEventListener('input', updateSaleDetails);
-      console.log('saleProduct event listener added');
-    }
-    
-    const saleQuantity = document.getElementById('saleQuantity');
-    if (saleQuantity) {
-      saleQuantity.addEventListener('input', updateSaleTotals);
-      console.log('saleQuantity event listener added');
-    }
-    
-    const saleUnitPrice = document.getElementById('saleUnitPrice');
-    if (saleUnitPrice) {
-      saleUnitPrice.addEventListener('input', updateSaleTotals);
-      console.log('saleUnitPrice event listener added');
-    }
-    
-    const buyPrice = document.getElementById('buyPrice');
-    if (buyPrice) {
-      buyPrice.addEventListener('input', updateSaleTotals);
-      console.log('buyPrice event listener added');
-    }
-    
     // Theme select in settings
     const themeSelect = document.getElementById('themeSelect');
     if (themeSelect) {
-      themeSelect.addEventListener('change', (e) => {
-        const target = e.target as HTMLSelectElement;
-        setTheme(target.value as 'light' | 'dark' | 'auto');
+      themeSelect.addEventListener('change', function(this: HTMLSelectElement) {
+        setTheme(this.value as 'light' | 'dark' | 'auto');
       });
-      console.log('themeSelect event listener added');
     }
     
     // Currency select in settings
@@ -321,7 +292,6 @@ function setupEventListeners(): void {
         updateDashboard();
         renderSales();
       });
-      console.log('currencySelect event listener added');
     }
     
     // Language select in settings
@@ -356,7 +326,6 @@ function setupEventListeners(): void {
           html.setAttribute('lang', newLanguage);
         }
       });
-      console.log('languageSelect event listener added');
     }
     
     // Settings header button for collapsible behavior
@@ -368,14 +337,12 @@ function setupEventListeners(): void {
           content.style.display = content.style.display === 'none' ? 'block' : 'none';
         }
       });
-      console.log('settingsViewHeaderBtn event listener added');
     }
     
     // Add event listeners for modal close buttons
     const modalCloseButtons = document.querySelectorAll('.modal-close, .modal-close-btn');
     modalCloseButtons.forEach(button => {
       button.addEventListener('click', closeModal);
-      console.log('Modal close button event listener added');
     });
     
     // Add event listener for clicking outside modal to close it
@@ -386,8 +353,57 @@ function setupEventListeners(): void {
           closeModal();
         }
       });
-      console.log('Modal background click event listener added');
     });
+    
+    // Add sale button
+    const addSaleBtn = document.getElementById('addSaleBtn');
+    if (addSaleBtn) {
+      addSaleBtn.addEventListener('click', function() {
+        // Set today's date by default
+        const today = new Date().toISOString().split('T')[0];
+        const saleDateInput = document.getElementById('saleDate') as HTMLInputElement;
+        if (saleDateInput) {
+          saleDateInput.value = today;
+        }
+        
+        // Generate a new sale ID
+        const saleIdInput = document.getElementById('saleId') as HTMLInputElement;
+        if (saleIdInput) {
+          saleIdInput.value = generateSaleId();
+        }
+        
+        // Clear other fields
+        const saleProductInput = document.getElementById('saleProduct') as HTMLInputElement;
+        const buyPriceInput = document.getElementById('buyPrice') as HTMLInputElement;
+        const saleUnitPriceInput = document.getElementById('saleUnitPrice') as HTMLInputElement;
+        const saleQuantityInput = document.getElementById('saleQuantity') as HTMLInputElement;
+        const saleTotalInput = document.getElementById('saleTotal') as HTMLInputElement;
+        const saleProfitInput = document.getElementById('saleProfit') as HTMLInputElement;
+        
+        if (saleProductInput) saleProductInput.value = '';
+        if (buyPriceInput) buyPriceInput.value = '';
+        if (saleUnitPriceInput) saleUnitPriceInput.value = '';
+        if (saleQuantityInput) saleQuantityInput.value = '1';
+        if (saleTotalInput) saleTotalInput.value = '';
+        if (saleProfitInput) saleProfitInput.value = '';
+        
+        showModal('addSaleModal');
+      });
+    }
+    
+    // Save sale button
+    const saveSaleBtn = document.getElementById('saveSaleBtn');
+    if (saveSaleBtn) {
+      saveSaleBtn.addEventListener('click', saveSale);
+    }
+    
+    // Settings header button
+    const settingsHeaderBtn = document.getElementById('settingsHeaderBtn');
+    if (settingsHeaderBtn) {
+      settingsHeaderBtn.addEventListener('click', function() {
+        showView('settings');
+      });
+    }
 
     console.log('All event listeners set up successfully');
   } catch (error) {
@@ -456,8 +472,15 @@ function showView(viewName: string): void {
 function showModal(modalName: string): void {
   try {
     const modal = modals[modalName];
+    const backdrop = document.getElementById('modalBackdrop');
+    
     if (modal) {
       modal.classList.add('show');
+      
+      // Show backdrop
+      if (backdrop) {
+        backdrop.classList.add('show');
+      }
       
       // Generate a new sale ID when opening the add sale modal
       if (modalName === 'addSaleModal') {
@@ -484,6 +507,13 @@ function closeModal(): void {
         modal.classList.remove('show');
       }
     });
+    
+    // Hide backdrop
+    const backdrop = document.getElementById('modalBackdrop');
+    if (backdrop) {
+      backdrop.classList.remove('show');
+    }
+    
     console.log('Modals closed');
   } catch (error) {
     console.error('Error closing modals:', error);

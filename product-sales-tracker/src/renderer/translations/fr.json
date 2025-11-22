@@ -51,7 +51,12 @@
     "totalAmount": "Montant total",
     "profit": "Bénéfice",
     "recordSale": "Enregistrer la vente",
-    "noSales": "Aucune vente pour le moment"
+    "noSales": "Aucune vente pour le moment",
+    "exportCSV": "Exporter en CSV",
+    "exportExcel": "Exporter en Excel",
+    "exportSuccessCSV": "Données de ventes exportées en CSV avec succès",
+    "exportSuccessExcel": "Données de ventes exportées en Excel avec succès",
+    "exportError": "Échec de l'exportation des données de ventes"
   },
   "reports": {
     "title": "Rapport de ventes quotidien",
@@ -61,7 +66,14 @@
     "soldUnits": "Unités vendues",
     "unitsSold": "Unités vendues",
     "salesValue": "Valeur des ventes",
-    "loadFailed": "Échec du chargement du rapport"
+    "loadFailed": "Échec du chargement du rapport",
+    "exportCSV": "Exporter en CSV",
+    "exportExcel": "Exporter en Excel",
+    "exportSuccessCSV": "Données de rapport exportées en CSV avec succès",
+    "exportSuccessExcel": "Données de rapport exportées en Excel avec succès",
+    "exportError": "Échec de l'exportation des données de rapport",
+    "noReportData": "Aucune donnée de rapport disponible",
+    "selectDateFirst": "Veuillez d'abord sélectionner une date"
   },
   "settings": {
     "title": "Paramètres de l'application",
@@ -80,7 +92,15 @@
     "dark": "Sombre",
     "auto": "Auto (Système)",
     "languageSettings": "Paramètres de langue",
-    "language": "Langue"
+    "language": "Langue",
+    "workbookChanged": "Classeur modifié avec succès",
+    "workbookChangeFailed": "Échec du changement de classeur",
+    "workbookCreated": "Classeur créé avec succès",
+    "workbookCreateFailed": "Échec de la création du classeur",
+    "workbookOpened": "Classeur ouvert avec succès",
+    "workbookOpenFailed": "Échec de l'ouverture du classeur",
+    "workbookReset": "Utilisation du classeur par défaut",
+    "workbookResetFailed": "Échec de la réinitialisation au classeur par défaut"
   },
   "languages": {
     "english": "Anglais",
@@ -90,13 +110,15 @@
   "common": {
     "noWorkbook": "Aucun classeur chargé",
     "toggleTheme": "Basculer le thème",
+    "refreshData": "Actualiser les données",
     "cancel": "Annuler",
     "delete": "Supprimer",
     "confirmDelete": "Confirmer la suppression",
     "confirmDeleteMessage": "Êtes-vous sûr de vouloir supprimer cet élément ? Cette action est irréversible.",
     "save": "Enregistrer",
     "close": "Fermer",
-    "actions": "Actions"
+    "actions": "Actions",
+    "dataRefreshed": "Données actualisées avec succès"
   },
   "notifications": {
     "success": "Succès",
@@ -120,7 +142,8 @@
     "workbookCreatedMessage": "Nouveau classeur créé avec succès",
     "workbookOpenedMessage": "Classeur ouvert avec succès",
     "usingDefaultMessage": "Utilisation du classeur par défaut",
-    "saleRecordedMessage": "Vente enregistrée avec succès"
+    "saleRecordedMessage": "Vente enregistrée avec succès",
+    "dataRefreshed": "Données actualisées avec succès"
   },
   "currencies": {
     "USD": "Dollar américain (USD)",
