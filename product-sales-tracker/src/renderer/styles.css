@@ -141,6 +141,7 @@
   --z-sticky: 30;
   --z-fixed: 20;
   --z-modal-backdrop: 999;
+  --z-toast: 1001;
   
   /* Breakpoints */
   --breakpoint-sm: 640px;
