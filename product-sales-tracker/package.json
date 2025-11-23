@@ -4,21 +4,58 @@
   "main": "dist/main/main/main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc -p tsconfig.main.json && tsc -p tsconfig.renderer.json && cp src/renderer/index.html dist/renderer/ && cp src/renderer/login.html dist/renderer/ && cp src/renderer/styles.css dist/renderer/ && cp src/renderer/login-styles.css dist/renderer/ && cp src/renderer/login.js dist/renderer/ && cp src/renderer/secret-window.html dist/renderer/ && cp src/renderer/secret-window.js dist/renderer/ && mkdir -p dist/renderer/translations && cp src/renderer/translations/*.json dist/renderer/translations/",
-    "start": "npm run build && electron ."
+    "build": "tsc -p tsconfig.main.json && tsc -p tsconfig.renderer.json && cp src/renderer/index.html dist/renderer/ && cp src/renderer/login.html dist/renderer/ && cp src/renderer/styles.css dist/renderer/ && cp src/renderer/login-styles.css dist/renderer/ && cp src/renderer/login.js dist/renderer/ && cp src/renderer/secret-window.html dist/renderer/ && cp src/renderer/secret-window.js dist/renderer/ && cp src/renderer/offline.html dist/renderer/ && mkdir -p dist/renderer/translations && cp src/renderer/translations/*.json dist/renderer/translations/",
+    "start": "npm run build && electron .",
+    "dist": "npm run build && electron-builder",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:linux": "npm run build && electron-builder --linux"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "A focused Electron application for tracking products and sales without customer management. This application allows you to manage your product inventory and record sales transactions, with daily reporting capabilities.",
+  "build": {
+    "appId": "com.dalid.productsalestracker",
+    "productName": "Product Sales Tracker",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "src/renderer/**/*.html",
+      "src/renderer/**/*.css",
+      "src/renderer/**/*.js",
+      "src/renderer/**/*.json",
+      "node_modules/chart.js/dist/chart.umd.js",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "node_modules/chart.js/dist",
+        "to": "resources/chart.js",
+        "filter": ["chart.umd.js"]
+      }
+    ],
+    "win": {
+      "target": ["nsis", "portable"]
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.business"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  },
   "dependencies": {
     "chart.js": "^4.5.1",
-    "electron": "^39.2.1",
     "exceljs": "^4.4.0"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
     "concurrently": "^9.2.1",
+    "electron": "^39.2.1",
     "electron-builder": "^26.0.12",
     "typescript": "^5.9.3"
   }

@@ -37,6 +37,10 @@ const electron_1 = require("electron");
 const path = __importStar(require("path"));
 const fs = __importStar(require("fs"));
 const excel_handler_1 = require("./excel-handler");
+// Disable network features for offline operation
+electron_1.app.commandLine.appendSwitch('no-proxy-server');
+electron_1.app.commandLine.appendSwitch('disable-http-cache');
+electron_1.app.commandLine.appendSwitch('disable-web-security', 'false'); // Keep web security enabled
 let mainWindow = null;
 let excelHandler = null;
 function createWindow() {
@@ -46,13 +50,19 @@ function createWindow() {
         height: 900,
         minWidth: 1000,
         minHeight: 700,
+        title: 'Daily Sales Tracker',
+        backgroundColor: '#f8fafc',
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
-            preload: path.join(__dirname, 'electron-preload.js')
-        },
-        title: 'Daily Sales Tracker',
-        backgroundColor: '#f8fafc'
+            preload: path.join(__dirname, 'electron-preload.js'),
+            // Disable web security features that might access network
+            webSecurity: true, // Keep enabled for security
+            allowRunningInsecureContent: false,
+            experimentalFeatures: false,
+            // Disable network-related features
+            partition: 'persist:offline',
+        }
     });
     // Remove the default menu
     electron_1.Menu.setApplicationMenu(null);
@@ -246,13 +256,19 @@ electron_1.ipcMain.handle('open-secret-window', async () => {
             height: 600,
             minWidth: 600,
             minHeight: 500,
+            title: 'Secret Administration Panel',
+            backgroundColor: '#f8fafc',
             webPreferences: {
                 nodeIntegration: false,
                 contextIsolation: true,
-                preload: path.join(__dirname, 'electron-preload.js')
-            },
-            title: 'Secret Administration Panel',
-            backgroundColor: '#f8fafc'
+                preload: path.join(__dirname, 'electron-preload.js'),
+                // Disable web security features that might access network
+                webSecurity: true, // Keep enabled for security
+                allowRunningInsecureContent: false,
+                experimentalFeatures: false,
+                // Disable network-related features
+                partition: 'persist:offline',
+            }
         });
         // Load secret window HTML
         secretWindow.loadFile(path.join(__dirname, '../../renderer/secret-window.html'));

@@ -18,6 +18,7 @@ let sales: Sale[] = [];
 let currentWorkbookPath: string = '';
 let currentLanguage: string = 'en';
 let translations: any = {};
+let isOnline: boolean = false; // Track online/offline status
 
 // DOM Elements
 let views: { [key: string]: HTMLElement | null } = {};
@@ -418,6 +419,27 @@ function setupEventListeners(): void {
       settingsHeaderBtn.addEventListener('click', function() {
         showView('settings');
       });
+    }
+    
+    // Workbook management buttons
+    const createWorkbookBtn = document.getElementById('createWorkbookBtn');
+    if (createWorkbookBtn) {
+      createWorkbookBtn.addEventListener('click', createNewWorkbook);
+    }
+    
+    const openWorkbookBtn = document.getElementById('openWorkbookBtn');
+    if (openWorkbookBtn) {
+      openWorkbookBtn.addEventListener('click', openExistingWorkbook);
+    }
+    
+    const useDefaultWorkbookBtn = document.getElementById('useDefaultWorkbookBtn');
+    if (useDefaultWorkbookBtn) {
+      useDefaultWorkbookBtn.addEventListener('click', useDefaultWorkbook);
+    }
+    
+    const changeWorkbookBtn = document.getElementById('changeWorkbookBtn');
+    if (changeWorkbookBtn) {
+      changeWorkbookBtn.addEventListener('click', openExistingWorkbook);
     }
 
     console.log('All event listeners set up successfully');
@@ -1278,6 +1300,22 @@ async function showSecretWindow(): Promise<void> {
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
   try {
+    // Check initial online status (should be offline for this app)
+    isOnline = navigator.onLine;
+    console.log('Application online status:', isOnline);
+    
+    // Listen for online/offline events
+    window.addEventListener('online', () => {
+      isOnline = true;
+      console.log('Application is now online');
+      // In a truly offline app, we might want to warn the user
+      // window.showWarning('Online Detected', 'This application is designed to work offline only');
+    });
+    
+    window.addEventListener('offline', () => {
+      isOnline = false;
+      console.log('Application is now offline');
+    });
     // Initialize view elements
     views = {
       dashboard: document.getElementById('dashboard-view'),

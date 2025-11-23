@@ -10,6 +10,22 @@ const usernameInput = document.getElementById('username');
 const passwordInput = document.getElementById('password');
 const toast = document.getElementById('toast');
 
+// Track online status (should be offline for this app)
+let isOnline = navigator.onLine;
+
+// Listen for online/offline events
+window.addEventListener('online', () => {
+  isOnline = true;
+  console.log('Login page detected online status');
+  // In a truly offline app, we might want to warn the user
+  // showToast('Online Detected: This application is designed to work offline only', 'warning');
+});
+
+window.addEventListener('offline', () => {
+  isOnline = false;
+  console.log('Login page detected offline status');
+});
+
 // Translations object
 let translations = {};
 let currentLanguage = 'en';

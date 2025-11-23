@@ -4,6 +4,11 @@ import * as fs from 'fs';
 import ExcelJS from 'exceljs';
 import { ExcelHandler, Sale } from './excel-handler';
 
+// Disable network features for offline operation
+app.commandLine.appendSwitch('no-proxy-server');
+app.commandLine.appendSwitch('disable-http-cache');
+app.commandLine.appendSwitch('disable-web-security', 'false'); // Keep web security enabled
+
 let mainWindow: BrowserWindow | null = null;
 let excelHandler: ExcelHandler | null = null;
 
@@ -14,13 +19,19 @@ function createWindow(): void {
     height: 900,
     minWidth: 1000,
     minHeight: 700,
+    title: 'Daily Sales Tracker',
+    backgroundColor: '#f8fafc',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'electron-preload.js')
-    },
-    title: 'Daily Sales Tracker',
-    backgroundColor: '#f8fafc'
+      preload: path.join(__dirname, 'electron-preload.js'),
+      // Disable web security features that might access network
+      webSecurity: true, // Keep enabled for security
+      allowRunningInsecureContent: false,
+      experimentalFeatures: false,
+      // Disable network-related features
+      partition: 'persist:offline',
+    }
   });
 
   // Remove the default menu
@@ -237,13 +248,19 @@ ipcMain.handle('open-secret-window', async () => {
       height: 600,
       minWidth: 600,
       minHeight: 500,
+      title: 'Secret Administration Panel',
+      backgroundColor: '#f8fafc',
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
-        preload: path.join(__dirname, 'electron-preload.js')
-      },
-      title: 'Secret Administration Panel',
-      backgroundColor: '#f8fafc'
+        preload: path.join(__dirname, 'electron-preload.js'),
+        // Disable web security features that might access network
+        webSecurity: true, // Keep enabled for security
+        allowRunningInsecureContent: false,
+        experimentalFeatures: false,
+        // Disable network-related features
+        partition: 'persist:offline',
+      }
     });
 
     // Load secret window HTML
