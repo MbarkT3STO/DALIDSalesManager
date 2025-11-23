@@ -441,6 +441,22 @@ function setupEventListeners(): void {
     if (changeWorkbookBtn) {
       changeWorkbookBtn.addEventListener('click', openExistingWorkbook);
     }
+    
+    // Add event listeners for auto-calculating sale totals
+    const quantityInput = document.getElementById('saleQuantity') as HTMLInputElement;
+    if (quantityInput) {
+      quantityInput.addEventListener('input', updateSaleTotals);
+    }
+    
+    const unitPriceInput = document.getElementById('saleUnitPrice') as HTMLInputElement;
+    if (unitPriceInput) {
+      unitPriceInput.addEventListener('input', updateSaleTotals);
+    }
+    
+    const buyPriceInput = document.getElementById('buyPrice') as HTMLInputElement;
+    if (buyPriceInput) {
+      buyPriceInput.addEventListener('input', updateSaleTotals);
+    }
 
     console.log('All event listeners set up successfully');
   } catch (error) {

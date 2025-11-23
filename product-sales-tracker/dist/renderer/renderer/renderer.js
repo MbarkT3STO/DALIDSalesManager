@@ -377,6 +377,19 @@ function setupEventListeners() {
         if (changeWorkbookBtn) {
             changeWorkbookBtn.addEventListener('click', openExistingWorkbook);
         }
+        // Add event listeners for auto-calculating sale totals
+        const quantityInput = document.getElementById('saleQuantity');
+        if (quantityInput) {
+            quantityInput.addEventListener('input', updateSaleTotals);
+        }
+        const unitPriceInput = document.getElementById('saleUnitPrice');
+        if (unitPriceInput) {
+            unitPriceInput.addEventListener('input', updateSaleTotals);
+        }
+        const buyPriceInput = document.getElementById('buyPrice');
+        if (buyPriceInput) {
+            buyPriceInput.addEventListener('input', updateSaleTotals);
+        }
         console.log('All event listeners set up successfully');
     }
     catch (error) {
