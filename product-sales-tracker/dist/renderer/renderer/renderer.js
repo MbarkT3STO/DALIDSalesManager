@@ -390,6 +390,20 @@ function setupEventListeners() {
         if (buyPriceInput) {
             buyPriceInput.addEventListener('input', updateSaleTotals);
         }
+        // Export report button
+        const exportReportBtn = document.getElementById('exportReportBtn');
+        if (exportReportBtn) {
+            exportReportBtn.addEventListener('click', exportReportToPDF);
+        }
+        // Export sales buttons
+        const exportSalesCSVBtn = document.getElementById('exportSalesCSV');
+        if (exportSalesCSVBtn) {
+            exportSalesCSVBtn.addEventListener('click', exportSalesDataCSV);
+        }
+        const exportSalesExcelBtn = document.getElementById('exportSalesExcel');
+        if (exportSalesExcelBtn) {
+            exportSalesExcelBtn.addEventListener('click', exportSalesDataExcel);
+        }
         console.log('All event listeners set up successfully');
     }
     catch (error) {
@@ -1164,6 +1178,66 @@ function formatCurrency(value) {
         console.error('Error formatting currency:', error);
         // Fallback to USD format
         return `$${value.toFixed(2)}`;
+    }
+}
+// Export daily report to PDF
+async function exportReportToPDF() {
+    try {
+        const date = document.getElementById('reportDate').value;
+        if (!date) {
+            window.showError(t('notifications.validationError'), t('reports.selectDateFirst'));
+            return;
+        }
+        const result = await window.electronAPI.getDailySalesReport(date);
+        if (result.success && result.report) {
+            // Call the main process to generate and save the PDF
+            const exportResult = await window.electronAPI.exportReportToPDF(result.report, date);
+            if (exportResult.success) {
+                window.showSuccess(t('notifications.success'), t('reports.exportSuccess'));
+            }
+            else {
+                window.showError(t('notifications.error'), exportResult.message || t('reports.exportFailed'));
+            }
+        }
+        else {
+            window.showError(t('notifications.error'), result.message || t('reports.loadFailed'));
+        }
+    }
+    catch (error) {
+        console.error('Error exporting report to PDF:', error);
+        window.showError(t('notifications.error'), error.message);
+    }
+}
+// Export sales data to CSV
+async function exportSalesDataCSV() {
+    try {
+        const result = await window.electronAPI.exportSalesCSV();
+        if (result.success) {
+            window.showSuccess(t('notifications.success'), t('sales.exportSuccessCSV'));
+        }
+        else {
+            window.showError(t('notifications.error'), result.message || t('sales.exportError'));
+        }
+    }
+    catch (error) {
+        console.error('Error exporting sales data to CSV:', error);
+        window.showError(t('notifications.error'), error.message);
+    }
+}
+// Export sales data to Excel
+async function exportSalesDataExcel() {
+    try {
+        const result = await window.electronAPI.exportSalesExcel();
+        if (result.success) {
+            window.showSuccess(t('notifications.success'), t('sales.exportSuccessExcel'));
+        }
+        else {
+            window.showError(t('notifications.error'), result.message || t('sales.exportError'));
+        }
+    }
+    catch (error) {
+        console.error('Error exporting sales data to Excel:', error);
+        window.showError(t('notifications.error'), error.message);
     }
 }
 // Show secret window with password protection

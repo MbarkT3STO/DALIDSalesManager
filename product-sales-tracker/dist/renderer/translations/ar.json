@@ -71,9 +71,12 @@
     "loadFailed": "فشل تحميل التقرير",
     "exportCSV": "تصدير CSV",
     "exportExcel": "تصدير Excel",
+    "exportPDF": "تصدير PDF",
     "exportSuccessCSV": "تم تصدير بيانات التقرير إلى CSV بنجاح",
     "exportSuccessExcel": "تم تصدير بيانات التقرير إلى Excel بنجاح",
+    "exportSuccess": "تم تصدير التقرير بنجاح",
     "exportError": "فشل في تصدير بيانات التقرير",
+    "exportFailed": "فشل في تصدير التقرير",
     "noReportData": "لا توجد بيانات تقرير متاحة",
     "selectDateFirst": "يرجى اختيار تاريخ أولاً"
   },

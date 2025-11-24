@@ -71,9 +71,12 @@
     "loadFailed": "Failed to load report",
     "exportCSV": "Export CSV",
     "exportExcel": "Export Excel",
+    "exportPDF": "Export PDF",
     "exportSuccessCSV": "Report data exported to CSV successfully",
     "exportSuccessExcel": "Report data exported to Excel successfully",
+    "exportSuccess": "Report exported successfully",
     "exportError": "Failed to export report data",
+    "exportFailed": "Failed to export report",
     "noReportData": "No report data available",
     "selectDateFirst": "Please select a date first"
   },

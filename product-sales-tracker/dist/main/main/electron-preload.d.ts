@@ -68,6 +68,10 @@ export interface IElectronAPI {
         path?: string;
         message?: string;
     }>;
+    exportReportToPDF: (report: any, date: string) => Promise<{
+        success: boolean;
+        message?: string;
+    }>;
     openSecretWindow: () => Promise<{
         success: boolean;
         message?: string;

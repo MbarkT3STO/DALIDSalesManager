@@ -15,6 +15,7 @@ const api = {
     saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
     exportSalesCSV: () => ipcRenderer.invoke('export-sales-csv'),
     exportSalesExcel: () => ipcRenderer.invoke('export-sales-excel'),
+    exportReportToPDF: (report, date) => ipcRenderer.invoke('export-report-to-pdf', report, date),
     openSecretWindow: () => ipcRenderer.invoke('open-secret-window'),
     generateSampleData: (recordsPerDay) => ipcRenderer.invoke('generate-sample-data', recordsPerDay)
 };

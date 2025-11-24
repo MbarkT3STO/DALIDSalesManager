@@ -29,5 +29,10 @@ export declare class ExcelHandler {
         message?: string;
         count?: number;
     }>;
+    exportReportToPDF(report: any, date: string): Promise<{
+        success: boolean;
+        message?: string;
+    }>;
+    exportToExcel(sales: Sale[], outputPath: string): Promise<void>;
 }
 //# sourceMappingURL=excel-handler.d.ts.map

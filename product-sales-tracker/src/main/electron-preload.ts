@@ -17,6 +17,7 @@ export interface IElectronAPI {
   saveSettings: (settings: any) => Promise<{ success: boolean; message?: string }>;
   exportSalesCSV: () => Promise<{ success: boolean; path?: string; message?: string }>;
   exportSalesExcel: () => Promise<{ success: boolean; path?: string; message?: string }>;
+  exportReportToPDF: (report: any, date: string) => Promise<{ success: boolean; message?: string }>;
   openSecretWindow: () => Promise<{ success: boolean; message?: string }>;
   generateSampleData: (recordsPerDay: number) => Promise<{ success: boolean; message?: string; count?: number }>;
 }
@@ -37,6 +38,7 @@ const api: IElectronAPI = {
   saveSettings: (settings: any) => ipcRenderer.invoke('save-settings', settings),
   exportSalesCSV: () => ipcRenderer.invoke('export-sales-csv'),
   exportSalesExcel: () => ipcRenderer.invoke('export-sales-excel'),
+  exportReportToPDF: (report: any, date: string) => ipcRenderer.invoke('export-report-to-pdf', report, date),
   openSecretWindow: () => ipcRenderer.invoke('open-secret-window'),
   generateSampleData: (recordsPerDay: number) => ipcRenderer.invoke('generate-sample-data', recordsPerDay)
 };

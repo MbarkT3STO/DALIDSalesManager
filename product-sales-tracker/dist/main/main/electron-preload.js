@@ -18,6 +18,7 @@ const api = {
     saveSettings: (settings) => electron_1.ipcRenderer.invoke('save-settings', settings),
     exportSalesCSV: () => electron_1.ipcRenderer.invoke('export-sales-csv'),
     exportSalesExcel: () => electron_1.ipcRenderer.invoke('export-sales-excel'),
+    exportReportToPDF: (report, date) => electron_1.ipcRenderer.invoke('export-report-to-pdf', report, date),
     openSecretWindow: () => electron_1.ipcRenderer.invoke('open-secret-window'),
     generateSampleData: (recordsPerDay) => electron_1.ipcRenderer.invoke('generate-sample-data', recordsPerDay)
 };

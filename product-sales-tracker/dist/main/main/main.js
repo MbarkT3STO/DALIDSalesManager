@@ -202,6 +202,19 @@ electron_1.ipcMain.handle('get-daily-sales-report', async (event, date) => {
         return { success: false, message: error.message };
     }
 });
+// IPC handler to export daily sales report to PDF
+electron_1.ipcMain.handle('export-report-to-pdf', async (event, report, date) => {
+    try {
+        if (!excelHandler) {
+            return { success: false, message: 'No workbook loaded' };
+        }
+        const result = await excelHandler.exportReportToPDF(report, date);
+        return result;
+    }
+    catch (error) {
+        return { success: false, message: error.message };
+    }
+});
 electron_1.ipcMain.handle('get-workbook-path', async () => {
     try {
         if (!excelHandler) {
@@ -327,4 +340,60 @@ async function exportSalesToCSV(sales, outputPath) {
         }
     });
 }
+// IPC handler to export sales data to CSV
+electron_1.ipcMain.handle('export-sales-csv', async () => {
+    try {
+        if (!excelHandler) {
+            return { success: false, message: 'No workbook loaded' };
+        }
+        // Show save dialog
+        const result = await electron_1.dialog.showSaveDialog({
+            title: 'Export Sales Data to CSV',
+            defaultPath: 'sales-data.csv',
+            filters: [
+                { name: 'CSV Files', extensions: ['csv'] }
+            ]
+        });
+        if (result.canceled || !result.filePath) {
+            return { success: false, message: 'Export cancelled' };
+        }
+        const outputPath = result.filePath;
+        // Get sales data
+        const { sales } = await excelHandler.readWorkbook();
+        // Export to CSV
+        await exportSalesToCSV(sales, outputPath);
+        return { success: true, path: outputPath, message: 'Sales data exported to CSV successfully' };
+    }
+    catch (error) {
+        return { success: false, message: error.message };
+    }
+});
+// IPC handler to export sales data to Excel
+electron_1.ipcMain.handle('export-sales-excel', async () => {
+    try {
+        if (!excelHandler) {
+            return { success: false, message: 'No workbook loaded' };
+        }
+        // Show save dialog
+        const result = await electron_1.dialog.showSaveDialog({
+            title: 'Export Sales Data to Excel',
+            defaultPath: 'sales-data.xlsx',
+            filters: [
+                { name: 'Excel Files', extensions: ['xlsx'] }
+            ]
+        });
+        if (result.canceled || !result.filePath) {
+            return { success: false, message: 'Export cancelled' };
+        }
+        const outputPath = result.filePath;
+        // Get sales data
+        const { sales } = await excelHandler.readWorkbook();
+        // Export to Excel
+        await excelHandler.exportToExcel(sales, outputPath);
+        return { success: true, path: outputPath, message: 'Sales data exported to Excel successfully' };
+    }
+    catch (error) {
+        return { success: false, message: error.message };
+    }
+});
 //# sourceMappingURL=main.js.map

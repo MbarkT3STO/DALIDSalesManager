@@ -71,9 +71,12 @@
     "loadFailed": "Échec du chargement du rapport",
     "exportCSV": "Exporter en CSV",
     "exportExcel": "Exporter en Excel",
+    "exportPDF": "Exporter en PDF",
     "exportSuccessCSV": "Données de rapport exportées en CSV avec succès",
     "exportSuccessExcel": "Données de rapport exportées en Excel avec succès",
+    "exportSuccess": "Rapport exporté avec succès",
     "exportError": "Échec de l'exportation des données de rapport",
+    "exportFailed": "Échec de l'exportation du rapport",
     "noReportData": "Aucune donnée de rapport disponible",
     "selectDateFirst": "Veuillez d'abord sélectionner une date"
   },
